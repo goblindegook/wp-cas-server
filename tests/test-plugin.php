@@ -6,13 +6,10 @@
 
 class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
-    const TEST_ACTION = 0;
-    const TEST_FILTER = 1;
-
     private $plugin;
 
     /**
-     * Setup test suite for the CASServerPlugin class.
+     * Setup a test method for the CASServerPlugin class.
      */
     function setUp () {
         parent::setUp();
@@ -20,7 +17,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
     }
 
     /**
-     * Finish the test suite for the CASServerPlugin class.
+     * Finish a test method for the CASServerPlugin class.
      */
     function tearDown () {
         parent::tearDown();
@@ -114,129 +111,9 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         $options = get_option( WPCASServerPlugin::OPTIONS_KEY );
         $this->assertNotEmpty( $options['path'], 'Plugin sets default URI path root.');
 
-        $rule = '^' . $options['path'] . '(.*)?';
+        $rule = '^' . $options['path'] . '/(.*)?';
 
-        $this->assertNotNull( $wp_rewrite->extra_rules_top[$rule],
-            'Rewrite rules for the CAS server are set.' );
-    }
-
-    /**
-     * Test whether a WordPress hook is called for a given function and set of arguments.
-     * @param  string  $label    Hook label to test.
-     * @param  mixed   $function String or array with the function to execute.
-     * @param  array   $args     Ordered list of arguments to pass the function.
-     * @param  int     $test     What to test: TEST_ACTION (default) or TEST_FILTER.
-     * @return boolean           [description]
-     */
-    private function _is_hook_called ( $label, $function, $args, $test = self::TEST_ACTION ) {
-        $called = false;
-        $handler = function ( $in ) use (&$called) {
-            $called = true;
-            return $in;
-        };
-
-        switch ($test) {
-            case self::TEST_ACTION:
-                add_action( $label, $handler );
-                break;
-
-            case self::TEST_FILTER:
-                add_filter( $label, $handler );
-                break;
-            
-            default:
-                break;
-        }
-
-        ob_start();
-        call_user_func_array( $function, $args );
-        ob_end_clean();
-
-        switch ($test) {
-            case self::TEST_ACTION:
-                remove_action( $label, $handler );
-                break;
-
-            case self::TEST_FILTER:
-                remove_filter( $label, $handler );
-                break;
-            
-            default:
-                break;
-        }
-
-        return $called;
-    }
-
-    /**
-     * Test actions introduced by the plugin.
-     */
-    function test_plugin_actions () {
-        $server  = new WPCASServer;
-
-        $triggers = array(
-            'cas_server_before_request' => array( 'function' => array( $server, 'handleRequest' ),
-                                                  'args'     => array( '/invalid-uri' ),
-                                                  ),
-            'cas_server_after_request'  => array( 'function' => array( $server, 'handleRequest' ),
-                                                  'args'     => array( '/invalid-uri' ),
-                                                  ),
-            'cas_server_error'          => array( 'function' => array( $server, 'handleRequest' ),
-                                                  'args'     => array( '/invalid-uri' ),
-                                                  ),
-            );
-
-        foreach ($triggers as $action => $trigger) {
-            $called = $this->_is_hook_called( $action, $trigger['function'], $trigger['args'], self::TEST_ACTION );
-            $this->assertTrue( $called, "Action callback for '$action' is called." );
-        }
-    }
-
-    /**
-     * Test filters introduced by the plugin.
-     * 
-     * @TODO: Some filters not tested until I find a way to get around exit and die().
-     */
-    function test_plugin_filters () {
-        $server  = new WPCASServer;
-
-        $triggers = array(
-            'cas_enabled'                  => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/invalid-uri' ),
-                                                     ),
-            'cas_server_routes'            => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/invalid-uri' ),
-                                                     ),
-            /*
-            'cas_server_dispatch_callback' => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/login' ),
-                                                     ),
-            'cas_server_dispatch_args'     => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/login' ),
-                                                     ),
-            'cas_server_login_args'        => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/login' ),
-                                                     ),
-            'cas_server_ticket'            => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/login' ),
-                                                     ),
-            'cas_server_service'           => array( 'function' => array( $server, 'handleRequest' ),
-                                                     'args'     => array( '/login' ),
-                                                     ), */
-            );
-
-        foreach ($triggers as $filter => $trigger) {
-
-            $_GET['service'] = 'https://test.local/';
-
-            $user_id = $this->factory->user->create();
-            wp_set_current_user( $user_id );
-
-            $called = $this->_is_hook_called( $filter, $trigger['function'], $trigger['args'], self::TEST_FILTER );
-            $this->assertTrue( $called, "Filter callback for '$filter' is called." );
-        }
-
-        $this->markTestIncomplete( 'Some filters not tested until I find a way to get around exit and die().' );
+        $this->markTestIncomplete( 'Test for rewrite rules.' );
     }
 
     /**

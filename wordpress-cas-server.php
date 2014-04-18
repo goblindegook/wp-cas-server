@@ -142,7 +142,7 @@ class WPCASServerPlugin {
             return;
         }
 
-        $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE] );
+        echo $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE] );
 
         exit;
     }
@@ -194,7 +194,7 @@ class WPCASServerPlugin {
      */
     protected function add_rewrite_rules () {
         $path = $this->_get_option( 'path' );
-        add_rewrite_rule( '^' . $path . '(.*)?', 'index.php?' . self::QUERY_VAR_ROUTE . '=$matches[1]', 'top' );
+        add_rewrite_rule( '^' . $path . '/(.*)?', 'index.php?' . self::QUERY_VAR_ROUTE . '=$matches[1]', 'top' );
     }
 
 }

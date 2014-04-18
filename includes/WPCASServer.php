@@ -58,26 +58,24 @@ class WPCASServer {
      * 
      * @uses apply_filters()
      */
-    protected function getRoutes () {
+    public function routes () {
 
         $cas_routes = array(
-            '/login/?'            => array( $this, 'login' ),
-            '/logout/?'           => array( $this, 'logout' ),
-            '/proxy/?'            => array( $this, 'proxy' ),
-            '/proxyValidate/?'    => array( $this, 'proxyValidate' ),
-            '/serviceValidate/?'  => array( $this, 'serviceValidate' ),
-            '/validate/?'         => array( $this, 'validate' ),
+            'login'           => array( $this, 'login' ),
+            'logout'          => array( $this, 'logout' ),
+            'proxy'           => array( $this, 'proxy' ),
+            'proxyValidate'   => array( $this, 'proxyValidate' ),
+            'serviceValidate' => array( $this, 'serviceValidate' ),
+            'validate'        => array( $this, 'validate' ),
             );
 
         return apply_filters( 'cas_server_routes', $cas_routes );
     }
 
     /**
-     * [serveRequest description]
-     * 
+     * Handle a CAS server request for a specific URI.
      * @param  string $path CAS request URI.
-     * 
-     * @return void
+     * @return string       Request response.
      */
     public function handleRequest ( $path ) {
 
@@ -96,18 +94,20 @@ class WPCASServer {
         $result = $this->_dispatch( $path );
 
         if (is_wp_error( $result )) {
-            echo $this->_xmlResponse( $this->_xmlError( $result ) );
+            $output = $this->_xmlResponse( $this->_xmlError( $result ) );
         }
         else {
-            echo $result;
+            $output = $result;
         }
 
         do_action( 'cas_server_after_request' );
+
+        return apply_filters( 'cas_server_response', $output, $path );
     }
 
     /**
      * Dispatch the request for processing by the relevant callback as determined by the routes
-     * list returned by WPCASServer::getRoutes().
+     * list returned by WPCASServer::routes().
      * 
      * @return (string|WP_Error) Service response string or WordPress error.
      * 
@@ -125,9 +125,9 @@ class WPCASServer {
                 );
         }
 
-        foreach ($this->getRoutes() as $route => $callback) {
+        foreach ($this->routes() as $route => $callback) {
 
-            $match = preg_match( '@^' . $route . '$@', $path );
+            $match = preg_match( '@^' . $route . '/?$@', $path );
 
             if (!$match) {
                 continue;
@@ -240,7 +240,7 @@ class WPCASServer {
      * @param  array $args Request arguments.
      * @return void
      */
-    protected function login ( $args ) {
+    public function login ( $args ) {
 
         $args = array_merge( $_POST, $args );
         $args = apply_filters( 'cas_server_login_args', $args );
@@ -391,7 +391,7 @@ class WPCASServer {
      * @uses wp_redirect()
      * @uses esc_url_raw()
      */
-    protected function logout ( $args ) {
+    public function logout ( $args ) {
         $service = esc_url_raw( $args['service'] );
         session_start();
         session_unset();
@@ -406,7 +406,7 @@ class WPCASServer {
      * 
      * @return [type] [description]
      */
-    protected function proxy ( $args ) {
+    public function proxy ( $args ) {
     }
 
     /**
@@ -414,7 +414,7 @@ class WPCASServer {
      * 
      * @return [type] [description]
      */
-    protected function proxyValidate ( $args ) {
+    public function proxyValidate ( $args ) {
     }
 
     /**
@@ -422,7 +422,7 @@ class WPCASServer {
      * 
      * @return [type] [description]
      */
-    protected function serviceValidate ( $args ) {
+    public function serviceValidate ( $args ) {
     }
 
     /**
@@ -430,7 +430,7 @@ class WPCASServer {
      * 
      * @return [type] [description]
      */
-    protected function validate ( $args ) {
+    public function validate ( $args ) {
     }
 
 }
