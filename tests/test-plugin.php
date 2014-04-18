@@ -98,15 +98,26 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
     /**
      * Test plugin options.
      */
-    function test_plugin_options () {
+    function test_options () {
         delete_option( WPCASServerPlugin::OPTIONS_KEY );
         $this->plugin->init();
         $this->assertNotEmpty( get_option( WPCASServerPlugin::OPTIONS_KEY ), 'Plugin sets default options on init.' );
     }
 
-    function test_plugin_rewrite_rules () {
+    /**
+     * Test the rewrite rules set by the plugin.
+     * @return [type] [description]
+     */
+    function test_rewrite_rules () {
+        global $wp_rewrite;
+
         $options = get_option( WPCASServerPlugin::OPTIONS_KEY );
         $this->assertNotEmpty( $options['path'], 'Plugin sets default URI path root.');
+
+        $rule = '^' . $options['path'] . '(.*)?';
+
+        $this->assertNotNull( $wp_rewrite->extra_rules_top[$rule],
+            'Rewrite rules for the CAS server are set.' );
     }
 
     /**
@@ -226,13 +237,6 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         }
 
         $this->markTestIncomplete( 'Some filters not tested until I find a way to get around exit and die().' );
-    }
-
-    /**
-     * Test rewrite rules set by the plugin.
-     */
-    function test_rewrite_rules () {
-        $this->markTestIncomplete();
     }
 
     /**

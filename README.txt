@@ -9,28 +9,25 @@ Provides authentication services based on Jasig CAS protocols.
 
 == Description ==
 
-The plugin allows WordPress to act as a single sign-on authenticator using versions 1.0 and 2.0 of the Central Authentication Service protocol.
+[![Build Status](https://travis-ci.org/goblindegook/wordpress-cas-server.svg?branch=master)](https://travis-ci.org/goblindegook/wordpress-cas-server)
+
+This plugin allows WordPress to act as a single sign-on authenticator using versions 1.0 and 2.0 of the Central Authentication Service protocol.
 
 That way, users on your WordPress install may be able to access different applications that support the CAS protocol while providing a single set of credentials, once only and without exposing the user's password.
 
 The following URIs are provided:
 
 * `/login`: TODO
-
 * `/logout`: TODO
-
-* `/validate` [CAS 1.0]: TODO
-
-* `/serviceValidate` [CAS 2.0]: TODO
-
-* `/proxyValidate` [CAS 2.0]: TODO
-
 * `/proxy` [CAS 2.0]: TODO
+* `/proxyValidate` [CAS 2.0]: TODO
+* `/serviceValidate` [CAS 2.0]: TODO
+* `/validate` [CAS 1.0]: TODO
 
 == Installation ==
 
 1. Upload `wordpress-cas-server` directory to the `/wp-content/plugins/` directory.
-2. Activate the plugin under 'Plugins' in the WordPress administration panel.
+1. Activate the plugin under 'Plugins' in the WordPress administration panel.
 
 == Frequently Asked Questions ==
 
@@ -50,15 +47,15 @@ You may peruse the CAS 1.0 and 2.0 protocol specifications in complete detail at
 
 = What types of tickets does this plugin support? =
 
-WordPress CAS Server supports Ticket-Granting Cookies (TGC), Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
+WordPress CAS Server sets and receives Ticket-Granting Cookies (TGC), Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
 
 == Hooks & Filters ==
 
-= Action: `cas_server_operation` =
+= Action: `cas_*` =
 
 TODO
 
-= Filter: `cas_server_valid_user` =
+= Filter: `cas_*` =
 
 TODO
 
