@@ -15,29 +15,50 @@ Domain Path: /languages
  * @subpackage WPCASServerPlugin
  */
 
-require_once( dirname( __FILE__ ) . '/inc/WPCASServer.php' );
+require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
 
 if (!class_exists( 'WPCASServerPlugin' )):
 
 class WPCASServerPlugin {
 
-    const SLUG = 'wordpress-cas-server';
-
-    const FILE = 'wordpress-cas-server/wordpress-cas-server.php';
-
-    const QUERY_VAR_ROUTE = 'cas_route';
+    /**
+     * Plugin version.
+     */
+    const VERSION = '0.1-alpha';
 
     /**
-     * CAS service URI prefix.
-     * @var string
+     * Plugin slug.
      */
-    public $cas_path = 'wp-cas';
+    const SLUG = 'wordpress-cas-server';
+
+    /**
+     * Plugin options key.
+     */
+    const OPTIONS_KEY = 'wordpress_cas_server';
+
+    /**
+     * Plugin file.
+     */
+    const FILE = 'wordpress-cas-server/wordpress-cas-server.php';
+
+    /**
+     * Query variable used to pass the requested CAS route.
+     */
+    const QUERY_VAR_ROUTE = 'cas_route';
 
     /**
      * CAS server instance.
      * @var WPCASServer
      */
     protected $server;
+
+    /**
+     * Default plugin options.
+     * @var array
+     */
+    private $default_options = array(
+        'path' => 'wp-cas',
+        );
 
     /**
      * WordPress CAS Server plugin constructor.
@@ -53,30 +74,26 @@ class WPCASServerPlugin {
 
     /**
      * Plugin activation callback.
-     * 
-     * @return void
      */
     public function activation ( $network_wide ) {
         if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
             $sites = wp_get_sites();
             foreach ( $sites as $site ) {
                 switch_to_blog( $site['blog_id'] );
-                $this->register_rewrites();
+                $this->add_rewrite_rules();
                 flush_rewrite_rules();
             }
             restore_current_blog();
         }
         else
         {
-            $this->register_rewrites();
+            $this->add_rewrite_rules();
             flush_rewrite_rules();
         }
     }
 
     /**
      * Plugin deactivation callback to flush rewrite rules.
-     * 
-     * @return void
      */
     public function deactivation ( $network_wide ) {
         if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
@@ -95,8 +112,6 @@ class WPCASServerPlugin {
 
     /**
      * Plugin loading callback.
-     * 
-     * @return void
      */
     public function plugins_loaded () {
         add_action( 'init'                  , array( $this, 'init' ) );
@@ -106,20 +121,18 @@ class WPCASServerPlugin {
 
     /**
      * Plugin initialization callback.
-     * @return void
      * 
      * @uses $wp
      */
     public function init () {
         global $wp;
         $wp->add_query_var( self::QUERY_VAR_ROUTE );
-        $this->register_rewrites();
+        $this->_update_options();
+        $this->add_rewrite_rules();
     }
 
     /**
      * Serve the CAS request and stop.
-     * 
-     * @return void
      */
     public function template_redirect () {
         global $wp;
@@ -131,17 +144,57 @@ class WPCASServerPlugin {
 
         $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE] );
 
-        die();
+        exit;
     }
 
+    /**
+     * Callback to filter the hosts WordPress allows redirections to.
+     * 
+     * @param  array $allowed   List of valid redirection target hosts.
+     * @return array            Filtered list of valid redirection target hosts.
+     * 
+     * @todo
+     */
     public function allowed_redirect_hosts ( $allowed ) {
-        // TODO: Allow redirecting to a list of hosts on logout.
+        // TODO
         return $allowed;
     }
 
-    protected function register_rewrites () {
-        add_rewrite_rule( '^' . $this->cas_path . '/?$'  , 'index.php?' . self::QUERY_VAR_ROUTE . '=/'          , 'top' );
-        add_rewrite_rule( '^' . $this->cas_path . '(.*)?', 'index.php?' . self::QUERY_VAR_ROUTE . '=$matches[1]', 'top' );
+    /**
+     * Get plugin options.
+     * @return array Plugin options.
+     */
+    private function _get_options () {
+        return get_option( self::OPTIONS_KEY, $this->default_options );
+    }
+
+    /**
+     * Get plugin option by key.
+     * @param  string $key  Plugin option key to return.
+     * @return mixed        Plugin option value.
+     */
+    private function _get_option ( $key = null ) {
+        $options = $this->_get_options();
+        return $options[$key];
+    }
+
+    /**
+     * Update the plugin options in the database.
+     * @param  array  $updated_options  Updated options to set (will be merged with existing options).
+     */
+    private function _update_options ( $updated_options = array() ) {
+        $options = $this->_get_options();
+        $options = array_merge( (array) $options, (array) $updated_options );
+        update_option( self::OPTIONS_KEY, $options );
+    }
+
+    /**
+     * Register new rewrite rules for the CAS server URIs.
+     * @return void
+     */
+    protected function add_rewrite_rules () {
+        $path = $this->_get_option( 'path' );
+        add_rewrite_rule( '^' . $path . '(.*)?', 'index.php?' . self::QUERY_VAR_ROUTE . '=$matches[1]', 'top' );
     }
 
 }

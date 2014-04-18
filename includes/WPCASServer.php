@@ -29,7 +29,7 @@ class WPCASServer {
      * XML response.
      * @var DOMDocument
      */
-    protected $response;
+    protected $xmlResponse;
 
     /**
      * WordPress CAS Server constructor.
@@ -37,7 +37,7 @@ class WPCASServer {
      * @uses get_option()
      */
     public function __construct () {
-        $this->response = new DOMDocument( '1.0', get_option( 'blog_charset' ) );
+        $this->xmlResponse = new DOMDocument( '1.0', get_option( 'blog_charset' ) );
     }
 
     //
@@ -80,7 +80,8 @@ class WPCASServer {
      * @return void
      */
     public function handleRequest ( $path ) {
-        define( 'CAS_REQUEST', true );
+
+        if (!defined( 'CAS_REQUEST' )) define( 'CAS_REQUEST', true );
 
         $this->_setResponseHeader( 'Pragma'         , 'no-cache' );
         $this->_setResponseHeader( 'Cache-Control'  , 'no-store' );
@@ -166,6 +167,7 @@ class WPCASServer {
      * @param string $value Header value.
      */
     protected function _setResponseHeader ( $key, $value ) {
+        if (headers_sent()) return;
         header( sprintf( '%s: %s', $key, $value ) );
     }
 
@@ -178,11 +180,11 @@ class WPCASServer {
     protected function _xmlResponse ( $response ) {
         $this->_setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_option( 'blog_charset' ) );
 
-        $root = $this->response->createElementNS( self::CAS_NS, 'cas:serviceResponse' );
+        $root = $this->xmlResponse->createElementNS( self::CAS_NS, 'cas:serviceResponse' );
         $root->appendChild( $response );
-        $this->response->appendChild($root);
+        $this->xmlResponse->appendChild($root);
 
-        return $this->response->saveXML();
+        return $this->xmlResponse->saveXML();
     }
 
     /**
@@ -198,14 +200,14 @@ class WPCASServer {
 
         foreach (array( 'authenticationFailure', 'proxyFailure' ) as $type) {
             if (!empty( $error->errors[$type] )) {
-                $element = $this->response->createElementNS( self::CAS_NS,
+                $element = $this->xmlResponse->createElementNS( self::CAS_NS,
                     "cas:$type", implode( "\n", $error->errors[$type] ) );
                 $element->setAttribute( "code", $error->error_data[$type]['code'] );
                 return $element;
             }
         }
 
-        $element = $this->response->createElementNS( self::CAS_NS,
+        $element = $this->xmlResponse->createElementNS( self::CAS_NS,
             "cas:authenticationFailure", __( 'Unknown error', 'wordpress-cas-server' ) );
         $element->setAttribute( "code", self::ERROR_INTERNAL_ERROR );
         return $element;
@@ -273,7 +275,7 @@ class WPCASServer {
      * @return void
      * 
      * @uses sanitize_user()
-     * @uses sanitize_url()
+     * @uses esc_url_raw()
      * @uses wp_signon()
      * @uses wp_verify_nonce()
      * 
@@ -285,7 +287,7 @@ class WPCASServer {
         $password   = $args['password'];
         $lt         = preg_replace( '@^' . self::TYPE_LT . '@', '', $args['lt'] );
 
-        $service    = sanitize_url( $args['service'] );
+        $service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
         $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
 
         // TODO: Support for the optional "warn" parameter.
@@ -318,11 +320,12 @@ class WPCASServer {
      * @uses add_query_arg()
      * @uses apply_filters()
      * @uses auth_redirect()
+     * @uses esc_url_raw()
      * @uses get_option()
      * @uses get_user_by()
      * @uses is_user_logged_in()
      * @uses remove_query_arg()
-     * @uses sanitize_url()
+     * @uses wp_get_current_user
      * @uses wp_logout()
      * @uses wp_redirect()
      */
@@ -330,7 +333,7 @@ class WPCASServer {
 
         $renew   = isset( $args['renew'] )   && 'true' === $args['renew'];
         $gateway = isset( $args['gateway'] ) && 'true' === $args['gateway'];
-        $service = sanitize_url( $args['service'] );
+        $service = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
 
         if ($renew) {
             wp_logout();
@@ -354,9 +357,7 @@ class WPCASServer {
             }
         }
 
-        $user = get_current_user();
-
-        $this->_loginUser( $user, $service );
+        $this->_loginUser( wp_get_current_user(), $service );
     }
 
     /**
@@ -388,9 +389,10 @@ class WPCASServer {
      * @uses get_option()
      * @uses wp_logout()
      * @uses wp_redirect()
+     * @uses esc_url_raw()
      */
     protected function logout ( $args ) {
-        $service = sanitize_url( $args['service'] );
+        $service = esc_url_raw( $args['service'] );
         session_start();
         session_unset();
         session_destroy();

@@ -1,8 +1,8 @@
 === Plugin Name ===
 Contributors: goblindegook
 Tags: authentication, CAS, Central Authentication Service, single sign-on
-Requires at least: 3.8.3
-Tested up to: 3.8.3
+Requires at least: 3.9
+Tested up to: 3.9
 Stable tag: trunk
 
 Provides authentication services based on Jasig CAS protocols.
