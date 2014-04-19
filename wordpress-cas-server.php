@@ -153,7 +153,7 @@ class WPCASServerPlugin {
      * @param  array $allowed   List of valid redirection target hosts.
      * @return array            Filtered list of valid redirection target hosts.
      * 
-     * @todo
+     * @todo Doesn't do anything yet.
      */
     public function allowed_redirect_hosts ( $allowed ) {
         // TODO

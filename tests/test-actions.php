@@ -55,6 +55,8 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         
         $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
             "Action callback for '$action' is called." );
+
+        // TODO: Test did_action()
     }
 
     function test_cas_server_after_request () {

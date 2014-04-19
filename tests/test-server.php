@@ -36,10 +36,12 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 			'validate',
 			);
 
+		$server_routes = $this->server->routes();
+
 		foreach ($routes as $route) {
-			$this->assertArrayHasKey( $route, $this->server->routes(),
+			$this->assertArrayHasKey( $route, $server_routes,
 				"Route '$route' has a callback." );
-			$this->assertTrue( is_callable( $this->server->routes()[$route] ),
+			$this->assertTrue( is_callable( $server_routes[$route] ),
 				"Method for route '$route' is callable." );
 		}
 	}
