@@ -103,7 +103,6 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
     /**
      * Test the rewrite rules set by the plugin.
-     * @return [type] [description]
      */
     function test_rewrite_rules () {
         global $wp_rewrite;

@@ -75,4 +75,20 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
             "Action callback for '$action' is called." );
     }
 
+    /**
+     * [test_cas_server_valid_ticket description]
+     * @todo
+     */
+    function test_cas_server_valid_ticket () {
+        $this->markTestIncomplete( 'TODO' );
+    }
+
+    /**
+     * [test_cas_server_invalid_ticket description]
+     * @todo
+     */
+    function test_cas_server_invalid_ticket () {
+        $this->markTestIncomplete( 'TODO' );
+    }
+
 }

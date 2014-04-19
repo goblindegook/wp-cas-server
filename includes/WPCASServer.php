@@ -32,6 +32,12 @@ class WPCASServer {
     protected $xmlResponse;
 
     /**
+     * Ticket validation error.
+     * @var string
+     */
+    protected $ticketValidationError;
+
+    /**
      * WordPress CAS Server constructor.
      * 
      * @uses get_option()
@@ -74,8 +80,13 @@ class WPCASServer {
 
     /**
      * Handle a CAS server request for a specific URI.
+     * 
      * @param  string $path CAS request URI.
      * @return string       Request response.
+     * 
+     * @uses apply_filters()
+     * @uses do_action()
+     * @uses is_wp_error()
      */
     public function handleRequest ( $path ) {
 
@@ -85,7 +96,12 @@ class WPCASServer {
         $this->_setResponseHeader( 'Cache-Control'  , 'no-store' );
         $this->_setResponseHeader( 'Expires'        , gmdate( self::RFC1123_DATE_FORMAT ) );
 
-        do_action( 'cas_server_before_request' );
+        /**
+         * Fires before the CAS request is processed.
+         * 
+         * @param string $path Requested URI path.
+         */
+        do_action( 'cas_server_before_request', $path );
 
         if (empty( $path )) {
             $path = isset( $_SERVER['PATH_INFO'] ) ? $_SERVER['PATH_INFO'] : '/';
@@ -100,16 +116,30 @@ class WPCASServer {
             $output = $result;
         }
 
+        /**
+         * Fires after the CAS request is processed.
+         * 
+         * @param string $path Requested URI path.
+         */
         do_action( 'cas_server_after_request' );
 
-        return apply_filters( 'cas_server_response', $output, $path );
+        /**
+         * Filters the CAS server response string.
+         * 
+         * @param string $output Response output string.
+         * @param string $path   Requested URI path.
+         */
+        $output = apply_filters( 'cas_server_response', $output, $path );
+
+        return $output;
     }
 
     /**
      * Dispatch the request for processing by the relevant callback as determined by the routes
      * list returned by WPCASServer::routes().
      * 
-     * @return (string|WP_Error) Service response string or WordPress error.
+     * @param  string            $path Requested URI path.
+     * @return (string|WP_Error)       Service response string or WordPress error.
      * 
      * @uses apply_filters()
      * @uses is_wp_error()
@@ -133,7 +163,13 @@ class WPCASServer {
                 continue;
             }
 
-            $callback = apply_filters( 'cas_server_dispatch_callback', $callback );
+            /**
+             * Filters the callback to be dispatched for the request.
+             * 
+             * @param (string|array) $callback Callback function or method.
+             * @param string         $path     Requested URI path.
+             */
+            $callback = apply_filters( 'cas_server_dispatch_callback', $callback, $path );
 
             if (!is_callable( $callback )) {
                 return new WP_Error( 'authenticationFailure',
@@ -144,9 +180,18 @@ class WPCASServer {
 
             $args = $_GET;
 
-            $args = apply_filters( 'cas_server_dispatch_args', $args, $callback );
+            /**
+             * Filters the callback arguments to be dispatched for the request.
+             * 
+             * Plugin developers may return a WP_Error object via the cas_server_dispatch_args
+             * filter to abort the request.
+             * 
+             * @param array          $args     Arguments to pass the callback.
+             * @param (string|array) $callback Callback function or method.
+             * @param string         $path     Requested URI path.
+             */
+            $args = apply_filters( 'cas_server_dispatch_args', $args, $callback, $path );
 
-            // Allow plugins to halt the request via this filter:
             if (is_wp_error( $args )) {
                 return $args;
             }
@@ -196,6 +241,12 @@ class WPCASServer {
      * @uses do_action()
      */
     protected function _xmlError ( $error ) {
+
+        /**
+         * Fires if the CAS server has to return an XML error.
+         * 
+         * @param WP_Error $error WordPress error to return as XML.
+         */
         do_action( 'cas_server_error', $error );
 
         foreach (array( 'authenticationFailure', 'proxyFailure' ) as $type) {
@@ -209,7 +260,9 @@ class WPCASServer {
 
         $element = $this->xmlResponse->createElementNS( self::CAS_NS,
             "cas:authenticationFailure", __( 'Unknown error', 'wordpress-cas-server' ) );
+
         $element->setAttribute( "code", self::ERROR_INTERNAL_ERROR );
+
         return $element;
     }
 
@@ -226,7 +279,134 @@ class WPCASServer {
      * @uses wp_generate_auth_cookie()
      */
     protected function _createTicket( $user, $type = self::TYPE_ST, $expiration = 15 ) {
-        return $type . urlencode( str_rot13( wp_generate_auth_cookie( $user->ID, time() + $expiration, 'auth' ) ) );
+        return $type . urlencode( base64_encode( wp_generate_auth_cookie( $user->ID, time() + $expiration, 'auth' ) ) );
+    }
+
+    /**
+     * Login User
+     * @param  WP_User $user    WordPress user to authenticate.
+     * @param  string  $service URI for the service requesting user authentication.
+     */
+    protected function _loginUser ( $user, $service ) {
+        $ticket = $this->_createTicket( $user, self::TYPE_ST );
+
+        if (!empty( $service )) {
+            $service = add_query_arg( 'ticket', $ticket, $service );
+
+            /**
+             * Filters the redirect URI for the service requesting user authentication.
+             * 
+             * @param string  $service Service URI requesting user authentication.
+             * @param WP_User $user    Logged in WordPress user.
+             */
+            $service = apply_filters( 'cas_server_redirect_service', $service, $user );
+
+            wp_redirect( $service );
+            exit;
+        }
+
+        wp_redirect( get_option( 'home' ) );
+        exit;
+    }
+
+    /**
+     * Sets a ticket validation error message when an authentication cookie is malformed.
+     * 
+     * @param  string $cookie Malformed auth cookie.
+     * @param  string $scheme Authentication scheme. Values include 'auth', 'secure_auth',
+     *                        or 'logged_in'.
+     */
+    public function auth_cookie_malformed ( $cookie, $scheme ) {
+        $this->ticketValidationError = __( 'Ticket is malformed.', 'wordpress-cas-server' );
+    }
+
+    /**
+     * Sets a ticket validation error message once an authentication cookie has expired.
+     * 
+     * @param array $cookie_elements An array of data for the authentication cookie.
+     */
+    public function auth_cookie_expired ( $cookie_elements ) {
+        $this->ticketValidationError = __( 'Ticket has expired.', 'wordpress-cas-server' );
+    }
+
+    /**
+     * Sets a ticket validation error message if a bad username is entered in the user authentication process.
+     * 
+     * @param array $cookie_elements An array of data for the authentication cookie.
+     */
+    public function auth_cookie_bad_username ( $cookie_elements ) {
+        $this->ticketValidationError = __( 'Invalid user for ticket.', 'wordpress-cas-server' );
+    }
+
+    /**
+     * Sets a ticket validation error message if a bad authentication cookie hash is encountered.
+     * 
+     * @param array $cookie_elements An array of data for the authentication cookie.
+     */
+    public function auth_cookie_bad_hash ( $cookie_elements ) {
+        $this->ticketValidationError = __( 'Ticket hash is invalid.', 'wordpress-cas-server' );
+    }
+
+    /**
+     * Validates a ticket and returns its associated user.
+     * 
+     * @param  string               $ticket Service or proxy ticket.
+     * @return (WP_User|WP_Error)           Authenticated WordPress user or error.
+     * 
+     * @uses add_action()
+     * @uses get_user_by()
+     * @uses remove_action()
+     * @uses wp_validate_auth_cookie()
+     * @uses WP_Error
+     */
+    protected function _validateTicket ( $ticket ) {
+
+        $this->ticketValidationError = '';
+
+        list( , $ticket_content ) = explode( '-', $ticket, 2 );
+
+        $user = false;
+
+        add_action( 'auth_cookie_malformed'     , array( $this, 'auth_cookie_malformed' )    , 10, 2 );
+        add_action( 'auth_cookie_expired'       , array( $this, 'auth_cookie_expired' )      , 10, 1 );
+        add_action( 'auth_cookie_bad_username'  , array( $this, 'auth_cookie_bad_username' ) , 10, 1 );
+        add_action( 'auth_cookie_bad_hash'      , array( $this, 'auth_cookie_bad_hash')      , 10, 1 );
+
+        if ($user_id = wp_validate_auth_cookie( base64_decode( $ticket_content ), 'auth' )) {
+            $user = get_user_by( 'id', $user_id );
+        }
+
+        remove_action( 'auth_cookie_malformed'     , array( $this, 'auth_cookie_malformed') );
+        remove_action( 'auth_cookie_expired'       , array( $this, 'auth_cookie_expired') );
+        remove_action( 'auth_cookie_bad_username'  , array( $this, 'auth_cookie_bad_username') );
+        remove_action( 'auth_cookie_bad_hash'      , array( $this, 'auth_cookie_bad_hash') );
+
+        if ($user) {
+            /**
+             * Fires on an valid ticket.
+             * 
+             * @param WP_User $user   WordPress user validated by ticket.
+             * @param string  $ticket Valid ticket string.
+             */
+            do_action( 'cas_server_valid_ticket', $user, $ticket );
+
+            return $user;
+        }
+
+        $error = new WP_Error( 'authenticationFailure',
+            $this->ticketValidationError,
+            array( 'code' => self::ERROR_INVALID_TICKET )
+            );
+
+        /**
+         * Fires on an invalid ticket.
+         * 
+         * @param WP_Error $error  Validation error for the provided ticket.
+         * @param string   $ticket Invalid ticket string.
+         */
+        do_action( 'cas_server_invalid_ticket', $error, $ticket );
+
+        return $error;
     }
 
     //
@@ -256,6 +436,10 @@ class WPCASServer {
      * Implements the /login URI behaviour as credential acceptor when a set of accepted credentials
      * are passed to /login via POST.
      * 
+     * This plugin does not implement a form to take advantage of this request behaviour, and relies
+     * on WordPress' own authentication interfaces. Developers may implement custom forms so long as
+     * they send the request parameters described below.
+     * 
      * The following HTTP request parameters MUST be passed to /login while it is acting as a
      * credential acceptor for username/password authentication. They are all case-sensitive.
      * 
@@ -280,6 +464,8 @@ class WPCASServer {
      * @uses wp_verify_nonce()
      * 
      * @todo Support for the optional "warn" parameter.
+     * @todo What happens if the nonce check fails?
+     * @todo What happens if the user login fails?
      */
     protected function _loginAcceptor ( $args ) {
 
@@ -293,14 +479,22 @@ class WPCASServer {
         // TODO: Support for the optional "warn" parameter.
 
         if (!wp_verify_nonce( $lt, 'lt' )) {
-
+            // TODO: What do I do if the nonce verification fails?
+            auth_redirect();
+            exit;
         }
 
         $user = wp_signon( array(
             'user_login'    => $username,
             'user_password' => $password,
             ) );
-        
+
+        if (!$user) {
+            // TODO: What do I do if signon fails?
+            auth_redirect();
+            exit;
+        }
+
         $this->_loginUser( $user, $service );
     }
 
@@ -322,7 +516,6 @@ class WPCASServer {
      * @uses auth_redirect()
      * @uses esc_url_raw()
      * @uses get_option()
-     * @uses get_user_by()
      * @uses is_user_logged_in()
      * @uses remove_query_arg()
      * @uses wp_get_current_user
@@ -358,27 +551,6 @@ class WPCASServer {
         }
 
         $this->_loginUser( wp_get_current_user(), $service );
-    }
-
-    /**
-     * Login 
-     * @param  WP_User $user    WordPress user to authenticate.
-     * @param  string  $service URI for the service requesting user authentication.
-     * @return void
-     */
-    protected function _loginUser ( $user, $service ) {
-        $ticket = $this->_createTicket( $user, self::TYPE_ST );
-        $ticket = apply_filters( 'cas_server_ticket', $ticket, self::TYPE_ST, $user );
-
-        if (!empty( $service )) {
-            $service = add_query_arg( 'ticket', $ticket, $service );
-            $service = apply_filters( 'cas_server_service', $service, $user );
-            wp_redirect( $service );
-            exit;
-        }
-
-        wp_redirect( get_option( 'home' ) );
-        exit;
     }
 
     /**
