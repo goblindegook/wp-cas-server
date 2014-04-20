@@ -17,12 +17,12 @@ interface ICASServer {
     const ERROR_INVALID_TICKET  = 'INVALID_TICKET';
     const ERROR_BAD_PGT         = 'BAD_PGT';
 
-    const TYPE_ST               = 'ST-';
-    const TYPE_PT               = 'PT-';
-    const TYPE_PGT              = 'PGT-';
-    const TYPE_PGTIOU           = 'PGTIOU-';
-    const TYPE_TGC              = 'TGC-';
-    const TYPE_LT               = 'LT-';
+    const TYPE_ST               = 'ST';
+    const TYPE_PT               = 'PT';
+    const TYPE_PGT              = 'PGT';
+    const TYPE_PGTIOU           = 'PGTIOU';
+    const TYPE_TGC              = 'TGC';
+    const TYPE_LT               = 'LT';
 
     const RFC1123_DATE_FORMAT   = 'D, d M Y H:i:s T';
 

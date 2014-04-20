@@ -136,4 +136,16 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
+    function test_cas_server_ticket_expiration () {
+        $filter   = 'cas_server_ticket_expiration';
+        $function = array( $this->server, 'handleRequest' );
+        $args     = array( '/login' );
+        
+        /*
+        $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
+            "Filter callback for '$filter' is called." );
+        */
+        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
+    }
+
 }

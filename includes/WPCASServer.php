@@ -264,7 +264,18 @@ class WPCASServer {
      * @uses wp_generate_auth_cookie()
      */
     protected function _createTicket( $user, $type = ICASServer::TYPE_ST, $expiration = 15 ) {
-        return $type . urlencode( base64_encode( wp_generate_auth_cookie( $user->ID, time() + $expiration, 'auth' ) ) );
+        /**
+         * This filters allows developers to override the default ticket expiration period.
+         * 
+         * @param  int     $expiration Ticket expiration period (in seconds).
+         * @param  string  $type       Type of ticket to set.
+         * @param  WP_User $user       Authenticated user associated with the ticket.
+         * 
+         * @return int                 Filtered ticket expiration period (in seconds).
+         */
+        $expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
+
+        return $type . '-' . urlencode( base64_encode( wp_generate_auth_cookie( $user->ID, time() + $expiration, 'auth' ) ) );
     }
 
     /**
@@ -281,8 +292,10 @@ class WPCASServer {
             /**
              * Filters the redirect URI for the service requesting user authentication.
              * 
-             * @param string  $service Service URI requesting user authentication.
-             * @param WP_User $user    Logged in WordPress user.
+             * @param  string  $service Service URI requesting user authentication.
+             * @param  WP_User $user    Logged in WordPress user.
+             * 
+             * @return string           Filtered service URI requesting user authentication.
              */
             $service = apply_filters( 'cas_server_redirect_service', $service, $user );
 
@@ -376,8 +389,8 @@ class WPCASServer {
 
         list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
 
-        if (!in_array( "$ticket_type-", $valid_ticket_types )) {
-            $this->ticketValidationError = __( 'Ticket is of invalid type.', 'wordpress-cas-server' );
+        if (!in_array( $ticket_type, $valid_ticket_types )) {
+            $this->ticketValidationError = __( 'Ticket type is incorrect.', 'wordpress-cas-server' );
         }
 
         $user = false;
@@ -486,7 +499,7 @@ class WPCASServer {
 
         $username   = sanitize_user( $args['username'] );
         $password   = $args['password'];
-        $lt         = preg_replace( '@^' . ICASServer::TYPE_LT . '@', '', $args['lt'] );
+        $lt         = preg_replace( '@^' . ICASServer::TYPE_LT . '-@', '', $args['lt'] );
 
         $service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
         $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
@@ -636,7 +649,7 @@ class WPCASServer {
         );
 
         $user = $this->_validateTicket( $ticket, $valid_ticket_types );
-        
+
         if ($user && !is_wp_error( $user )) {
             $user_data = get_userdata( $user->ID );
             return "yes\n" . $user_data->user_login . "\n";
