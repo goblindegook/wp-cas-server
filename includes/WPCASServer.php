@@ -1,29 +1,14 @@
 <?php
 /**
  * @package WPCASServerPlugin
- * @subpackage WPCASServerPlugin
+ * @subpackage WPCASServer
  */
+
+require_once( 'ICASServer.php');
 
 if (!class_exists( 'WPCASServer' )) :
 
 class WPCASServer {
-
-    const CAS_NS                = 'http://www.yale.edu/tp/cas';
-
-    const ERROR_INTERNAL_ERROR  = 'INTERNAL_ERROR';
-    const ERROR_INVALID_REQUEST = 'INVALID_REQUEST';
-    const ERROR_INVALID_SERVICE = 'INVALID_SERVICE';
-    const ERROR_INVALID_TICKET  = 'INVALID_TICKET';
-    const ERROR_BAD_PGT         = 'BAD_PGT';
-
-    const TYPE_ST               = 'ST-';
-    const TYPE_PT               = 'PT-';
-    const TYPE_PGT              = 'PGT-';
-    const TYPE_PGTIOU           = 'PGTIOU-';
-    const TYPE_TGC              = 'TGC-';
-    const TYPE_LT               = 'LT-';
-
-    const RFC1123_DATE_FORMAT   = 'D, d M Y H:i:s T';
 
     /**
      * XML response.
@@ -94,7 +79,7 @@ class WPCASServer {
 
         $this->_setResponseHeader( 'Pragma'         , 'no-cache' );
         $this->_setResponseHeader( 'Cache-Control'  , 'no-store' );
-        $this->_setResponseHeader( 'Expires'        , gmdate( self::RFC1123_DATE_FORMAT ) );
+        $this->_setResponseHeader( 'Expires'        , gmdate( ICASServer::RFC1123_DATE_FORMAT ) );
 
         /**
          * Fires before the CAS request is processed.
@@ -151,7 +136,7 @@ class WPCASServer {
         if (!$enabled) {
             return new WP_Error( 'authenticationFailure',
                 __('The CAS server is disabled.', 'wordpress-cas-server'),
-                array( 'code' => self::ERROR_INTERNAL_ERROR )
+                array( 'code' => ICASServer::ERROR_INTERNAL_ERROR )
                 );
         }
 
@@ -174,7 +159,7 @@ class WPCASServer {
             if (!is_callable( $callback )) {
                 return new WP_Error( 'authenticationFailure',
                     __('The handler for the route is invalid.', 'wordpress-cas-server'),
-                    array( 'code' => self::ERROR_INTERNAL_ERROR )
+                    array( 'code' => ICASServer::ERROR_INTERNAL_ERROR )
                     );
             }
 
@@ -201,7 +186,7 @@ class WPCASServer {
 
         return new WP_Error( 'authenticationFailure',
             __( 'The server does not support the method requested.', 'wordpress-cas-server' ),
-            array( 'code' => self::ERROR_INVALID_REQUEST )
+            array( 'code' => ICASServer::ERROR_INVALID_REQUEST )
             );
     }
 
@@ -225,7 +210,7 @@ class WPCASServer {
     protected function _xmlResponse ( $response ) {
         $this->_setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_option( 'blog_charset' ) );
 
-        $root = $this->xmlResponse->createElementNS( self::CAS_NS, 'cas:serviceResponse' );
+        $root = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, 'cas:serviceResponse' );
         $root->appendChild( $response );
         $this->xmlResponse->appendChild($root);
 
@@ -251,17 +236,17 @@ class WPCASServer {
 
         foreach (array( 'authenticationFailure', 'proxyFailure' ) as $type) {
             if (!empty( $error->errors[$type] )) {
-                $element = $this->xmlResponse->createElementNS( self::CAS_NS,
+                $element = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
                     "cas:$type", implode( "\n", $error->errors[$type] ) );
                 $element->setAttribute( "code", $error->error_data[$type]['code'] );
                 return $element;
             }
         }
 
-        $element = $this->xmlResponse->createElementNS( self::CAS_NS,
+        $element = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
             "cas:authenticationFailure", __( 'Unknown error', 'wordpress-cas-server' ) );
 
-        $element->setAttribute( "code", self::ERROR_INTERNAL_ERROR );
+        $element->setAttribute( "code", ICASServer::ERROR_INTERNAL_ERROR );
 
         return $element;
     }
@@ -278,7 +263,7 @@ class WPCASServer {
      * 
      * @uses wp_generate_auth_cookie()
      */
-    protected function _createTicket( $user, $type = self::TYPE_ST, $expiration = 15 ) {
+    protected function _createTicket( $user, $type = ICASServer::TYPE_ST, $expiration = 15 ) {
         return $type . urlencode( base64_encode( wp_generate_auth_cookie( $user->ID, time() + $expiration, 'auth' ) ) );
     }
 
@@ -288,7 +273,7 @@ class WPCASServer {
      * @param  string  $service URI for the service requesting user authentication.
      */
     protected function _loginUser ( $user, $service ) {
-        $ticket = $this->_createTicket( $user, self::TYPE_ST );
+        $ticket = $this->_createTicket( $user, ICASServer::TYPE_ST );
 
         if (!empty( $service )) {
             $service = add_query_arg( 'ticket', $ticket, $service );
@@ -395,7 +380,7 @@ class WPCASServer {
 
         $error = new WP_Error( 'authenticationFailure',
             $this->ticketValidationError,
-            array( 'code' => self::ERROR_INVALID_TICKET )
+            array( 'code' => ICASServer::ERROR_INVALID_TICKET )
             );
 
         /**
@@ -471,7 +456,7 @@ class WPCASServer {
 
         $username   = sanitize_user( $args['username'] );
         $password   = $args['password'];
-        $lt         = preg_replace( '@^' . self::TYPE_LT . '@', '', $args['lt'] );
+        $lt         = preg_replace( '@^' . ICASServer::TYPE_LT . '@', '', $args['lt'] );
 
         $service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
         $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
