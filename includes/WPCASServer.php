@@ -273,7 +273,7 @@ class WPCASServer {
      * @param  string  $service URI for the service requesting user authentication.
      */
     protected function _loginUser ( $user, $service ) {
-        $ticket = $this->_createTicket( $user, ICASServer::TYPE_ST );
+        $ticket = $this->_createTicket( $user, ICASServer::TYPE_ST, 60 );
 
         if (!empty( $service )) {
             $service = add_query_arg( 'ticket', $ticket, $service );
@@ -360,8 +360,9 @@ class WPCASServer {
     /**
      * Validates a ticket and returns its associated user.
      * 
-     * @param  string               $ticket Service or proxy ticket.
-     * @return (WP_User|WP_Error)           Authenticated WordPress user or error.
+     * @param  string               $ticket             Service or proxy ticket.
+     * @param  array                $valid_ticket_types Ticket must be of the specified types.
+     * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
      * 
      * @uses add_action()
      * @uses get_user_by()
@@ -369,11 +370,15 @@ class WPCASServer {
      * @uses wp_validate_auth_cookie()
      * @uses WP_Error
      */
-    protected function _validateTicket ( $ticket ) {
+    protected function _validateTicket ( $ticket, $valid_ticket_types = array() ) {
 
         $this->ticketValidationError = '';
 
-        list( , $ticket_content ) = explode( '-', $ticket, 2 );
+        list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
+
+        if (!in_array( "$ticket_type-", $valid_ticket_types )) {
+            $this->ticketValidationError = __( 'Ticket is of invalid type.', 'wordpress-cas-server' );
+        }
 
         $user = false;
 
@@ -391,7 +396,7 @@ class WPCASServer {
         remove_action( 'auth_cookie_bad_username'  , array( $this, 'auth_cookie_bad_username') );
         remove_action( 'auth_cookie_bad_hash'      , array( $this, 'auth_cookie_bad_hash') );
 
-        if ($user) {
+        if ($user && empty( $this->ticketValidationError )) {
             /**
              * Fires on an valid ticket.
              * 
@@ -547,7 +552,7 @@ class WPCASServer {
             exit;
         }
 
-        if (false && !is_user_logged_in()) {
+        if (!is_user_logged_in()) {
             if ($gateway && !empty( $service )) {
                 wp_redirect( $service );
                 exit;
@@ -611,6 +616,33 @@ class WPCASServer {
      * @return [type] [description]
      */
     public function validate ( $args ) {
+
+        /**
+         * `service` is required.
+         */
+        if (empty( $args['service'] )) {
+            return "no\n\n";
+        }
+
+        $ticket = isset( $args['ticket'] ) ? $args['ticket'] : '';
+
+        /**
+         * `/validate` checks the validity of a service ticket. `/validate` is part of the CAS 1.0
+         * protocol and thus does not handle proxy authentication. CAS MUST respond with a ticket
+         * validation failure response when a proxy ticket is passed to `/validate`.
+         */
+        $valid_ticket_types = array(
+            ICASServer::TYPE_ST,
+        );
+
+        $user = $this->_validateTicket( $ticket, $valid_ticket_types );
+        
+        if ($user && !is_wp_error( $user )) {
+            $user_data = get_userdata( $user->ID );
+            return "yes\n" . $user_data->user_login . "\n";
+        }
+
+        return "no\n\n";
     }
 
 }
