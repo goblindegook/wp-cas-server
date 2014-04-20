@@ -46,29 +46,53 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 		}
 	}
 
+	function test_handleRequest () {
+		$this->assertTrue( is_callable( array( $this->server, 'handleRequest' ) ), "'handleRequest' method is callable." );
+
+		$this->markTestIncomplete();
+	}
+
 	function test_login () {
+
+		$this->assertTrue( is_callable( array( $this->server, 'login' ) ), "'login' method is callable." );
+
 		// $this->go_to();
 
 		$this->markTestIncomplete();
 	}
 
 	function test_logout () {
+
+		$this->assertTrue( is_callable( array( $this->server, 'logout' ) ), "'logout' method is callable." );
+
 		$this->markTestIncomplete();
 	}
 
 	function test_validate () {
+
+		$this->assertTrue( is_callable( array( $this->server, 'validate' ) ), "'validate' method is callable." );
+
 		$this->markTestIncomplete();
 	}
 
 	function test_serviceValidate () {
+
+		$this->assertTrue( is_callable( array( $this->server, 'serviceValidate' ) ), "'serviceValidate' method is callable." );
+
 		$this->markTestIncomplete();
 	}
 
 	function test_proxy () {
+
+		$this->assertTrue( is_callable( array( $this->server, 'proxy' ) ), "'proxy' method is callable." );
+
 		$this->markTestIncomplete();
 	}
 
 	function test_proxyValidate () {
+
+		$this->assertTrue( is_callable( array( $this->server, 'proxyValidate' ) ), "'proxyValidate' method is callable." );
+
 		$this->markTestIncomplete();
 	}
 

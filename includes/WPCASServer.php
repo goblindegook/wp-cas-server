@@ -295,6 +295,31 @@ class WPCASServer {
     }
 
     /**
+     * Redirects the user to either the standard WordPress authentication page or a custom one
+     * at a URI returned by the `cas_server_custom_auth_uri` filter.
+     * 
+     * @uses apply_filters()
+     * @uses auth_redirect()
+     * @uses wp_redirect()
+     */
+    protected function _loginAuthRedirect () {
+        /**
+         * Allows developers to redirect the user to a custom login form.
+         * 
+         * @param string $custom_login_url URI for the custom login page.
+         * @param array  $args             Login request parameters.
+         */
+        $custom_login_url = apply_filters( 'cas_server_custom_auth_uri', false, $args );
+
+        if ($custom_login_url) {
+            wp_redirect( $custom_login_url );
+        } else {
+            auth_redirect();                    
+        }
+        exit;
+    }
+
+    /**
      * Sets a ticket validation error message when an authentication cookie is malformed.
      * 
      * @param  string $cookie Malformed auth cookie.
@@ -465,8 +490,8 @@ class WPCASServer {
 
         if (!wp_verify_nonce( $lt, 'lt' )) {
             // TODO: What do I do if the nonce verification fails?
-            auth_redirect();
-            exit;
+            
+            $this->_loginAuthRedirect();
         }
 
         $user = wp_signon( array(
@@ -476,8 +501,8 @@ class WPCASServer {
 
         if (!$user) {
             // TODO: What do I do if signon fails?
-            auth_redirect();
-            exit;
+            
+            $this->_loginAuthRedirect();
         }
 
         $this->_loginUser( $user, $service );
@@ -498,7 +523,6 @@ class WPCASServer {
      * 
      * @uses add_query_arg()
      * @uses apply_filters()
-     * @uses auth_redirect()
      * @uses esc_url_raw()
      * @uses get_option()
      * @uses is_user_logged_in()
@@ -530,8 +554,7 @@ class WPCASServer {
             }
             else
             {
-                auth_redirect();
-                exit;
+                $this->_loginAuthRedirect();
             }
         }
 
