@@ -4,11 +4,11 @@
  * @subpackage WPCASServer
  */
 
-require_once( 'ICASServer.php');
+require_once( dirname( __FILE__ ) . '/ICASServer.php');
 
 if (!class_exists( 'WPCASServer' )) :
 
-class WPCASServer {
+class WPCASServer implements ICASServer {
 
     /**
      * XML response.
@@ -65,6 +65,12 @@ class WPCASServer {
 
     /**
      * Handle a CAS server request for a specific URI.
+     * 
+     * This method will attempt to set the following HTTP headers to prevent caching:
+     * 
+     * - `Pragma: no-cache`
+     * - `Cache-Control: no-store`
+     * - `Expires: <time of request>`
      * 
      * @param  string $path CAS request URI.
      * @return string       Request response.
@@ -282,6 +288,11 @@ class WPCASServer {
      * Login User
      * @param  WP_User $user    WordPress user to authenticate.
      * @param  string  $service URI for the service requesting user authentication.
+     * 
+     * @uses add_query_arg()
+     * @uses apply_filters()
+     * @uses get_option()
+     * @uses wp_redirect()
      */
     protected function _loginUser ( $user, $service ) {
         $ticket = $this->_createTicket( $user, ICASServer::TYPE_ST, 60 );
@@ -442,7 +453,7 @@ class WPCASServer {
     //
 
     /**
-     * Implements the /login URI and determines whether to interpret the request as a credential
+     * Implements the `/login` URI and determines whether to interpret the request as a credential
      * requestor or a credential acceptor.
      * 
      * @param  array $args Request arguments.
@@ -461,30 +472,29 @@ class WPCASServer {
     }
 
     /**
-     * Implements the /login URI behaviour as credential acceptor when a set of accepted credentials
-     * are passed to /login via POST.
+     * Implements the `/login` URI behaviour as credential acceptor when a set of accepted
+     * credentials are passed to `/login` via POST.
      * 
      * This plugin does not implement a form to take advantage of this request behaviour, and relies
      * on WordPress' own authentication interfaces. Developers may implement custom forms so long as
      * they send the request parameters described below.
      * 
-     * The following HTTP request parameters MUST be passed to /login while it is acting as a
+     * The following HTTP request parameters MUST be passed to `/login` while it is acting as a
      * credential acceptor for username/password authentication. They are all case-sensitive.
      * 
-     * - username: The username of the client that is trying to log in.
-     * - password: The password of the client that is trying to log in.
-     * - lt: A login ticket. It acts as a nonce to prevent replaying requests and must be generated
-     *   using wp_create_nonce( 'lt' ).
+     * - `username`: The username of the client that is trying to log in.
+     * - `password`: The password of the client that is trying to log in.
+     * - `lt`: A login ticket. It acts as a nonce to prevent replaying requests and must be
+     *   generated using `wp_create_nonce( 'lt' )`.
      * 
      * The following HTTP request parameters are optional:
      * 
-     * - service: The URL of the application the client is trying to access. CAS will redirect the
+     * - `service`: The URL of the application the client is trying to access. CAS will redirect the
      *   client to this URL upon successful authentication.
-     * - warn: If this parameter is set, single sign-on will NOT be transparent. The client will be
-     *   prompted before being authenticated to another service.
+     * - `warn`: If this parameter is set, single sign-on will NOT be transparent. The client will
+     *   be prompted before being authenticated to another service.
      * 
-     * @param  array $args Request arguments.
-     * @return void
+     * @param array $args Request arguments.
      * 
      * @uses sanitize_user()
      * @uses esc_url_raw()
@@ -502,11 +512,13 @@ class WPCASServer {
         $lt         = preg_replace( '@^' . ICASServer::TYPE_LT . '-@', '', $args['lt'] );
 
         $service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
+
         $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
 
         // TODO: Support for the optional "warn" parameter.
 
         if (!wp_verify_nonce( $lt, 'lt' )) {
+
             // TODO: What do I do if the nonce verification fails?
             
             $this->_loginAuthRedirect();
@@ -518,6 +530,7 @@ class WPCASServer {
             ) );
 
         if (!$user) {
+
             // TODO: What do I do if signon fails?
             
             $this->_loginAuthRedirect();
@@ -527,25 +540,21 @@ class WPCASServer {
     }
 
     /**
-     * Implements the /login URI as credential requestor.
+     * Implements the `/login` URI as credential requestor.
      * 
      * If the client has already established a single sign-on session with CAS, the
-     * client will have presented its HTTP session cookie to /login unless the "renew"
+     * client will have presented its HTTP session cookie to `/login` unless the "renew"
      * parameter is set to "true".
      * 
      * If there is no session or the "renew" parameter is set, CAS will respond by
      * displaying a login screen requesting (usually) a username and password.
      * 
-     * @param  array  $args Request arguments.
-     * @return void
+     * @param array $args Request arguments.
      * 
-     * @uses add_query_arg()
-     * @uses apply_filters()
      * @uses esc_url_raw()
-     * @uses get_option()
      * @uses is_user_logged_in()
      * @uses remove_query_arg()
-     * @uses wp_get_current_user
+     * @uses wp_get_current_user()
      * @uses wp_logout()
      * @uses wp_redirect()
      */
@@ -582,12 +591,12 @@ class WPCASServer {
     /**
      * [logout description]
      * 
-     * @return [type] [description]
+     * @param array $args Request arguments.
      * 
+     * @uses esc_url_raw()
      * @uses get_option()
      * @uses wp_logout()
      * @uses wp_redirect()
-     * @uses esc_url_raw()
      */
     public function logout ( $args ) {
         $service = esc_url_raw( $args['service'] );
@@ -602,33 +611,72 @@ class WPCASServer {
     /**
      * [proxy description]
      * 
-     * @return [type] [description]
+     * @param  array $args Request arguments.
+     * @return [type]      [description]
      */
     public function proxy ( $args ) {
+        // TODO
     }
 
     /**
      * [proxyValidate description]
      * 
-     * @return [type] [description]
+     * @param  array $args Request arguments.
+     * @return [type]      [description]
      */
     public function proxyValidate ( $args ) {
+        // TODO
     }
 
     /**
      * [serviceValidate description]
      * 
-     * @return [type] [description]
+     * @param  array $args Request arguments.
+     * @return [type]      [description]
      */
     public function serviceValidate ( $args ) {
+        // TODO
     }
 
     /**
-     * [validate description]
+     * `/validate` is a CAS 1.0 protocol method that checks the validity of a service ticket.
      * 
-     * @return [type] [description]
+     * Being part of the CAS 1.0 protocol, `/validate` does not handle proxy authentication.
+     * 
+     * The following HTTP request parameters may be specified:
+     * 
+     * - `service` (required): The URL of the service for which the ticket was issued.
+     * - `ticket` (required): The service ticket issued by `/login`.
+     * - `renew` (optional): If this parameter is set, the server will force the user to reenter
+     *   their primary credentials.
+     * 
+     * `/validate` will return one of the following two responses:
+     *
+     * On successful validation:
+     *  
+     * ```
+     * yes\n
+     * username\n
+     * ```
+     * 
+     * On validation failure:
+     * 
+     * ```
+     * no\n
+     * \n
+     * ```
+     * 
+     * This method will attempt to set a `Content-Type: text/plain` HTTP header when called.
+     * 
+     * @param  array  $args Request arguments.
+     * @return string       Validation response.
+     * 
+     * @uses get_userdata()
+     * @uses is_wp_error()
      */
     public function validate ( $args ) {
+
+        $this->_setResponseHeader( 'Content-Type', 'text/plain; charset=' . get_option( 'blog_charset' ) );
 
         /**
          * `service` is required.

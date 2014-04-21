@@ -80,14 +80,14 @@ class WPCASServerPlugin {
             $sites = wp_get_sites();
             foreach ( $sites as $site ) {
                 switch_to_blog( $site['blog_id'] );
-                $this->add_rewrite_rules();
+                $this->_add_rewrite_rules();
                 flush_rewrite_rules();
             }
             restore_current_blog();
         }
         else
         {
-            $this->add_rewrite_rules();
+            $this->_add_rewrite_rules();
             flush_rewrite_rules();
         }
     }
@@ -128,7 +128,7 @@ class WPCASServerPlugin {
         global $wp;
         $wp->add_query_var( self::QUERY_VAR_ROUTE );
         $this->_update_options();
-        $this->add_rewrite_rules();
+        $this->_add_rewrite_rules();
     }
 
     /**
@@ -190,9 +190,8 @@ class WPCASServerPlugin {
 
     /**
      * Register new rewrite rules for the CAS server URIs.
-     * @return void
      */
-    protected function add_rewrite_rules () {
+    private function _add_rewrite_rules () {
         $path = $this->_get_option( 'path' );
         add_rewrite_rule( '^' . $path . '/(.*)?', 'index.php?' . self::QUERY_VAR_ROUTE . '=$matches[1]', 'top' );
     }

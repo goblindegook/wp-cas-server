@@ -26,6 +26,11 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 		unset( $this->server );
 	}
 
+	function test_interface () {
+		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
+			'WPCASServer implements the ICASServer interface.' );
+	}
+
 	function test_routes () {
 		$routes = array(
 			'login',

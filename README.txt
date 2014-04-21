@@ -17,12 +17,12 @@ That way, users on your WordPress install may be able to access different applic
 
 The following URIs are provided:
 
-* `/login`: TODO
-* `/logout`: TODO
-* `/proxy` [CAS 2.0]: TODO
-* `/proxyValidate` [CAS 2.0]: TODO
-* `/serviceValidate` [CAS 2.0]: TODO
-* `/validate` [CAS 1.0]: TODO
+* `/wp-cas/login`: TODO
+* `/wp-cas/logout`: TODO
+* `/wp-cas/proxy` [CAS 2.0]: TODO
+* `/wp-cas/proxyValidate` [CAS 2.0]: TODO
+* `/wp-cas/serviceValidate` [CAS 2.0]: TODO
+* `/wp-cas/validate` [CAS 1.0]: TODO
 
 == Installation ==
 
@@ -49,7 +49,7 @@ You may peruse the CAS 1.0 and 2.0 protocol specifications in complete detail at
 
 WordPress CAS Server sets and receives Ticket-Granting Cookies (TGC), Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
 
-== Hooks & Filters ==
+== Hooks ==
 
 = Action: `cas_*` =
 
