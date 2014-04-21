@@ -38,12 +38,12 @@ class WPCASServer implements ICASServer {
     /**
      * Get the list of routes supported by this CAS server and the callbacks each will invoke.
      * 
-     * - /login
-     * - /logout
-     * - /proxy
-     * - /proxyValidate
-     * - /serviceValidate
-     * - /validate
+     * - `/login`
+     * - `/logout`
+     * - `/proxy`
+     * - `/proxyValidate`
+     * - `/serviceValidate`
+     * - `/validate`
      * 
      * @return array Array containing supported routes as keys and their callbacks as values.
      * 
@@ -66,7 +66,7 @@ class WPCASServer implements ICASServer {
     /**
      * Handle a CAS server request for a specific URI.
      * 
-     * This method will attempt to set the following HTTP headers to prevent caching:
+     * This method will attempt to set the following HTTP headers to prevent browser caching:
      * 
      * - `Pragma: no-cache`
      * - `Cache-Control: no-store`
@@ -90,7 +90,8 @@ class WPCASServer implements ICASServer {
         /**
          * Fires before the CAS request is processed.
          * 
-         * @param string $path Requested URI path.
+         * @param  string $path Requested URI path.
+         * @return string       Filtered requested URI path.
          */
         do_action( 'cas_server_before_request', $path );
 
@@ -112,7 +113,7 @@ class WPCASServer implements ICASServer {
          * 
          * @param string $path Requested URI path.
          */
-        do_action( 'cas_server_after_request' );
+        do_action( 'cas_server_after_request', $path );
 
         /**
          * Filters the CAS server response string.
@@ -127,7 +128,7 @@ class WPCASServer implements ICASServer {
 
     /**
      * Dispatch the request for processing by the relevant callback as determined by the routes
-     * list returned by WPCASServer::routes().
+     * list returned by `WPCASServer::routes()`.
      * 
      * @param  string            $path Requested URI path.
      * @return (string|WP_Error)       Service response string or WordPress error.
@@ -208,10 +209,10 @@ class WPCASServer implements ICASServer {
     }
 
     /**
-     * Wrap an XML CAS response and output it as a string.
+     * Wrap a CAS 2.0 XML response and output it as a string.
      * 
-     * @param DOMNode $response 
-     * @return string
+     * @param  DOMNode $response XML response contents for a CAS 2.0 request.
+     * @return string            CAS 2.0 server response as an XML string.
      */
     protected function _xmlResponse ( $response ) {
         $this->_setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_option( 'blog_charset' ) );
@@ -224,10 +225,10 @@ class WPCASServer implements ICASServer {
     }
 
     /**
-     * Error response.
+     * XML error response to a CAS 2.0 request.
      * 
      * @param  WP_Error   $wp_error Error object.
-     * @return DOMElement CAS error.
+     * @return DOMElement           CAS error.
      * 
      * @uses do_action()
      */
@@ -267,6 +268,7 @@ class WPCASServer implements ICASServer {
      *                              no longer than 5 minutes.
      * @return string               Generated ticket.
      * 
+     * @uses apply_filters()
      * @uses wp_generate_auth_cookie()
      */
     protected function _createTicket( $user, $type = ICASServer::TYPE_ST, $expiration = 15 ) {
@@ -389,6 +391,7 @@ class WPCASServer implements ICASServer {
      * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
      * 
      * @uses add_action()
+     * @uses do_action()
      * @uses get_user_by()
      * @uses remove_action()
      * @uses wp_validate_auth_cookie()
@@ -457,7 +460,6 @@ class WPCASServer implements ICASServer {
      * requestor or a credential acceptor.
      * 
      * @param  array $args Request arguments.
-     * @return void
      */
     public function login ( $args ) {
 
@@ -465,10 +467,12 @@ class WPCASServer implements ICASServer {
         $args = apply_filters( 'cas_server_login_args', $args );
 
         if (isset( $args['username'] ) && isset( $args['password'] ) && isset( $args['lt'] )) {
-            return $this->_loginAcceptor( $args );
+            $this->_loginAcceptor( $args );
         }
-
-        return $this->_loginRequestor( $args );
+        else
+        {
+            $this->_loginRequestor( $args );
+        }
     }
 
     /**
@@ -589,7 +593,16 @@ class WPCASServer implements ICASServer {
     }
 
     /**
-     * [logout description]
+     * `/logout` destroys a client's single sign-on CAS session.
+     * 
+     * When called, this method will destroy the ticket-granting cookie and prevent subsequent
+     * requests to `/login` from returning service tickets until the user re-authenticates using
+     * their primary credentials.
+     * 
+     * The following HTTP request parameter may be specified:
+     * 
+     * - `url` (optional): If specified, the server will redirect the user to the page located at
+     *   `url`, which should contain a description telling the user they've been logged out.
      * 
      * @param array $args Request arguments.
      * 
