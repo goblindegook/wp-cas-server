@@ -355,6 +355,7 @@ class WPCASServer implements ICASServer {
      * 
      * @uses apply_filters()
      * @uses is_ssl()
+     * @uses set_transient()
      * @uses wp_hash()
      */
     protected function _createTicket( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 15 ) {
@@ -371,8 +372,10 @@ class WPCASServer implements ICASServer {
         $expires    = time() + $expiration;
 
         $key        = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
-        $hash       = hash_hmac( 'md5', $user->user_login . '|' . $service . '|' . $expires, $key );
+        $hash       = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
         $ticket     = $user->user_login . '|' . $service . '|' . $expires . '|' . $hash;
+
+        set_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key, $ticket, 5 * 60 );
 
         return $type . '-' . urlencode( base64_encode( $ticket ) );
     }
@@ -409,12 +412,12 @@ class WPCASServer implements ICASServer {
      * @param  array                $valid_ticket_types Ticket must be of the specified types.
      * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
      * 
+     * @uses delete_transient()
      * @uses do_action()
+     * @uses get_transient()
      * @uses get_user_by()
      * @uses wp_hash()
      * @uses WP_Error
-     * 
-     * @todo Invalidate $ticket on successful validation.
      */
     protected function _validateTicket ( $service, $ticket, $valid_ticket_types = array() ) {
 
@@ -457,13 +460,19 @@ class WPCASServer implements ICASServer {
         if ( !$user ) {
             return $this->_ticketError( __( 'Invalid user for ticket.', 'wordpress-cas-server' ), $ticket, $service );
         }
-        
-        $key        = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
-        $hash       = hash_hmac( 'md5', $user->user_login . '|' . $service . '|' . $expires, $key );
+
+        $key  = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
+        $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
 
         if ($ticket_hash !== $hash) {
             return $this->_ticketError( __( 'Ticket hash is invalid.', 'wordpress-cas-server' ), $ticket, $service );
         }
+
+        if (!get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
+            return $this->_ticketError( __( 'Tickets may not be reused.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        delete_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
 
         /**
          * Fires on an valid ticket.
@@ -472,8 +481,6 @@ class WPCASServer implements ICASServer {
          * @param string  $ticket Valid ticket string.
          */
         do_action( 'cas_server_valid_ticket', $user, $ticket );
-
-        // TODO: Invalidate $ticket.
 
         return $user;
     }
@@ -575,8 +582,7 @@ class WPCASServer implements ICASServer {
      * 
      * - `username`: The username of the client that is trying to log in.
      * - `password`: The password of the client that is trying to log in.
-     * - `lt`: A login ticket. It acts as a nonce to prevent replaying requests and must be
-     *   generated using `wp_create_nonce( 'lt' )`.
+     * - `lt`: A login ticket. It acts as a nonce to prevent replaying requests.
      * 
      * The following HTTP request parameters are optional:
      * 
@@ -593,8 +599,6 @@ class WPCASServer implements ICASServer {
      * @uses wp_verify_nonce()
      * 
      * @todo Support for the optional "warn" parameter.
-     * @todo What happens if the nonce check fails?
-     * @todo What happens if the user login fails?
      */
     protected function _loginAcceptor ( $args ) {
 
@@ -606,10 +610,7 @@ class WPCASServer implements ICASServer {
 
         // TODO: Support for the optional "warn" parameter.
 
-        if (!wp_verify_nonce( $lt, 'lt' )) {
-
-            // TODO: What do I do if the nonce verification fails?
-            
+        if (!wp_verify_nonce( $lt, 'lt' )) {            
             $this->_loginAuthRedirect();
         }
 
@@ -619,9 +620,6 @@ class WPCASServer implements ICASServer {
             ) );
 
         if (!$user) {
-
-            // TODO: What do I do if signon fails?
-            
             $this->_loginAuthRedirect();
         }
 
@@ -710,7 +708,10 @@ class WPCASServer implements ICASServer {
      * [proxy description]
      * 
      * @param  array $args Request arguments.
+     * 
      * @return [type]      [description]
+     * 
+     * @todo
      */
     public function proxy ( $args ) {
         // TODO
@@ -720,7 +721,10 @@ class WPCASServer implements ICASServer {
      * [proxyValidate description]
      * 
      * @param  array $args Request arguments.
+     * 
      * @return [type]      [description]
+     * 
+     * @todo
      */
     public function proxyValidate ( $args ) {
         // TODO

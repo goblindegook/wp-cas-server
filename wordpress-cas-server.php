@@ -47,6 +47,11 @@ class WPCASServerPlugin {
     const QUERY_VAR_ROUTE = 'cas_route';
 
     /**
+     * Transient prefix for ticket reuse validation.
+     */
+    const TRANSIENT_PREFIX = 'cas_';
+
+    /**
      * CAS server instance.
      * @var WPCASServer
      */
