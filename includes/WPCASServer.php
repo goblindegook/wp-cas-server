@@ -419,7 +419,7 @@ class WPCASServer implements ICASServer {
      * @uses wp_hash()
      * @uses WP_Error
      */
-    protected function _validateTicket ( $service, $ticket, $valid_ticket_types = array() ) {
+    protected function _validateTicket ( $ticket, $service = '', $valid_ticket_types = array() ) {
 
         $user = false;
 
@@ -437,7 +437,7 @@ class WPCASServer implements ICASServer {
 
         $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
 
-        if (!in_array( $ticket_type, $valid_ticket_types )) {
+        if ($ticket_type && !in_array( $ticket_type, $valid_ticket_types )) {
             return $this->_ticketError( __( 'Ticket type is incorrect.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
@@ -458,14 +458,14 @@ class WPCASServer implements ICASServer {
         $user = get_user_by( 'login', $user_login );
 
         if ( !$user ) {
-            return $this->_ticketError( __( 'Invalid user for ticket.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_ticketError( __( 'Ticket does not match user.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
         $key  = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
         $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
 
         if ($ticket_hash !== $hash) {
-            return $this->_ticketError( __( 'Ticket hash is invalid.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_ticketError( __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
         if (!get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
@@ -777,7 +777,7 @@ class WPCASServer implements ICASServer {
             ICASServer::TYPE_ST,
         );
 
-        $user = $this->_validateTicket( $service, $ticket, $valid_ticket_types );
+        $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
 
         if (is_wp_error( $user )) {
             return $user;
@@ -839,7 +839,7 @@ class WPCASServer implements ICASServer {
             ICASServer::TYPE_ST,
         );
 
-        $user = $this->_validateTicket( $service, $ticket, $valid_ticket_types );
+        $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
 
         if ($user && !is_wp_error( $user )) {
             return "yes\n" . $user->get( 'user_login' ) . "\n";
