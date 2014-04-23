@@ -26,13 +26,17 @@ interface ICASServer {
 
     const RFC1123_DATE_FORMAT   = 'D, d M Y H:i:s T';
 
-	public function handleRequest ( $path );
+	public function handleRequest ( $path, $options = array() );
 
 	public function login ( $args );
-	public function logout ( $args );
-	public function proxy ( $args );
-	public function proxyValidate ( $args );
-	public function serviceValidate ( $args );
-	public function validate ( $args );
 
+	public function logout ( $args );
+
+	public function proxy ( $args );
+
+	public function proxyValidate ( $args );
+
+	public function serviceValidate ( $args );
+
+	public function validate ( $args );
 }

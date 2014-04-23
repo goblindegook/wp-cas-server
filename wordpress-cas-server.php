@@ -57,7 +57,8 @@ class WPCASServerPlugin {
      * @var array
      */
     private $default_options = array(
-        'path' => 'wp-cas',
+        'path'       => 'wp-cas',
+        'attributes' => array(),
         );
 
     /**
@@ -142,7 +143,7 @@ class WPCASServerPlugin {
             return;
         }
 
-        echo $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE] );
+        echo $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE], $this->_get_options() );
 
         exit;
     }
