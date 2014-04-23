@@ -18,9 +18,9 @@ class WPCASServer implements ICASServer {
 
     /**
      * Ticket validation error.
-     * @var string
+     * @var array
      */
-    protected $ticketValidationError;
+    protected $ticketValidationErrors;
 
     /**
      * WordPress CAS Server plugin options.
@@ -346,6 +346,7 @@ class WPCASServer implements ICASServer {
      * Generate a new security ticket for the CAS service.
      * 
      * @param  WP_USER $user        WordPress user to authenticate.
+     * @param  string  $service     Service URI.
      * @param  string  $type        Ticket type (default TYPE_ST).
      * @param  int     $expiration  Ticket expiration time in seconds (default 15). The CAS
      *                              specification recommends that the duration a ticket is valid be
@@ -353,9 +354,10 @@ class WPCASServer implements ICASServer {
      * @return string               Generated ticket.
      * 
      * @uses apply_filters()
-     * @uses wp_generate_auth_cookie()
+     * @uses is_ssl()
+     * @uses wp_hash()
      */
-    protected function _createTicket( $user, $type = ICASServer::TYPE_ST, $expiration = 15 ) {
+    protected function _createTicket( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 15 ) {
         /**
          * This filters allows developers to override the default ticket expiration period.
          * 
@@ -366,8 +368,114 @@ class WPCASServer implements ICASServer {
          * @return int                 Filtered ticket expiration period (in seconds).
          */
         $expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
+        $expires    = time() + $expiration;
 
-        return $type . '-' . urlencode( base64_encode( wp_generate_auth_cookie( $user->ID, time() + $expiration, 'auth' ) ) );
+        $key        = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
+        $hash       = hash_hmac( 'md5', $user->user_login . '|' . $service . '|' . $expires, $key );
+        $ticket     = $user->user_login . '|' . $service . '|' . $expires . '|' . $hash;
+
+        return $type . '-' . urlencode( base64_encode( $ticket ) );
+    }
+
+    /**
+     * Generates an authentication error.
+     * @param  string   $message Error message to pass.
+     * @param  string   $ticket  Invalid ticket.
+     * @param  string   $service Requesting service URI.
+     * @return WP_Error          WordPress error.
+     */
+    protected function _ticketError( $message, $ticket = '', $service = '' ) {
+        $error = new WP_Error( 'authenticationFailure',
+            $message,
+            array( 'code' => ICASServer::ERROR_INVALID_TICKET )
+            );
+
+        /**
+         * Fires on an invalid ticket.
+         * 
+         * @param WP_Error $error   Validation error for the provided ticket.
+         * @param string   $ticket  Invalid ticket string.
+         * @param string   $service Requesting service URI.
+         */
+        do_action( 'cas_server_invalid_ticket', $error, $ticket, $service );
+
+        return $error;
+    }
+
+    /**
+     * Validates a ticket and returns its associated user.
+     * 
+     * @param  string               $ticket             Service or proxy ticket.
+     * @param  array                $valid_ticket_types Ticket must be of the specified types.
+     * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
+     * 
+     * @uses do_action()
+     * @uses get_user_by()
+     * @uses wp_hash()
+     * @uses WP_Error
+     * 
+     * @todo Invalidate $ticket on successful validation.
+     */
+    protected function _validateTicket ( $service, $ticket, $valid_ticket_types = array() ) {
+
+        $user = false;
+
+        $this->ticketValidationErrors = array();
+
+        if (empty( $service )) {
+            return $this->_ticketError( __( 'Service is required.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        if (empty( $ticket )) {
+            return $this->_ticketError( __( 'Ticket is required.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
+
+        $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
+
+        if (!in_array( $ticket_type, $valid_ticket_types )) {
+            return $this->_ticketError( __( 'Ticket type is incorrect.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        if (empty( $ticket_elements )) {
+            return $this->_ticketError( __( 'Ticket is malformed.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        list( $user_login, $ticket_service, $expires, $ticket_hash ) = $ticket_elements;
+
+        if ( $ticket_service !== $service ) {
+            return $this->_ticketError( __( 'Ticket does not match service.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        if ( $expires < time() ) {
+            return $this->_ticketError( __( 'Ticket has expired.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        $user = get_user_by( 'login', $user_login );
+
+        if ( !$user ) {
+            return $this->_ticketError( __( 'Invalid user for ticket.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+        
+        $key        = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
+        $hash       = hash_hmac( 'md5', $user->user_login . '|' . $service . '|' . $expires, $key );
+
+        if ($ticket_hash !== $hash) {
+            return $this->_ticketError( __( 'Ticket hash is invalid.', 'wordpress-cas-server' ), $ticket, $service );
+        }
+
+        /**
+         * Fires on an valid ticket.
+         * 
+         * @param WP_User $user   WordPress user validated by ticket.
+         * @param string  $ticket Valid ticket string.
+         */
+        do_action( 'cas_server_valid_ticket', $user, $ticket );
+
+        // TODO: Invalidate $ticket.
+
+        return $user;
     }
 
     /**
@@ -381,7 +489,8 @@ class WPCASServer implements ICASServer {
      * @uses wp_redirect()
      */
     protected function _loginUser ( $user, $service ) {
-        $ticket = $this->_createTicket( $user, ICASServer::TYPE_ST, 60 );
+
+        $ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_ST, 60 );
 
         if (!empty( $service )) {
             $service = add_query_arg( 'ticket', $ticket, $service );
@@ -427,116 +536,6 @@ class WPCASServer implements ICASServer {
             auth_redirect();                    
         }
         exit;
-    }
-
-    /**
-     * Sets a ticket validation error message when an authentication cookie is malformed.
-     * 
-     * @param  string $cookie Malformed auth cookie.
-     * @param  string $scheme Authentication scheme. Values include 'auth', 'secure_auth',
-     *                        or 'logged_in'.
-     */
-    public function auth_cookie_malformed ( $cookie, $scheme ) {
-        $this->ticketValidationError = __( 'Ticket is malformed.', 'wordpress-cas-server' );
-    }
-
-    /**
-     * Sets a ticket validation error message once an authentication cookie has expired.
-     * 
-     * @param array $cookie_elements An array of data for the authentication cookie.
-     */
-    public function auth_cookie_expired ( $cookie_elements ) {
-        $this->ticketValidationError = __( 'Ticket has expired.', 'wordpress-cas-server' );
-    }
-
-    /**
-     * Sets a ticket validation error message if a bad username is entered in the user authentication process.
-     * 
-     * @param array $cookie_elements An array of data for the authentication cookie.
-     */
-    public function auth_cookie_bad_username ( $cookie_elements ) {
-        $this->ticketValidationError = __( 'Invalid user for ticket.', 'wordpress-cas-server' );
-    }
-
-    /**
-     * Sets a ticket validation error message if a bad authentication cookie hash is encountered.
-     * 
-     * @param array $cookie_elements An array of data for the authentication cookie.
-     */
-    public function auth_cookie_bad_hash ( $cookie_elements ) {
-        $this->ticketValidationError = __( 'Ticket hash is invalid.', 'wordpress-cas-server' );
-    }
-
-    /**
-     * Validates a ticket and returns its associated user.
-     * 
-     * @param  string               $ticket             Service or proxy ticket.
-     * @param  array                $valid_ticket_types Ticket must be of the specified types.
-     * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
-     * 
-     * @uses add_action()
-     * @uses do_action()
-     * @uses get_user_by()
-     * @uses remove_action()
-     * @uses wp_validate_auth_cookie()
-     * @uses WP_Error
-     */
-    protected function _validateTicket ( $ticket, $valid_ticket_types = array() ) {
-
-        $this->ticketValidationError = '';
-
-        list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
-
-        if (!in_array( $ticket_type, $valid_ticket_types )) {
-            $this->ticketValidationError = __( 'Ticket type is incorrect.', 'wordpress-cas-server' );
-        }
-
-        if (empty( $ticket )) {
-            $this->ticketValidationError = __( 'Invalid ticket.', 'wordpress-cas-server' );
-        }
-
-        $user = false;
-
-        add_action( 'auth_cookie_malformed'     , array( $this, 'auth_cookie_malformed' )    , 10, 2 );
-        add_action( 'auth_cookie_expired'       , array( $this, 'auth_cookie_expired' )      , 10, 1 );
-        add_action( 'auth_cookie_bad_username'  , array( $this, 'auth_cookie_bad_username' ) , 10, 1 );
-        add_action( 'auth_cookie_bad_hash'      , array( $this, 'auth_cookie_bad_hash')      , 10, 1 );
-
-        if ($user_id = wp_validate_auth_cookie( base64_decode( $ticket_content ), 'auth' )) {
-            $user = get_user_by( 'id', $user_id );
-        }
-
-        remove_action( 'auth_cookie_malformed'     , array( $this, 'auth_cookie_malformed') );
-        remove_action( 'auth_cookie_expired'       , array( $this, 'auth_cookie_expired') );
-        remove_action( 'auth_cookie_bad_username'  , array( $this, 'auth_cookie_bad_username') );
-        remove_action( 'auth_cookie_bad_hash'      , array( $this, 'auth_cookie_bad_hash') );
-
-        if ($user && empty( $this->ticketValidationError )) {
-            /**
-             * Fires on an valid ticket.
-             * 
-             * @param WP_User $user   WordPress user validated by ticket.
-             * @param string  $ticket Valid ticket string.
-             */
-            do_action( 'cas_server_valid_ticket', $user, $ticket );
-
-            return $user;
-        }
-
-        $error = new WP_Error( 'authenticationFailure',
-            $this->ticketValidationError,
-            array( 'code' => ICASServer::ERROR_INVALID_TICKET )
-            );
-
-        /**
-         * Fires on an invalid ticket.
-         * 
-         * @param WP_Error $error  Validation error for the provided ticket.
-         * @param string   $ticket Invalid ticket string.
-         */
-        do_action( 'cas_server_invalid_ticket', $error, $ticket );
-
-        return $error;
     }
 
     //
@@ -774,7 +773,7 @@ class WPCASServer implements ICASServer {
             ICASServer::TYPE_ST,
         );
 
-        $user = $this->_validateTicket( $ticket, $valid_ticket_types );
+        $user = $this->_validateTicket( $service, $ticket, $valid_ticket_types );
 
         if (is_wp_error( $user )) {
             return $user;
@@ -824,14 +823,8 @@ class WPCASServer implements ICASServer {
 
         $this->_setResponseHeader( 'Content-Type', 'text/plain; charset=' . get_option( 'blog_charset' ) );
 
-        /**
-         * `service` is required.
-         */
-        if (empty( $args['service'] )) {
-            return "no\n\n";
-        }
-
-        $ticket = isset( $args['ticket'] ) ? $args['ticket'] : '';
+        $service = isset( $args['service'] ) ? $args['service'] : '';
+        $ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
 
         /**
          * `/validate` checks the validity of a service ticket. `/validate` is part of the CAS 1.0
@@ -842,7 +835,7 @@ class WPCASServer implements ICASServer {
             ICASServer::TYPE_ST,
         );
 
-        $user = $this->_validateTicket( $ticket, $valid_ticket_types );
+        $user = $this->_validateTicket( $service, $ticket, $valid_ticket_types );
 
         if ($user && !is_wp_error( $user )) {
             return "yes\n" . $user->get( 'user_login' ) . "\n";

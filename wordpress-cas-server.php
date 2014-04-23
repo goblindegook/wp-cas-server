@@ -194,7 +194,7 @@ class WPCASServerPlugin {
      */
     private function _add_rewrite_rules () {
         $path = $this->_get_option( 'path' );
-        add_rewrite_rule( '^' . $path . '/(.*)?', 'index.php?' . self::QUERY_VAR_ROUTE . '=$matches[1]', 'top' );
+        add_rewrite_endpoint( $path, EP_ALL, self::QUERY_VAR_ROUTE );
     }
 
 }
