@@ -78,8 +78,10 @@ class WPCASServer implements ICASServer {
      * - `Cache-Control: no-store`
      * - `Expires: <time of request>`
      * 
-     * @param  string $path CAS request URI.
-     * @return string       Request response.
+     * @param  string $path    CAS request URI.
+     * @param  array  $options Server options.
+     * 
+     * @return string          Request response.
      * 
      * @uses apply_filters()
      * @uses do_action()

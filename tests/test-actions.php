@@ -48,6 +48,9 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         return $called;
     }
 
+    /**
+     * @group action
+     */
     function test_cas_server_before_request () {
         $action   = 'cas_server_before_request';
         $function = array( $this->server, 'handleRequest' );
@@ -59,6 +62,9 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         // TODO: Test did_action()
     }
 
+    /**
+     * @group action
+     */
     function test_cas_server_after_request () {
         $action   = 'cas_server_after_request';
         $function = array( $this->server, 'handleRequest' );
@@ -68,6 +74,9 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
             "Action callback for '$action' is called." );
     }
 
+    /**
+     * @group action
+     */
     function test_cas_server_error () {
         $action   = 'cas_server_error';
         $function = array( $this->server, 'handleRequest' );
@@ -78,7 +87,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     }
 
     /**
-     * [test_cas_server_valid_ticket description]
+     * @group action
      * @todo
      */
     function test_cas_server_valid_ticket () {
@@ -86,7 +95,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     }
 
     /**
-     * [test_cas_server_invalid_ticket description]
+     * @group action
      * @todo
      */
     function test_cas_server_invalid_ticket () {

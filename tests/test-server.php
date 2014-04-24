@@ -4,102 +4,136 @@
  * @subpackage WPCASServerPlugin_Tests
  */
 
+/**
+ * @coversDefaultClass WPCASServer
+ */
 class WP_TestWPCASServer extends WP_UnitTestCase {
 
-	private $server;
-	private $routes;
+    private $server;
+    private $routes;
 
-	/**
-	 * Setup a test method for the WPCASServer class.
-	 */
-	function setUp () {
-		parent::setUp();
-		$this->server = new WPCASServer;
-		$this->routes = $this->server->routes();
-	}
+    /**
+     * Setup a test method for the WPCASServer class.
+     */
+    function setUp () {
+        parent::setUp();
+        $this->server = new WPCASServer;
+        $this->routes = $this->server->routes();
+    }
 
-	/**
-	 * Finish a test method for the CASServer class.
-	 */
-	function tearDown () {
-		parent::tearDown();
-		unset( $this->server );
-	}
+    /**
+     * Finish a test method for the CASServer class.
+     */
+    function tearDown () {
+        parent::tearDown();
+        unset( $this->server );
+    }
 
-	function test_interface () {
-		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
-			'WPCASServer implements the ICASServer interface.' );
-	}
+    function test_interface () {
+        $this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
+            'WPCASServer implements the ICASServer interface.' );
+    }
 
-	function test_routes () {
-		$routes = array(
-			'login',
-			'logout',
-			'proxy',
-			'proxyValidate',
-			'serviceValidate',
-			'validate',
-			);
+    /**
+     * @covers ::routes
+     */
+    function test_routes () {
+        $routes = array(
+            'login',
+            'logout',
+            'proxy',
+            'proxyValidate',
+            'serviceValidate',
+            'validate',
+            );
 
-		$server_routes = $this->server->routes();
+        $server_routes = $this->server->routes();
 
-		foreach ($routes as $route) {
-			$this->assertArrayHasKey( $route, $server_routes,
-				"Route '$route' has a callback." );
-			$this->assertTrue( is_callable( $server_routes[$route] ),
-				"Method for route '$route' is callable." );
-		}
-	}
+        foreach ($routes as $route) {
+            $this->assertArrayHasKey( $route, $server_routes,
+                "Route '$route' has a callback." );
+            $this->assertTrue( is_callable( $server_routes[$route] ),
+                "Method for route '$route' is callable." );
+        }
+    }
 
-	function test_handleRequest () {
-		$this->assertTrue( is_callable( array( $this->server, 'handleRequest' ) ), "'handleRequest' method is callable." );
+    /**
+     * @covers ::handleRequest
+     * @todo
+     */
+    function test_handleRequest () {
+        $this->assertTrue( is_callable( array( $this->server, 'handleRequest' ) ), "'handleRequest' method is callable." );
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
-	function test_login () {
+    /**
+     * @covers ::login
+     * @todo
+     */
+    function test_login () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'login' ) ), "'login' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'login' ) ), "'login' method is callable." );
 
-		// $this->go_to();
+        // $this->go_to();
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
-	function test_logout () {
+    /**
+     * @covers ::logout
+     * @todo
+     */
+    function test_logout () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'logout' ) ), "'logout' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'logout' ) ), "'logout' method is callable." );
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
-	function test_validate () {
+    /**
+     * @covers ::proxy
+     * @todo
+     */
+    function test_proxy () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'validate' ) ), "'validate' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'proxy' ) ), "'proxy' method is callable." );
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
-	function test_serviceValidate () {
+    /**
+     * @covers ::proxyValidate
+     * @todo
+     */
+    function test_proxyValidate () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'serviceValidate' ) ), "'serviceValidate' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'proxyValidate' ) ), "'proxyValidate' method is callable." );
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
-	function test_proxy () {
+    /**
+     * @covers ::serviceValidate
+     * @todo
+     */
+    function test_serviceValidate () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'proxy' ) ), "'proxy' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'serviceValidate' ) ), "'serviceValidate' method is callable." );
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
-	function test_proxyValidate () {
+    /**
+     * @covers ::validate
+     * @todo
+     */
+    function test_validate () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'proxyValidate' ) ), "'proxyValidate' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'validate' ) ), "'validate' method is callable." );
 
-		$this->markTestIncomplete();
-	}
+        $this->markTestIncomplete();
+    }
 
 }
 

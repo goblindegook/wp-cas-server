@@ -168,6 +168,7 @@ class WPCASServerPlugin {
 
     /**
      * Get plugin options.
+     * 
      * @return array Plugin options.
      */
     private function _get_options () {
