@@ -178,15 +178,19 @@ class WPCASServerPlugin {
     }
 
     /**
-     * Callback to filter the hosts WordPress allows redirections to.
+     * Callback to filter the hosts WordPress allows redirecting to.
      * 
      * @param  array $allowed   List of valid redirection target hosts.
-     * @return array            Filtered list of valid redirection target hosts.
      * 
-     * @todo Doesn't do anything yet.
+     * @return array            Filtered list of valid redirection target hosts.
      */
     public function allowed_redirect_hosts ( $allowed ) {
-        // TODO
+
+        foreach (self::get_option( 'allowed_services' ) as $uri) {
+            // `allowed_redirect_hosts` returns a list of **hosts**, not URIs:
+            $allowed[] = parse_url( $uri, PHP_URL_HOST );
+        }
+
         return $allowed;
     }
 
@@ -220,6 +224,8 @@ class WPCASServerPlugin {
 
     /**
      * Register new rewrite rules for the CAS server URIs.
+     * 
+     * @uses add_rewrite_endpoint()
      */
     private function _add_rewrite_rules () {
         $path = self::get_option( 'path' );
