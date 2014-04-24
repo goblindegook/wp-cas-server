@@ -23,12 +23,6 @@ class WPCASServer implements ICASServer {
     protected $ticketValidationErrors;
 
     /**
-     * WordPress CAS Server plugin options.
-     * @var array
-     */
-    protected $options;
-
-    /**
      * WordPress CAS Server constructor.
      * 
      * @uses get_option()
@@ -79,7 +73,6 @@ class WPCASServer implements ICASServer {
      * - `Expires: <time of request>`
      * 
      * @param  string $path    CAS request URI.
-     * @param  array  $options Server options.
      * 
      * @return string          Request response.
      * 
@@ -87,9 +80,7 @@ class WPCASServer implements ICASServer {
      * @uses do_action()
      * @uses is_wp_error()
      */
-    public function handleRequest ( $path, $options = array() ) {
-
-        $this->options = $options;
+    public function handleRequest ( $path ) {
 
         if (!defined( 'CAS_REQUEST' )) define( 'CAS_REQUEST', true );
 
@@ -258,12 +249,14 @@ class WPCASServer implements ICASServer {
 
         // CAS attributes:
         
-        if (is_array( $this->options['attributes'] ) && !empty( $this->options['attributes'] )) {
+        $attributes = WPCASServerPlugin::get_option( 'attributes' );
+        
+        if (is_array( $attributes ) && !empty( $attributes )) {
 
-            $attributes = array();
+            $response_attributes = array();
 
-            foreach ($this->options['attributes'] as $key) {
-                $attributes[$key] = $user->get( $key );
+            foreach ($attributes as $key) {
+                $response_attributes[$key] = $user->get( $key );
             }
 
             /**
@@ -275,11 +268,11 @@ class WPCASServer implements ICASServer {
              * 
              * @return array               Filtered list of attributes.
              */
-            $attributes = apply_filters( 'cas_server_validation_extra_attributes', $attributes, $user );
+            $response_attributes = apply_filters( 'cas_server_validation_extra_attributes', $response_attributes, $user );
 
             $xmlAttributes = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:attributes" );
 
-            foreach ($attributes as $key => $value) {
+            foreach ($response_attributes as $key => $value) {
                 $xmlAttribute = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:$key", $value );
                 $xmlAttributes->appendChild( $xmlAttribute );
             }
@@ -470,7 +463,7 @@ class WPCASServer implements ICASServer {
             return $this->_ticketError( __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
-        if (!get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
+        if (WPCASServerPlugin::get_option( 'allow_ticket_reuse' ) == false && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
             return $this->_ticketError( __( 'Tickets may not be reused.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
@@ -494,7 +487,7 @@ class WPCASServer implements ICASServer {
      * 
      * @uses add_query_arg()
      * @uses apply_filters()
-     * @uses get_option()
+     * @uses home_url()
      * @uses wp_redirect()
      */
     protected function _loginUser ( $user, $service ) {
@@ -518,7 +511,7 @@ class WPCASServer implements ICASServer {
             exit;
         }
 
-        wp_redirect( get_option( 'home' ) );
+        wp_redirect( home_url() );
         exit;
     }
 
@@ -692,7 +685,7 @@ class WPCASServer implements ICASServer {
      * @param array $args Request arguments.
      * 
      * @uses esc_url_raw()
-     * @uses get_option()
+     * @uses home_url()
      * @uses wp_logout()
      * @uses wp_redirect()
      */
@@ -702,7 +695,7 @@ class WPCASServer implements ICASServer {
         session_unset();
         session_destroy();
         wp_logout();
-        wp_redirect( !empty( $service ) ? $service : get_option( 'home' ) );
+        wp_redirect( !empty( $service ) ? $service : home_url() );
         exit;
     }
 

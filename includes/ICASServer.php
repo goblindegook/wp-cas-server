@@ -78,11 +78,10 @@ interface ICASServer {
      * Handle a CAS server request for a specific URI.
      * 
      * @param  string $path    CAS request URI.
-     * @param  array  $options Server options.
      * 
      * @return string          Request response.
      */
-	public function handleRequest ( $path, $options = array() );
+	public function handleRequest ( $path );
 
     /**
      * Handles `/login` method requests [CAS 1.0 and 2.0].

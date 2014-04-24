@@ -62,14 +62,38 @@ class WPCASServerPlugin {
      * @var array
      */
     private $default_options = array(
-        'path'       => 'wp-cas',
-        'attributes' => array(),
+        /**
+         * CAS server endpoint path fragment (e.g. `<scheme>://<host>/wp-cas/login`).
+         */
+        'path'               => 'wp-cas',
+
+        /**
+         * @todo Disable the server if SSL is not enabled on WordPress and reject
+         * requests from services not operating over SSL.
+         */
+        'force_ssl'          => false,
+
+        /**
+         * `allow_ticket_reuse` exists as a workaround for potential issues with
+         * WordPress's Transients API.
+         */
+        'allow_ticket_reuse' => false,
+
+        /**
+         * @todo Allow requests from these service URIs only.
+         */
+        'allowed_services'   => array(),
+
+        /**
+         * User attributes to return on a successful `/serviceValidate` response.
+         */
+        'attributes'         => array(),
         );
 
     /**
      * WordPress CAS Server plugin constructor.
      */
-    public function __construct ( $server ) {
+    public function __construct ( ICASServer $server ) {
         register_activation_hook( __FILE__, array( $this, 'activation' ) );
         register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
@@ -148,7 +172,7 @@ class WPCASServerPlugin {
             return;
         }
 
-        echo $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE], $this->_get_options() );
+        echo $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE] );
 
         exit;
     }
@@ -167,30 +191,29 @@ class WPCASServerPlugin {
     }
 
     /**
-     * Get plugin options.
-     * 
-     * @return array Plugin options.
-     */
-    private function _get_options () {
-        return get_option( self::OPTIONS_KEY, $this->default_options );
-    }
-
-    /**
      * Get plugin option by key.
+     * 
      * @param  string $key  Plugin option key to return.
+     * 
      * @return mixed        Plugin option value.
+     * 
+     * @uses get_option()
      */
-    private function _get_option ( $key = null ) {
-        $options = $this->_get_options();
-        return $options[$key];
+    static public function get_option ( $key = null ) {
+        $options = get_option( self::OPTIONS_KEY );
+        return array_key_exists( $key, $options ) ? $options[$key] : null;
     }
 
     /**
      * Update the plugin options in the database.
+     * 
      * @param  array  $updated_options  Updated options to set (will be merged with existing options).
+     * 
+     * @uses get_option()
+     * @uses update_option()
      */
     private function _update_options ( $updated_options = array() ) {
-        $options = $this->_get_options();
+        $options = get_option( self::OPTIONS_KEY, $this->default_options );
         $options = array_merge( (array) $options, (array) $updated_options );
         update_option( self::OPTIONS_KEY, $options );
     }
@@ -199,7 +222,7 @@ class WPCASServerPlugin {
      * Register new rewrite rules for the CAS server URIs.
      */
     private function _add_rewrite_rules () {
-        $path = $this->_get_option( 'path' );
+        $path = self::get_option( 'path' );
         add_rewrite_endpoint( $path, EP_ALL, self::QUERY_VAR_ROUTE );
     }
 
