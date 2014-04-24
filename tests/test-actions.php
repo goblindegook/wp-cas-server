@@ -90,7 +90,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
      * @group action
      * @todo
      */
-    function test_cas_server_valid_ticket () {
+    function test_cas_server_validation_success () {
         $this->markTestIncomplete( 'TODO' );
     }
 
@@ -98,7 +98,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
      * @group action
      * @todo
      */
-    function test_cas_server_invalid_ticket () {
+    function test_cas_server_validation_error () {
         $this->markTestIncomplete( 'TODO' );
     }
 

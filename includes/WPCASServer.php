@@ -17,12 +17,6 @@ class WPCASServer implements ICASServer {
     protected $xmlResponse;
 
     /**
-     * Ticket validation error.
-     * @var array
-     */
-    protected $ticketValidationErrors;
-
-    /**
      * WordPress CAS Server constructor.
      * 
      * @uses get_option()
@@ -226,18 +220,18 @@ class WPCASServer implements ICASServer {
     }
 
     /**
-     * XML success response to a CAS 2.0 authentication request.
+     * XML success response to a CAS 2.0 validation request.
      * 
      * @param  WP_User    $user                 Authenticated WordPress user.
      * @param  string     $proxyGratingTicket   Generated Proxy-Granting Ticket (PGT) to return.
      * @param  array      $proxies              List of proxy URIs.
      * 
-     * @return DOMElement       CAS success response XML fragment.
+     * @return DOMElement                       CAS success response XML fragment.
      * 
      * @uses apply_filters()
      * @uses get_userdata()
      */
-    protected function _xmlSuccess ( $user, $proxyGrantingTicket = '', $proxies = array() ) {
+    protected function _xmlValidateSuccess ( $user, $proxyGrantingTicket = '', $proxies = array() ) {
 
         $response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
             "cas:authenticationSuccess" );
@@ -304,6 +298,28 @@ class WPCASServer implements ICASServer {
     }
 
     /**
+     * XML success response to a CAS 2.0 proxy request.
+     * 
+     * @param  WP_User    $user Authenticated WordPress user.
+     * 
+     * @return DOMElement       CAS success response XML fragment.
+     */
+    protected function _xmlProxySuccess ( $user, $service = '' ) {
+
+        $expiration = WPCASServerPlugin::get_option( 'expiration', 15 );
+
+        $proxy_ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_PT, $expiration );
+
+        $response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
+            "cas:proxySuccess" );
+
+        $response->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
+            "cas:proxyTicket", $proxy_ticket ) );
+
+        return $response;
+    }
+
+    /**
      * XML error response to a CAS 2.0 request.
      * 
      * @param  WP_Error   $wp_error Error object.
@@ -320,11 +336,11 @@ class WPCASServer implements ICASServer {
          */
         do_action( 'cas_server_error', $error );
 
-        foreach (array( 'authenticationFailure', 'proxyFailure' ) as $type) {
-            if (!empty( $error->errors[$type] )) {
+        foreach (array( 'authenticationFailure', 'proxyFailure' ) as $slug) {
+            if (!empty( $error->errors[$slug] )) {
                 $element = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-                    "cas:$type", implode( "\n", $error->errors[$type] ) );
-                $element->setAttribute( "code", $error->error_data[$type]['code'] );
+                    "cas:$slug", implode( "\n", $error->errors[$slug] ) );
+                $element->setAttribute( "code", $error->error_data[$slug]['code'] );
                 return $this->_xmlResponse( $element );
             }
         }
@@ -346,6 +362,7 @@ class WPCASServer implements ICASServer {
      * @param  int     $expiration  Ticket expiration time in seconds (default 15). The CAS
      *                              specification recommends that the duration a ticket is valid be
      *                              no longer than 5 minutes.
+     * 
      * @return string               Generated ticket.
      * 
      * @uses apply_filters()
@@ -355,7 +372,7 @@ class WPCASServer implements ICASServer {
      */
     protected function _createTicket( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 15 ) {
         /**
-         * This filters allows developers to override the default ticket expiration period.
+         * This filter allows developers to override the default ticket expiration period.
          * 
          * @param  int     $expiration Ticket expiration period (in seconds).
          * @param  string  $type       Type of ticket to set.
@@ -377,25 +394,22 @@ class WPCASServer implements ICASServer {
 
     /**
      * Generates an authentication error.
+     * 
      * @param  string   $message Error message to pass.
-     * @param  string   $ticket  Invalid ticket.
-     * @param  string   $service Requesting service URI.
+     * @param  string   $code    CAS error code.
+     * 
      * @return WP_Error          WordPress error.
      */
-    protected function _ticketError( $message, $ticket = '', $service = '' ) {
-        $error = new WP_Error( 'authenticationFailure',
-            $message,
-            array( 'code' => ICASServer::ERROR_INVALID_TICKET )
-            );
+    protected function _validateError( $slug, $message, $code = ICASServer::ERROR_INVALID_TICKET ) {
+
+        $error = new WP_Error( $slug, $message, array( 'code' => $code ) );
 
         /**
          * Fires on an invalid ticket.
          * 
          * @param WP_Error $error   Validation error for the provided ticket.
-         * @param string   $ticket  Invalid ticket string.
-         * @param string   $service Requesting service URI.
          */
-        do_action( 'cas_server_invalid_ticket', $error, $ticket, $service );
+        do_action( 'cas_server_validation_error', $error );
 
         return $error;
     }
@@ -416,16 +430,26 @@ class WPCASServer implements ICASServer {
      */
     protected function _validateTicket ( $ticket, $service = '', $valid_ticket_types = array() ) {
 
-        $user = false;
-
-        $this->ticketValidationErrors = array();
+        if (in_array( ICASServer::TYPE_PGT, $valid_ticket_types )) {
+            $error_slug = 'proxyFailure';
+            $error_code = ICASServer::ERROR_BAD_PGT;
+        }
+        else
+        {
+            $error_slug = 'authenticationFailure';
+            $error_code = ICASServer::ERROR_INVALID_TICKET;
+        }
 
         if (empty( $service )) {
-            return $this->_ticketError( __( 'Service is required.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Service is required.', 'wordpress-cas-server' ),
+                ICASServer::ERROR_INVALID_REQUEST );
         }
 
         if (empty( $ticket )) {
-            return $this->_ticketError( __( 'Ticket is required.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket is required.', 'wordpress-cas-server' ),
+                ICASServer::ERROR_INVALID_REQUEST );
         }
 
         list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
@@ -433,38 +457,51 @@ class WPCASServer implements ICASServer {
         $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
 
         if ($ticket_type && !in_array( $ticket_type, $valid_ticket_types )) {
-            return $this->_ticketError( __( 'Ticket type is incorrect.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket type cannot be validated.', 'wordpress-cas-server' ),
+                $error_code );
         }
 
         if (empty( $ticket_elements )) {
-            return $this->_ticketError( __( 'Ticket is malformed.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket is malformed.', 'wordpress-cas-server' ),
+                $error_code );
         }
 
         list( $user_login, $ticket_service, $expires, $ticket_hash ) = $ticket_elements;
 
         if ( $ticket_service !== $service ) {
-            return $this->_ticketError( __( 'Ticket does not match service.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket does not match service.', 'wordpress-cas-server' ),
+                $error_code );
         }
 
         if ( $expires < time() ) {
-            return $this->_ticketError( __( 'Ticket has expired.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket has expired.', 'wordpress-cas-server' ),
+                $error_code );
         }
 
         $user = get_user_by( 'login', $user_login );
 
         if ( !$user ) {
-            return $this->_ticketError( __( 'Ticket does not match user.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket does not match user.', 'wordpress-cas-server' ),
+                $error_code );
         }
 
         $key  = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
         $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
 
         if ($ticket_hash !== $hash) {
-            return $this->_ticketError( __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
         if (WPCASServerPlugin::get_option( 'allow_ticket_reuse' ) == false && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
-            return $this->_ticketError( __( 'Tickets may not be reused.', 'wordpress-cas-server' ), $ticket, $service );
+            return $this->_validateError( $error_slug,
+                __( 'Ticket is not recognized.', 'wordpress-cas-server' ),
+                $error_code );
         }
 
         delete_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
@@ -475,7 +512,7 @@ class WPCASServer implements ICASServer {
          * @param WP_User $user   WordPress user validated by ticket.
          * @param string  $ticket Valid ticket string.
          */
-        do_action( 'cas_server_valid_ticket', $user, $ticket );
+        do_action( 'cas_server_validation_success', $user, $ticket );
 
         return $user;
     }
@@ -492,7 +529,9 @@ class WPCASServer implements ICASServer {
      */
     protected function _loginUser ( $user, $service ) {
 
-        $ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_ST, 60 );
+        $expiration = WPCASServerPlugin::get_option( 'expiration', 15 );
+
+        $ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_ST, $expiration );
 
         if (!empty( $service )) {
             $service = add_query_arg( 'ticket', $ticket, $service );
@@ -644,7 +683,7 @@ class WPCASServer implements ICASServer {
 
         $renew   = isset( $args['renew'] )   && 'true' === $args['renew'];
         $gateway = isset( $args['gateway'] ) && 'true' === $args['gateway'];
-        $service = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
+        $service = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
 
         if ($renew) {
             wp_logout();
@@ -700,29 +739,80 @@ class WPCASServer implements ICASServer {
     }
 
     /**
-     * [proxy description]
+     * `/proxy` provides proxy tickets to services that have acquired proxy-granting tickets and
+     * will be proxying authentication to back-end services.
+     * 
+     * The following HTTP request parameters must be provided:
+     * 
+     * - `pgt` (required): The proxy-granting ticket (PGT) acquired by the service during
+     *   service ticket (ST) or proxy ticket (PT) validation.
+     * - `targetService` (required): The service identifier of the back-end service. Note that not
+     *   all back-end services are web services so this service identifier will not always be a URL.
+     *   However, the service identifier specified here must match the "service" parameter specified
+     *   to `/proxyValidate` upon validation of the proxy ticket.
      * 
      * @param  array $args Request arguments.
      * 
-     * @return [type]      [description]
-     * 
-     * @todo
+     * @return mixed       Successful response XML as string or WP_Error.
      */
     public function proxy ( $args ) {
-        // TODO
+
+        $pgt            = $args['pgt'];
+        $targetService  = $args['targetService'];
+
+        /**
+         * `/proxy` checks the validity of the proxy-granting ticket passed.
+         */
+        $valid_ticket_types = array(
+            ICASServer::TYPE_PGT,
+        );
+
+        $user = $this->_validateTicket( $pgt, $targetService, $valid_ticket_types );
+
+        if (is_wp_error( $user )) {
+            return $user;
+        }
+
+        return $this->_xmlResponse( $this->_xmlProxySuccess( $user, $targetService ) );
     }
 
     /**
-     * [proxyValidate description]
+     * `/proxyValidate` must perform the same validation tasks as `/serviceValidate` and
+     * additionally validate proxy tickets. `/proxyValidate` must be capable of validating both
+     * service tickets and proxy tickets.
      * 
      * @param  array $args Request arguments.
      * 
-     * @return [type]      [description]
+     * @return mixed       Successful response XML as string or WP_Error.
      * 
-     * @todo
+     * @uses is_wp_error()
+     * @uses WP_Error
+     * 
+     * @todo Accept proxy callback URL (pgtUrl) parameter.
+     * @todo Accept renew parameter.
      */
     public function proxyValidate ( $args ) {
-        // TODO
+
+        $service = $args['service'];
+        $ticket  = $args['ticket'];
+        $pgtUrl  = (!empty( $args['pgtUrl'] ))  ? $args['pgtUrl']  : ''; // TODO
+        $renew   = (!empty( $args['renew'] ))   ? $args['renew']   : ''; // TODO
+
+        /**
+         * `/proxyValidate` checks the validity of both service and proxy tickets.
+         */
+        $valid_ticket_types = array(
+            ICASServer::TYPE_ST,
+            ICASServer::TYPE_PT,
+        );
+
+        $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
+
+        if (is_wp_error( $user )) {
+            return $user;
+        }
+
+        return $this->_xmlResponse( $this->_xmlValidateSuccess( $user ) );
     }
 
     /**
@@ -732,9 +822,9 @@ class WPCASServer implements ICASServer {
      * `/serviceValidate` will also generate and issue proxy-granting tickets (PGT) when requested.
      * The service will deny authenticating  user if it receives a proxy ticket.
      * 
-     * @param  array  $args Request arguments.
+     * @param  array $args Request arguments.
      * 
-     * @return mixed        Successful response XML as string or WP_Error.
+     * @return mixed       Successful response XML as string or WP_Error.
      * 
      * @uses is_wp_error()
      * @uses WP_Error
@@ -744,20 +834,6 @@ class WPCASServer implements ICASServer {
      */
     public function serviceValidate ( $args ) {
         
-        if (empty( $args['service'] )) {
-            return new WP_Error( 'authenticationFailure',
-                __( 'Request must include a service ticket.', 'wordpress-cas-server' ),
-                array( 'code' => ICASServer::ERROR_INVALID_REQUEST )
-                );
-        }
-
-        if (empty( $args['ticket'] )) {
-            return new WP_Error( 'authenticationFailure',
-                __( 'Request must include a service ticket.', 'wordpress-cas-server' ),
-                array( 'code' => ICASServer::ERROR_INVALID_REQUEST )
-                );
-        }
-
         $service = $args['service'];
         $ticket  = $args['ticket'];
         $pgtUrl  = (!empty( $args['pgtUrl'] ))  ? $args['pgtUrl']  : ''; // TODO
@@ -778,7 +854,7 @@ class WPCASServer implements ICASServer {
             return $user;
         }
 
-        return $this->_xmlResponse( $this->_xmlSuccess( $user ) );
+        return $this->_xmlResponse( $this->_xmlValidateSuccess( $user ) );
     }
 
     /**

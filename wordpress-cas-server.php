@@ -68,6 +68,11 @@ class WPCASServerPlugin {
         'path'               => 'wp-cas',
 
         /**
+         * Service ticket expiration, in seconds [0..300].
+         */
+        'expiration'         => 60,
+
+        /**
          * @todo Disable the server if SSL is not enabled on WordPress and reject
          * requests from services not operating over SSL.
          */
@@ -197,15 +202,16 @@ class WPCASServerPlugin {
     /**
      * Get plugin option by key.
      * 
-     * @param  string $key  Plugin option key to return.
+     * @param  string $key     Plugin option key to return.
+     * @param  mixed  $default Option value to return if `$key` is not found.
      * 
-     * @return mixed        Plugin option value.
+     * @return mixed           Plugin option value.
      * 
      * @uses get_option()
      */
-    static public function get_option ( $key = null ) {
+    static public function get_option ( $key = null, $default = false ) {
         $options = get_option( self::OPTIONS_KEY );
-        return array_key_exists( $key, $options ) ? $options[$key] : null;
+        return array_key_exists( $key, $options ) ? $options[$key] : $default;
     }
 
     /**
