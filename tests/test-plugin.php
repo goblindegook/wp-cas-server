@@ -37,6 +37,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
     /**
      * The plugin should be installed and activated.
+     * @covers WPCASServerPlugin::plugin_activated
      */
     function test_plugin_activated () {
         $this->assertNotNull( $GLOBALS[WPCASServerPlugin::SLUG],
@@ -47,7 +48,24 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
     }
 
     /**
+     * Test plugin options.
+     * @covers WPCASServerPlugin::init
+     */
+    function test_init () {
+        global $wp;
+
+        delete_option( WPCASServerPlugin::OPTIONS_KEY );
+
+        $this->plugin->init();
+
+        $this->assertNotEmpty( get_option( WPCASServerPlugin::OPTIONS_KEY ), 'Plugin sets default options on init.' );
+
+        $this->assertTrue( in_array( 'cas_route', $wp->public_query_vars ), 'Plugin sets the cas_route endpoint.' );
+    }
+
+    /**
      * Test plugin action callbacks.
+     * @group action
      */
     function test_actions () {
         $actions = array(
@@ -75,6 +93,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
     /**
      * Test plugin filter callbacks.
+     * @group filter
      */
     function test_filters () {
         $filters = array(
@@ -93,12 +112,27 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
     }
 
     /**
-     * Test plugin options.
+     * Test plugin settings getter.
+     * @covers WPCASServerPlugin::get_option
      */
-    function test_options () {
-        delete_option( WPCASServerPlugin::OPTIONS_KEY );
-        $this->plugin->init();
-        $this->assertNotEmpty( get_option( WPCASServerPlugin::OPTIONS_KEY ), 'Plugin sets default options on init.' );
+    function test_get_option () {
+        $path = WPCASServerPlugin::get_option( 'path' );
+        $this->assertEquals( 'wp-cas', $path, 'Obtain the path setting.' );
+
+        $path = WPCASServerPlugin::get_option( 'path', 'default' );
+        $this->assertEquals( 'wp-cas', $path, 'Ignores default when obtaining an existing setting.' );
+
+        $unset = WPCASServerPlugin::get_option( 'unset', 'nothing' );
+        $this->assertEquals( 'nothing', $unset, 'Obtain the default for a non-existing setting.' );
+    }
+
+    /**
+     * Test allowed_redirect_hosts filter callback.
+     * @covers WPCASServerPlugin::allowed_redirect_hosts
+     * @todo
+     */
+    function test_allowed_redirect_hosts () {
+        $this->markTestIncomplete( 'TODO' );
     }
 
     /**
@@ -114,14 +148,6 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         $rule = '^' . $options['path'] . '/(.*)?';
 
         $this->markTestIncomplete( 'Test for rewrite rules.' );
-    }
-
-    /**
-     * The cas_route query variable should be registered.
-     */
-    function test_cas_route_query_var () {
-        global $wp;
-        $this->assertTrue( in_array( 'cas_route', $wp->public_query_vars ) );
     }
 
 }

@@ -215,7 +215,7 @@ class WPCASServerPlugin {
      */
     static public function get_option ( $key = null, $default = false ) {
         $options = get_option( self::OPTIONS_KEY );
-        return array_key_exists( $key, $options ) ? $options[$key] : $default;
+        return isset( $options[$key] ) ? $options[$key] : $default;
     }
 
     /**
