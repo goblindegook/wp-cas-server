@@ -126,6 +126,7 @@ class WPCASServer implements ICASServer {
      * list returned by `WPCASServer::routes()`.
      * 
      * @param  string            $path Requested URI path.
+     * 
      * @return (string|WP_Error)       Service response string or WordPress error.
      * 
      * @uses apply_filters()
@@ -207,6 +208,7 @@ class WPCASServer implements ICASServer {
      * Wrap a CAS 2.0 XML response and output it as a string.
      * 
      * @param  DOMNode $response XML response contents for a CAS 2.0 request.
+     * 
      * @return string            CAS 2.0 server response as an XML string.
      */
     protected function _xmlResponse ( $response ) {
@@ -223,7 +225,7 @@ class WPCASServer implements ICASServer {
      * XML success response to a CAS 2.0 validation request.
      * 
      * @param  WP_User    $user                 Authenticated WordPress user.
-     * @param  string     $proxyGratingTicket   Generated Proxy-Granting Ticket (PGT) to return.
+     * @param  string     $proxyGrantingTicket  Generated Proxy-Granting Ticket (PGT) to return.
      * @param  array      $proxies              List of proxy URIs.
      * 
      * @return DOMElement                       CAS success response XML fragment.
@@ -300,9 +302,10 @@ class WPCASServer implements ICASServer {
     /**
      * XML success response to a CAS 2.0 proxy request.
      * 
-     * @param  WP_User    $user Authenticated WordPress user.
+     * @param  WP_User    $user    Authenticated WordPress user.
+     * @param  string     $service Service URI.
      * 
-     * @return DOMElement       CAS success response XML fragment.
+     * @return DOMElement          CAS success response XML fragment.
      */
     protected function _xmlProxySuccess ( $user, $service = '' ) {
 
@@ -322,8 +325,9 @@ class WPCASServer implements ICASServer {
     /**
      * XML error response to a CAS 2.0 request.
      * 
-     * @param  WP_Error   $wp_error Error object.
-     * @return DOMElement           CAS error response XML fragment.
+     * @param  WP_Error   $error Error object.
+     * 
+     * @return DOMElement        CAS error response XML fragment.
      * 
      * @uses do_action()
      */
@@ -395,6 +399,7 @@ class WPCASServer implements ICASServer {
     /**
      * Generates an authentication error.
      * 
+     * @param  string   $slug    Error slug.
      * @param  string   $message Error message to pass.
      * @param  string   $code    CAS error code.
      * 
@@ -418,7 +423,9 @@ class WPCASServer implements ICASServer {
      * Validates a ticket and returns its associated user.
      * 
      * @param  string               $ticket             Service or proxy ticket.
+     * @param  string               $service            Service URI.
      * @param  array                $valid_ticket_types Ticket must be of the specified types.
+     * 
      * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
      * 
      * @uses delete_transient()

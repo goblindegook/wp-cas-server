@@ -109,6 +109,8 @@ class WPCASServerPlugin {
 
     /**
      * Plugin activation callback.
+     * 
+     * @param bool $network_wide Plugin is activated for the entire network.
      */
     public function activation ( $network_wide ) {
         if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
@@ -129,6 +131,8 @@ class WPCASServerPlugin {
 
     /**
      * Plugin deactivation callback to flush rewrite rules.
+     * 
+     * @param bool $network_wide Plugin is activated for the entire network.
      */
     public function deactivation ( $network_wide ) {
         if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
