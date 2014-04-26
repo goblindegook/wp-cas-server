@@ -211,6 +211,14 @@ class WPCASServer implements ICASServer {
     }
 
     /**
+     * Wraps calls to session_start() to prevent 'headers already sent' errors.
+     */
+    protected function _sessionStart () {
+        if (headers_sent()) return;
+        session_start();
+    }
+
+    /**
      * Sets an HTTP response header.
      * 
      * @param string $key   Header key.
@@ -402,9 +410,7 @@ class WPCASServer implements ICASServer {
          * @return int                 Filtered ticket expiration period (in seconds).
          */
         $expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
-        $expires    = time() + $expiration;
-
-$expires = time() + 60;
+        $expires    = microtime( true ) + $expiration;
 
         $key        = wp_hash( $user->user_login . '|' . substr($user->user_pass, 8, 4) . '|' . $expires );
         $hash       = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
@@ -585,10 +591,12 @@ $expires = time() + 60;
      * Redirects the user to either the standard WordPress authentication page or a custom one
      * at a URI returned by the `cas_server_custom_auth_uri` filter.
      * 
+     * @param array $args HTTP request parameters received by `/login`.
+     * 
      * @uses apply_filters()
      * @uses auth_redirect()
      */
-    protected function _loginAuthRedirect () {
+    protected function _authRedirect ( $args = array() ) {
         /**
          * Allows developers to redirect the user to a custom login form.
          * 
@@ -670,8 +678,8 @@ $expires = time() + 60;
 
         // TODO: Support for the optional "warn" parameter.
 
-        if (!wp_verify_nonce( $lt, 'lt' )) {            
-            $this->_loginAuthRedirect();
+        if (!wp_verify_nonce( $lt, 'lt' )) {
+            $this->_authRedirect( $args );
         }
 
         $user = wp_signon( array(
@@ -679,8 +687,8 @@ $expires = time() + 60;
             'user_password' => $password,
             ) );
 
-        if (!$user) {
-            $this->_loginAuthRedirect();
+        if (!$user || is_wp_error( $user )) {
+            $this->_authRedirect( $args );
         }
 
         $this->_loginUser( $user, $service );
@@ -705,15 +713,22 @@ $expires = time() + 60;
      * @uses wp_logout()
      */
     protected function _loginRequestor ( $args ) {
+        global $userdata, $user_ID;
+
+        $this->_sessionStart();
 
         $renew   = isset( $args['renew'] )   && 'true' === $args['renew'];
         $gateway = isset( $args['gateway'] ) && 'true' === $args['gateway'];
         $service = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
 
         if ($renew) {
-            wp_logout();
+            if (!headers_sent()) {
+                wp_logout();
+            }
 
-            $url = '//' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+            $url = (is_ssl() ? 'https://' : 'http://')
+                 . $_SERVER['HTTP_HOST']
+                 . $_SERVER['REQUEST_URI'];
             $url = remove_query_arg( 'renew', $url );
 
             $this->_redirect( $url );
@@ -723,10 +738,8 @@ $expires = time() + 60;
             if ($gateway && $service) {
                 $this->_redirect( $service );
             }
-            else
-            {
-                $this->_loginAuthRedirect();
-            }
+
+            $this->_authRedirect( $args );
         }
 
         $this->_loginUser( wp_get_current_user(), $service );
@@ -752,7 +765,7 @@ $expires = time() + 60;
      */
     public function logout ( $args ) {
         $service = esc_url_raw( $args['service'] );
-        session_start();
+        $this->_sessionStart();
         session_unset();
         session_destroy();
         wp_logout();
