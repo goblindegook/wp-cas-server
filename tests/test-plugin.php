@@ -143,9 +143,16 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         global $wp_rewrite;
 
         $path = WPCASServerPlugin::get_option( 'path' );
+
         $this->assertNotEmpty( $path, 'Plugin sets default URI path root.');
 
         $rule = '^' . $path . '/(.*)?';
+
+        // TODO: Look for endpoints
+        // - Force SSL option OFF --> OK
+        // - Force SSL option ON and...
+        //     - SSL ON           --> OK
+        //     - SSL OFF          --> Error
 
         $this->markTestIncomplete( 'Test for rewrite rules.' );
     }

@@ -195,7 +195,7 @@ class WPCASServerPlugin {
      */
     public function allowed_redirect_hosts ( $allowed ) {
 
-        foreach (self::get_option( 'allowed_services' ) as $uri) {
+        foreach ((array) self::get_option( 'allowed_services' ) as $uri) {
             // `allowed_redirect_hosts` returns a list of **hosts**, not URIs:
             $allowed[] = parse_url( $uri, PHP_URL_HOST );
         }
@@ -238,6 +238,14 @@ class WPCASServerPlugin {
      * @uses add_rewrite_endpoint()
      */
     private function _add_rewrite_rules () {
+
+        /**
+         * Enforce SSL
+         */
+        if (self::get_option( 'force_ssl' ) && !is_ssl()) {
+            return;
+        }
+
         $path = self::get_option( 'path' );
         add_rewrite_endpoint( $path, EP_ALL, self::QUERY_VAR_ROUTE );
     }
