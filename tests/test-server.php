@@ -31,7 +31,6 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         parent::tearDown();
         unset( $this->server );
         unset( $this->redirect_location );
-        unset( $this->redirect_status );
 
         remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
     }
@@ -85,6 +84,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      * Tests /login requestor behaviour.
      * 
      * @covers ::login
+     * @runInSeparateProcess
      */
     function test_login_requestor () {
 
@@ -93,11 +93,11 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $service = 'http://test/';
 
-        wp_set_current_user( false );
-
         /**
          * /login?gateway=true&service=http://test/ (user logged out)
          */
+
+        wp_set_current_user( false );
 
         try {
             $this->server->login( array( 'service' => $service, 'gateway' => 'true' ) );
@@ -208,7 +208,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $service  = 'http://test/';
         $username = $user->user_login;
-        $password = wp_generate_password();
+        $password = wp_generate_password( 12 );
 
         wp_set_password( $password, $user->ID );
 
@@ -260,7 +260,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         }
 
         $this->assertStringStartsWith( home_url(), $this->redirect_location,
-            "'login' redirects to login screen when user is forced to renew credentials." );
+            "'login' redirects to login screen when credentials are invalid" );
 
         $this->assertFalse( isset( $query['ticket'] ),
             "'login' generates no ticket before validating credentials." );
@@ -285,10 +285,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         }
 
         $this->assertStringStartsWith( home_url(), $this->redirect_location,
-            "'login' redirects to login screen when user is forced to renew credentials." );
+            "'login' redirects to login screen when the login ticket is invalid" );
 
         $this->assertFalse( isset( $query['ticket'] ),
-            "'login' generates no ticket before validating credentials." );
+            "'login' generates no ticket before validating the login ticket." );
 
         /**
          * /login?service=http://test/ (invalid credentials, invalid login ticket)
@@ -310,21 +310,60 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         }
 
         $this->assertStringStartsWith( home_url(), $this->redirect_location,
-            "'login' redirects to login screen when user is forced to renew credentials." );
+            "'login' redirects to login screen when both credentials and login ticket are invalid" );
 
         $this->assertFalse( isset( $query['ticket'] ),
-            "'login' generates no ticket before validating credentials." );
+            "'login' does not generate a ticket before validating credentials and the login ticket." );
     }
 
     /**
      * @covers ::logout
-     * @todo
+     * @runInSeparateProcess
      */
     function test_logout () {
 
-        $this->assertTrue( is_callable( array( $this->server, 'logout' ) ), "'logout' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'logout' ) ),
+            "'logout' method is callable." );
 
-        $this->markTestIncomplete();
+        /**
+         * /logout?service=http://test/
+         */
+
+        $service = 'http://test/';
+
+        wp_set_current_user( $this->factory->user->create() );
+
+        $this->assertTrue( is_user_logged_in(),
+            'User is logged in.' );
+
+        try {
+            $this->server->logout( array( 'service' => $service ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+        }
+
+        $this->assertFalse( is_user_logged_in(),
+            'User is logged out.' );
+
+        $this->assertStringStartsWith( $service, $this->redirect_location,
+            "'logout' redirects to service." );
+
+        /**
+         * /logout
+         */
+
+        wp_set_current_user( $this->factory->user->create() );
+
+        try {
+            $this->server->logout( array( 'service' => $service ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+        }
+
+        $this->assertStringStartsWith( $service, $this->redirect_location,
+            "'logout' redirects to home if no service is provided." );
     }
 
     /**
@@ -363,6 +402,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
     /**
      * @covers ::validate
+     * @runInSeparateProcess
      */
     function test_validate () {
 

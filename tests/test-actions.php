@@ -33,19 +33,17 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
      * @param  array   $args     Ordered list of arguments to pass the function.
      * @return boolean           Whether the given action was called.
      */
-    private function _is_action_called ( $label, $function, $args ) {
-        $called = false;
-        $handler = function () use (&$called) {
-            $called = true;
-        };
+    private function _assertActionIsCalled ( $label, $function, $args ) {
+        $mock = $this->getMock( 'stdClass', array( 'action' ) );
+        $mock->expects( $this->once() )->method( 'action' );
 
-        add_action( $label, $handler );
+        add_filter( $label, array( $mock, 'action' ) );
         ob_start();
         call_user_func_array( $function, $args );
         ob_end_clean();
-        remove_action( $label, $handler );
+        remove_filter( $label, array( $mock, 'action' ) );
 
-        return $called;
+        unset( $mock );
     }
 
     /**
@@ -54,10 +52,9 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     function test_cas_server_before_request () {
         $action   = 'cas_server_before_request';
         $function = array( $this->server, 'handleRequest' );
-        $args     = array( '/invalid-uri' );
+        $args     = array( 'invalid-uri' );
         
-        $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
-            "Action callback for '$action' is called." );
+        $this->_assertActionIsCalled( $action, $function, $args );
     }
 
     /**
@@ -66,10 +63,9 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     function test_cas_server_after_request () {
         $action   = 'cas_server_after_request';
         $function = array( $this->server, 'handleRequest' );
-        $args     = array( '/invalid-uri' );
+        $args     = array( 'invalid-uri' );
         
-        $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
-            "Action callback for '$action' is called." );
+        $this->_assertActionIsCalled( $action, $function, $args );
     }
 
     /**
@@ -78,10 +74,9 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     function test_cas_server_error () {
         $action   = 'cas_server_error';
         $function = array( $this->server, 'handleRequest' );
-        $args     = array( '/invalid-uri' );
+        $args     = array( 'invalid-uri' );
         
-        $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
-            "Action callback for '$action' is called." );
+        $this->_assertActionIsCalled( $action, $function, $args );
     }
 
     /**
@@ -91,7 +86,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     function test_cas_server_validation_success () {
         $action   = 'cas_server_validation_success';
         $function = array( $this->server, 'handleRequest' );
-        $args     = array( '/serviceValidate' );
+        $args     = array( 'serviceValidate' );
 
         $user_id  = $this->factory->user->create();
 
@@ -101,8 +96,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         
         $this->markTestIncomplete();
         
-        $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
-            "Action callback for '$action' is called." );
+        $this->_assertActionIsCalled( $action, $function, $args );
     }
 
     /**
@@ -113,11 +107,8 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         $action   = 'cas_server_validation_error';
         $function = array( $this->server, 'handleRequest' );
 
-        $this->markTestIncomplete();
-
-        foreach (array( '/proxy', '/proxyValidate', '/serviceValidate' ) as $endpoint) {
-            $this->assertTrue( $this->_is_action_called( $action, $function, array( $endpoint ) ),
-                "Action callback for '$action' is called for '$endpoint'." );
+        foreach (array( 'proxy', 'proxyValidate', 'serviceValidate' ) as $endpoint) {
+            $this->_assertActionIsCalled( $action, $function, array( $endpoint ) );
         }
 
     }

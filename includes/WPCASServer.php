@@ -214,8 +214,23 @@ class WPCASServer implements ICASServer {
      * Wraps calls to session_start() to prevent 'headers already sent' errors.
      */
     protected function _sessionStart () {
-        if (headers_sent()) return;
+        $session_exists = function_exists( 'session_status' ) && session_status() == PHP_SESSION_NONE;
+        if (headers_sent() || $session_exists || strlen( session_id() )) return;
         session_start();
+    }
+
+    /**
+     * Wraps calls to session destruction functions.
+     */
+    protected function _sessionDestroy () {
+        wp_logout();
+        wp_set_current_user( false );
+
+        $session_exists = function_exists( 'session_status' ) && session_status() == PHP_SESSION_NONE;
+        if (headers_sent() || $session_exists || strlen( session_id() )) return;
+
+        session_unset();
+        session_destroy();
     }
 
     /**
@@ -366,7 +381,7 @@ class WPCASServer implements ICASServer {
         do_action( 'cas_server_error', $error );
 
         foreach (array( 'authenticationFailure', 'proxyFailure' ) as $slug) {
-            if ($error->errors[$slug]) {
+            if (isset( $error->errors[$slug] ) && $error->errors[$slug]) {
                 $element = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
                     "cas:$slug", implode( "\n", $error->errors[$slug] ) );
                 $element->setAttribute( "code", $error->error_data[$slug]['code'] );
@@ -395,7 +410,6 @@ class WPCASServer implements ICASServer {
      * @return string               Generated ticket.
      * 
      * @uses apply_filters()
-     * @uses is_ssl()
      * @uses set_transient()
      * @uses wp_hash()
      */
@@ -623,9 +637,9 @@ class WPCASServer implements ICASServer {
      * 
      * @param  array $args Request arguments.
      */
-    public function login ( $args ) {
+    public function login ( $args = array() ) {
 
-        $args = array_merge( $_POST, $args );
+        $args = array_merge( $_POST, (array) $args );
         $args = apply_filters( 'cas_server_login_args', $args );
 
         if (isset( $args['username'] ) && isset( $args['password'] ) && isset( $args['lt'] )) {
@@ -668,7 +682,7 @@ class WPCASServer implements ICASServer {
      * 
      * @todo Support for the optional "warn" parameter.
      */
-    protected function _loginAcceptor ( $args ) {
+    protected function _loginAcceptor ( $args = array() ) {
 
         $username   = sanitize_user( $args['username'] );
         $password   = $args['password'];
@@ -707,12 +721,13 @@ class WPCASServer implements ICASServer {
      * @param array $args Request arguments.
      * 
      * @uses esc_url_raw()
+     * @uses is_ssl()
      * @uses is_user_logged_in()
      * @uses remove_query_arg()
      * @uses wp_get_current_user()
      * @uses wp_logout()
      */
-    protected function _loginRequestor ( $args ) {
+    protected function _loginRequestor ( $args = array() ) {
         global $userdata, $user_ID;
 
         $this->_sessionStart();
@@ -763,14 +778,11 @@ class WPCASServer implements ICASServer {
      * @uses home_url()
      * @uses wp_logout()
      */
-    public function logout ( $args ) {
-        $service = esc_url_raw( $args['service'] );
+    public function logout ( $args = array() ) {
+        $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : home_url();
         $this->_sessionStart();
-        session_unset();
-        session_destroy();
-        wp_logout();
-
-        $this->_redirect( $service ? $service : home_url() );
+        $this->_sessionDestroy();
+        $this->_redirect( $service );
     }
 
     /**
@@ -789,11 +801,13 @@ class WPCASServer implements ICASServer {
      * @param  array $args Request arguments.
      * 
      * @return mixed       Successful response XML as string or WP_Error.
+     * 
+     * @uses esc_url_raw()
      */
-    public function proxy ( $args ) {
+    public function proxy ( $args = array() ) {
 
-        $pgt            = $args['pgt'];
-        $targetService  = $args['targetService'];
+        $pgt            = !empty( $args['pgt'] )           ? $args['pgt']                          : '';
+        $targetService  = !empty( $args['targetService'] ) ? esc_url_raw( $args['targetService'] ) : '';
 
         /**
          * `/proxy` checks the validity of the proxy-granting ticket passed.
@@ -826,12 +840,12 @@ class WPCASServer implements ICASServer {
      * @todo Accept proxy callback URL (pgtUrl) parameter.
      * @todo Accept renew parameter.
      */
-    public function proxyValidate ( $args ) {
+    public function proxyValidate ( $args = array() ) {
 
-        $service = $args['service'];
-        $ticket  = $args['ticket'];
-        $pgtUrl  = isset( $args['pgtUrl'] ) ? $args['pgtUrl'] : ''; // TODO
-        $renew   = isset( $args['renew'] )  ? $args['renew']  : ''; // TODO
+        $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
+        $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
+        $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : ''; // TODO
+        $renew   = isset( $args['renew'] ) && 'true' === $args['renew']; // TODO
 
         /**
          * `/proxyValidate` checks the validity of both service and proxy tickets.
@@ -861,18 +875,19 @@ class WPCASServer implements ICASServer {
      * 
      * @return mixed       Successful response XML as string or WP_Error.
      * 
+     * @uses esc_url_raw()
      * @uses is_wp_error()
      * @uses WP_Error
      * 
      * @todo Accept proxy callback URL (pgtUrl) parameter.
      * @todo Accept renew parameter.
      */
-    public function serviceValidate ( $args ) {
+    public function serviceValidate ( $args = array() ) {
         
-        $service = $args['service'];
-        $ticket  = $args['ticket'];
-        $pgtUrl  = isset( $args['pgtUrl'] ) ? $args['pgtUrl']  : ''; // TODO
-        $renew   = isset( $args['renew'] )  ? $args['renew']   : ''; // TODO
+        $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
+        $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
+        $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : ''; // TODO
+        $renew   = isset( $args['renew'] ) && 'true' === $args['renew']; // TODO
 
         /**
          * `/serviceValidate` checks the validity of a service ticket and does not handle proxy
@@ -926,15 +941,16 @@ class WPCASServer implements ICASServer {
      * 
      * @return string       Validation response.
      * 
+     * @uses esc_url_raw()
      * @uses get_userdata()
      * @uses is_wp_error()
      */
-    public function validate ( $args ) {
+    public function validate ( $args = array() ) {
 
         $this->_setResponseHeader( 'Content-Type', 'text/plain; charset=' . get_option( 'blog_charset' ) );
 
-        $service = isset( $args['service'] ) ? $args['service'] : '';
-        $ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
+        $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
+        $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
 
         /**
          * `/validate` checks the validity of a service ticket. `/validate` is part of the CAS 1.0
@@ -948,7 +964,7 @@ class WPCASServer implements ICASServer {
         $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
 
         if ($user && !is_wp_error( $user )) {
-            return "yes\n" . $user->get( 'user_login' ) . "\n";
+            return "yes\n" . $user->user_login . "\n";
         }
 
         return "no\n\n";
