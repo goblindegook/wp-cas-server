@@ -73,7 +73,7 @@ class WPCASServer implements ICASServer {
      */
     protected function _redirect ( $location, $status = 302 ) {
 
-        if (empty( WPCASServerPlugin::get_option( 'allowed_services' ) )) {
+        if (!WPCASServerPlugin::get_option( 'allowed_services' )) {
             wp_redirect( $location, $status );
         }
 
@@ -264,7 +264,7 @@ class WPCASServer implements ICASServer {
         
         $attributes = WPCASServerPlugin::get_option( 'attributes' );
         
-        if (is_array( $attributes ) && !empty( $attributes )) {
+        if (is_array( $attributes ) && count( $attributes ) > 0) {
 
             $response_attributes = array();
 
@@ -295,14 +295,14 @@ class WPCASServer implements ICASServer {
 
         // Include Proxy-Granting Ticket in successful `/proxyValidate` responses:
         
-        if (!empty( $proxyGrantingTicket )) {
+        if ($proxyGrantingTicket) {
             $response->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
                 "cas:proxyGrantingTicket", $proxyGrantingTicket ) );
         }
 
         // Include proxies in successful `/proxyValidate` responses:
         
-        if (!empty( $proxies )) {
+        if (count( $proxies ) > 0) {
             $xmlProxies = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:proxies" );
 
             foreach ($proxies as $proxy) {
@@ -358,7 +358,7 @@ class WPCASServer implements ICASServer {
         do_action( 'cas_server_error', $error );
 
         foreach (array( 'authenticationFailure', 'proxyFailure' ) as $slug) {
-            if (!empty( $error->errors[$slug] )) {
+            if ($error->errors[$slug]) {
                 $element = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
                     "cas:$slug", implode( "\n", $error->errors[$slug] ) );
                 $element->setAttribute( "code", $error->error_data[$slug]['code'] );
@@ -522,7 +522,7 @@ $expires = time() + 60;
 
         $key  = wp_hash( $user->user_login . '|' . substr( $user->user_pass, 8, 4 ) . '|' . $expires );
         $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
-        
+
         if ($ticket_hash !== $hash) {
             return $this->_validateError( $error_slug,
                 __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
@@ -562,7 +562,7 @@ $expires = time() + 60;
 
         $ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_ST, $expiration );
 
-        if (!empty( $service )) {
+        if ($service) {
             $service = add_query_arg( 'ticket', $ticket, $service );
 
             /**
@@ -720,7 +720,7 @@ $expires = time() + 60;
         }
 
         if (!is_user_logged_in()) {
-            if ($gateway && !empty( $service )) {
+            if ($gateway && $service) {
                 $this->_redirect( $service );
             }
             else
@@ -757,7 +757,7 @@ $expires = time() + 60;
         session_destroy();
         wp_logout();
 
-        $this->_redirect( !empty( $service ) ? $service : home_url() );
+        $this->_redirect( $service ? $service : home_url() );
     }
 
     /**
@@ -817,8 +817,8 @@ $expires = time() + 60;
 
         $service = $args['service'];
         $ticket  = $args['ticket'];
-        $pgtUrl  = (!empty( $args['pgtUrl'] ))  ? $args['pgtUrl']  : ''; // TODO
-        $renew   = (!empty( $args['renew'] ))   ? $args['renew']   : ''; // TODO
+        $pgtUrl  = isset( $args['pgtUrl'] ) ? $args['pgtUrl'] : ''; // TODO
+        $renew   = isset( $args['renew'] )  ? $args['renew']  : ''; // TODO
 
         /**
          * `/proxyValidate` checks the validity of both service and proxy tickets.
@@ -858,8 +858,8 @@ $expires = time() + 60;
         
         $service = $args['service'];
         $ticket  = $args['ticket'];
-        $pgtUrl  = (!empty( $args['pgtUrl'] ))  ? $args['pgtUrl']  : ''; // TODO
-        $renew   = (!empty( $args['renew'] ))   ? $args['renew']   : ''; // TODO
+        $pgtUrl  = isset( $args['pgtUrl'] ) ? $args['pgtUrl']  : ''; // TODO
+        $renew   = isset( $args['renew'] )  ? $args['renew']   : ''; // TODO
 
         /**
          * `/serviceValidate` checks the validity of a service ticket and does not handle proxy
