@@ -129,10 +129,81 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
     /**
      * Test allowed_redirect_hosts filter callback.
      * @covers WPCASServerPlugin::allowed_redirect_hosts
-     * @todo
      */
     function test_allowed_redirect_hosts () {
-        $this->markTestIncomplete( 'TODO' );
+
+        $no_schema_allowed = version_compare( phpversion(), '5.4.7', '>=' );        
+
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'path'             => 'wp-cas',
+            'allowed_services' => array(
+                'http://test1/',
+                'http://test2:8080/',
+                'https://test3/',
+                'http://test4/path/',
+                'http://user@test5/',
+                '//test6',
+                ),
+            ) );
+
+        $hosts = $this->plugin->allowed_redirect_hosts( array( 'test.local' ));
+
+        $this->assertContains( 'test.local', $hosts,
+            'test.local is retained in the allowed redirect hosts list.' );
+
+        $this->assertContains( 'test1', $hosts,
+            'test1 is added to the allowed redirect hosts list.' );
+
+        $this->assertContains( 'test2', $hosts,
+            'test2 is added to the allowed redirect hosts list.' );
+
+        $this->assertContains( 'test3', $hosts,
+            'test3 is added to the allowed redirect hosts list.' );
+
+        $this->assertContains( 'test4', $hosts,
+            'test4 is added to the allowed redirect hosts list.' );
+
+        $this->assertContains( 'test5', $hosts,
+            'test5 is added to the allowed redirect hosts list.' );
+
+        if ($no_schema_allowed) {
+            $this->assertContains( 'test6', $hosts,
+                'test6 is added to the allowed redirect hosts list.' );
+        }
+
+        $expected_count = $no_schema_allowed ? 7 : 6;
+
+        $this->assertCount( $expected_count, $hosts,
+            'Allowed hosts are added to an existing list.');
+
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'path'             => 'wp-cas',
+            'allowed_services' => false,
+            ) );
+
+        $hosts = $this->plugin->allowed_redirect_hosts( array( 'test.local' ));
+
+        $this->assertContains( 'test.local', $hosts,
+            'test.local is retained in the allowed redirect hosts list.' );
+
+        $this->assertNotContains( '', $hosts,
+            'Empty setting does not add invalid hosts to the list.' );
+
+        $this->assertCount( 1, $hosts,
+            'Invalid hosts are not added to an existing list.');
+
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'path'             => 'wp-cas',
+            'allowed_services' => 'http://test-string/',
+            ) );
+
+        $hosts = $this->plugin->allowed_redirect_hosts();
+
+        $this->assertContains( 'test-string', $hosts,
+            'String setting adds a single host to the list.' );
+
+        $this->assertCount( 1, $hosts,
+            'Single host is added.');
     }
 
     /**
@@ -154,7 +225,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         //     - SSL ON           --> OK
         //     - SSL OFF          --> Error
 
-        $this->markTestIncomplete( 'Test for rewrite rules.' );
+        $this->markTestIncomplete();
     }
 
 }

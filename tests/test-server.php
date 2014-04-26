@@ -11,6 +11,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
     private $server;
     private $routes;
+    private $redirect_location;
 
     /**
      * Setup a test method for the WPCASServer class.
@@ -19,6 +20,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         parent::setUp();
         $this->server = new WPCASServer;
         $this->routes = $this->server->routes();
+
+        add_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
     }
 
     /**
@@ -27,6 +30,15 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     function tearDown () {
         parent::tearDown();
         unset( $this->server );
+        unset( $this->redirect_location );
+        unset( $this->redirect_status );
+
+        remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
+    }
+
+    function wp_redirect_handler ( $location ) {
+        $this->redirect_location = $location;
+        throw new WPDieException( "Redirecting to $location" );
     }
 
     function test_interface () {
@@ -134,55 +146,64 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertTrue( is_callable( array( $this->server, 'validate' ) ),
             "'validate' method is callable." );
 
-        // No service
-        
+        /**
+         * No service.
+         */
         $args = array(
             'service' => '',
             'ticket'  => 'ticket',
             );
 
         $this->assertEquals( $this->server->validate( $args ), "no\n\n",
-            "error on empty service" );
+            "Error on empty service." );
 
-        // No ticket
-
+        /**
+         * No ticket.
+         */
         $args = array(
             'service' => 'http://test.local/',
             'ticket'  => '',
             );
 
         $this->assertEquals( $this->server->validate( $args ), "no\n\n",
-            "error on empty ticket" );
+            "Error on empty ticket." );
 
-        // Invalid ticket
-
+        /**
+         * Invalid ticket.
+         */
         $args = array(
             'service' => 'http://test.local/',
             'ticket'  => 'bad-ticket',
             );
 
         $this->assertEquals( $this->server->validate( $args ), "no\n\n",
-            "error on invalid ticket" );
+            "Error on invalid ticket." );
 
-        $this->markTestIncomplete();
-
-        // Valid ticket
-
+        /**
+         * Valid ticket.
+         */
+        $service = 'http://test/';
         $user_id = $this->factory->user->create();
 
         wp_set_current_user( $user_id );
 
-        $user = get_user_by( 'id', $user_id );
-
-        // TODO: Generate ticket with login
+        try {
+            $this->server->login( array( 'service' => $service ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $request );
+            $ticket = $request['ticket'];
+        }
 
         $args = array(
-            'service' => 'http://test/',
-            'ticket'  => '',
+            'service' => $service,
+            'ticket'  => $ticket,
             );
 
+        $user = get_user_by( 'id', $user_id );
+
         $this->assertEquals( $this->server->validate( $args ), "yes\n" . $user->user_login . "\n",
-            "valid ticket" );
+            "Valid ticket." );
     }
 
 }

@@ -58,6 +58,31 @@ class WPCASServer implements ICASServer {
     }
 
     /**
+     * Perform an HTTP redirect.
+     * 
+     * If the 'allowed_services' contains at least one host, it will always perform a safe
+     * redirect.
+     * 
+     * Calling WPCASServer::_redirect() will _always_ terminate the request.
+     * 
+     * @param  string  $location [description]
+     * @param  integer $status   [description]
+     * 
+     * @uses wp_redirect()
+     * @uses wp_safe_redirect()
+     */
+    protected function _redirect ( $location, $status = 302 ) {
+
+        if (empty( WPCASServerPlugin::get_option( 'allowed_services' ) )) {
+            wp_redirect( $location, $status );
+        }
+
+        wp_safe_redirect( $location, $status );
+
+        exit;
+    }
+
+    /**
      * Handle a CAS server request for a specific URI.
      * 
      * This method will attempt to set the following HTTP headers to prevent browser caching:
@@ -379,7 +404,9 @@ class WPCASServer implements ICASServer {
         $expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
         $expires    = time() + $expiration;
 
-        $key        = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
+$expires = time() + 60;
+
+        $key        = wp_hash( $user->user_login . '|' . substr($user->user_pass, 8, 4) . '|' . $expires );
         $hash       = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
         $ticket     = $user->user_login . '|' . $service . '|' . $expires . '|' . $hash;
 
@@ -465,7 +492,7 @@ class WPCASServer implements ICASServer {
                 $error_code );
         }
 
-        if (count( $ticket_elements ) < 5) {
+        if (count( $ticket_elements ) < 4) {
             return $this->_validateError( $error_slug,
                 __( 'Ticket is malformed.', 'wordpress-cas-server' ),
                 $error_code );
@@ -493,9 +520,9 @@ class WPCASServer implements ICASServer {
                 $error_code );
         }
 
-        $key  = wp_hash( $user->user_login . substr($user->user_pass, 8, 4) . '|' . $expires );
+        $key  = wp_hash( $user->user_login . '|' . substr( $user->user_pass, 8, 4 ) . '|' . $expires );
         $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
-
+        
         if ($ticket_hash !== $hash) {
             return $this->_validateError( $error_slug,
                 __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
@@ -528,7 +555,6 @@ class WPCASServer implements ICASServer {
      * @uses add_query_arg()
      * @uses apply_filters()
      * @uses home_url()
-     * @uses wp_redirect()
      */
     protected function _loginUser ( $user, $service ) {
 
@@ -549,12 +575,10 @@ class WPCASServer implements ICASServer {
              */
             $service = apply_filters( 'cas_server_redirect_service', $service, $user );
 
-            wp_redirect( $service );
-            exit;
+            $this->_redirect( $service );
         }
 
-        wp_redirect( home_url() );
-        exit;
+        $this->_redirect( home_url() );
     }
 
     /**
@@ -563,7 +587,6 @@ class WPCASServer implements ICASServer {
      * 
      * @uses apply_filters()
      * @uses auth_redirect()
-     * @uses wp_redirect()
      */
     protected function _loginAuthRedirect () {
         /**
@@ -575,10 +598,10 @@ class WPCASServer implements ICASServer {
         $custom_login_url = apply_filters( 'cas_server_custom_auth_uri', false, $args );
 
         if ($custom_login_url) {
-            wp_redirect( $custom_login_url );
-        } else {
-            auth_redirect();                    
+            $this->_redirect( $custom_login_url );
         }
+
+        auth_redirect();
         exit;
     }
 
@@ -680,7 +703,6 @@ class WPCASServer implements ICASServer {
      * @uses remove_query_arg()
      * @uses wp_get_current_user()
      * @uses wp_logout()
-     * @uses wp_redirect()
      */
     protected function _loginRequestor ( $args ) {
 
@@ -694,14 +716,12 @@ class WPCASServer implements ICASServer {
             $url = '//' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
             $url = remove_query_arg( 'renew', $url );
 
-            wp_redirect( $url );
-            exit;
+            $this->_redirect( $url );
         }
 
         if (!is_user_logged_in()) {
             if ($gateway && !empty( $service )) {
-                wp_redirect( $service );
-                exit;
+                $this->_redirect( $service );
             }
             else
             {
@@ -729,7 +749,6 @@ class WPCASServer implements ICASServer {
      * @uses esc_url_raw()
      * @uses home_url()
      * @uses wp_logout()
-     * @uses wp_redirect()
      */
     public function logout ( $args ) {
         $service = esc_url_raw( $args['service'] );
@@ -737,8 +756,8 @@ class WPCASServer implements ICASServer {
         session_unset();
         session_destroy();
         wp_logout();
-        wp_redirect( !empty( $service ) ? $service : home_url() );
-        exit;
+
+        $this->_redirect( !empty( $service ) ? $service : home_url() );
     }
 
     /**

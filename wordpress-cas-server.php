@@ -189,15 +189,19 @@ class WPCASServerPlugin {
     /**
      * Callback to filter the hosts WordPress allows redirecting to.
      * 
-     * @param  array $allowed   List of valid redirection target hosts.
+     * @param  array $allowed List of valid redirection target hosts.
      * 
-     * @return array            Filtered list of valid redirection target hosts.
+     * @return array          Filtered list of valid redirection target hosts.
      */
-    public function allowed_redirect_hosts ( $allowed ) {
+    public function allowed_redirect_hosts ( $allowed = array() ) {
 
         foreach ((array) self::get_option( 'allowed_services' ) as $uri) {
             // `allowed_redirect_hosts` returns a list of **hosts**, not URIs:
-            $allowed[] = parse_url( $uri, PHP_URL_HOST );
+            $host = parse_url( $uri, PHP_URL_HOST );
+
+            if (!empty( $host )) {
+                $allowed[] = $host;
+            }
         }
 
         return $allowed;
