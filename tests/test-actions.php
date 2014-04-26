@@ -30,6 +30,16 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
     }
 
+    /**
+     * Callback triggered on WordPress redirects.
+     * 
+     * It saves the redirect location to a test case private attribute and throws a
+     * `WPDieException` to prevent PHP from terminating immediately after the redirect.
+     * 
+     * @param  string $location URI for WordPress to redirect to.
+     * 
+     * @throws WPDieException Thrown to signal redirects and prevent tests from terminating.
+     */
     function wp_redirect_handler ( $location ) {
         $this->redirect_location = $location;
         throw new WPDieException( "Redirecting to $location" );
@@ -98,7 +108,6 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
 
     /**
      * @group action
-     * @todo
      */
     function test_cas_server_validation_success () {
         $action   = 'cas_server_validation_success';
@@ -130,7 +139,6 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
 
     /**
      * @group action
-     * @todo
      */
     function test_cas_server_validation_error () {
         $action   = 'cas_server_validation_error';

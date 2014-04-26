@@ -30,6 +30,16 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
     }
 
+    /**
+     * Callback triggered on WordPress redirects.
+     * 
+     * It saves the redirect location to a test case private attribute and throws a
+     * `WPDieException` to prevent PHP from terminating immediately after the redirect.
+     * 
+     * @param  string $location URI for WordPress to redirect to.
+     * 
+     * @throws WPDieException Thrown to signal redirects and prevent tests from terminating.
+     */
     function wp_redirect_handler ( $location ) {
         $this->redirect_location = $location;
         throw new WPDieException( "Redirecting to $location" );
@@ -43,7 +53,7 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
      * 
      * @return array         Query results in array form.
      */
-    private function _xpath_query_xml( $query, $xml ) {
+    private function _xpathQueryXML( $query, $xml ) {
         $doc = new DOMDocument;
         $doc->loadXML( $xml );
 
@@ -139,7 +149,7 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $xml = $this->server->handleRequest( 'login' );
         remove_filter( $filter, array( $mock, 'filter' ) );
 
-        $this->assertCount( 1, $this->_xpath_query_xml( '//cas:serviceResponse/cas:authenticationFailure', $xml ),
+        $this->assertCount( 1, $this->_xpathQueryXML( '//cas:serviceResponse/cas:authenticationFailure', $xml ),
             "'cas_server_dispatch_args' may return WP_Error to abort request.");
 
         $this->_assertFilterIsCalled( $filter, $function, $args );

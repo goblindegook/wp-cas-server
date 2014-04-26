@@ -1,5 +1,6 @@
 <?php
 /**
+ * Contains a CAS Server interface.
  * @package WPCASServerPlugin
  * @subpackage WPCASServer
  */

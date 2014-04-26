@@ -35,6 +35,16 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
     }
 
+    /**
+     * Callback triggered on WordPress redirects.
+     * 
+     * It saves the redirect location to a test case private attribute and throws a
+     * `WPDieException` to prevent PHP from terminating immediately after the redirect.
+     * 
+     * @param  string $location URI for WordPress to redirect to.
+     * 
+     * @throws WPDieException Thrown to signal redirects and prevent tests from terminating.
+     */
     function wp_redirect_handler ( $location ) {
         $this->redirect_location = $location;
         throw new WPDieException( "Redirecting to $location" );
@@ -314,6 +324,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $this->assertFalse( isset( $query['ticket'] ),
             "'login' does not generate a ticket before validating credentials and the login ticket." );
+
+        $this->markTestIncomplete( 'Test support for the optional "warn" parameter.' );
     }
 
     /**

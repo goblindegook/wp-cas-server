@@ -9,16 +9,18 @@ Plugin URI: https://github.com/goblindegook/wordpress-cas-server
 Text Domain: wordpress-cas-server
 Domain Path: /languages
 */
-
 /**
+ * WordPress CAS Server main plugin file.
  * @package WPCASServerPlugin
- * @subpackage WPCASServerPlugin
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
 
 if (!class_exists( 'WPCASServerPlugin' )):
 
+/**
+ * Main plugin class.
+ */
 class WPCASServerPlugin {
 
     /**

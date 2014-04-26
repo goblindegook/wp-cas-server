@@ -1,5 +1,6 @@
 <?php
 /**
+ * Implements the ICASServer interface as required by the WordPress CAS Server plugin.
  * @package WPCASServerPlugin
  * @subpackage WPCASServer
  */
@@ -8,6 +9,9 @@ require_once( dirname( __FILE__ ) . '/ICASServer.php');
 
 if (!class_exists( 'WPCASServer' )) :
 
+/**
+ * Class providing all public CAS methods.
+ */
 class WPCASServer implements ICASServer {
 
     /**
@@ -548,7 +552,8 @@ class WPCASServer implements ICASServer {
                 __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
         }
 
-        if (WPCASServerPlugin::get_option( 'allow_ticket_reuse' ) == false && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
+        if (WPCASServerPlugin::get_option( 'allow_ticket_reuse' ) == false
+            && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
             return $this->_validateError( $error_slug,
                 __( 'Ticket is not recognized.', 'wordpress-cas-server' ),
                 $error_code );
