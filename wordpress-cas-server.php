@@ -70,7 +70,7 @@ class WPCASServerPlugin {
         /**
          * Service ticket expiration, in seconds [0..300].
          */
-        'expiration'         => 60,
+        'expiration'         => 30,
 
         /**
          * @todo Disable the server if SSL is not enabled on WordPress and reject

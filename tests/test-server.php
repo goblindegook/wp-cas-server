@@ -62,6 +62,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      * @todo
      */
     function test_handleRequest () {
+
         $this->assertTrue( is_callable( array( $this->server, 'handleRequest' ) ), "'handleRequest' method is callable." );
 
         $this->markTestIncomplete();
@@ -130,9 +131,58 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      */
     function test_validate () {
 
-        $this->assertTrue( is_callable( array( $this->server, 'validate' ) ), "'validate' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'validate' ) ),
+            "'validate' method is callable." );
+
+        // No service
+        
+        $args = array(
+            'service' => '',
+            'ticket'  => 'ticket',
+            );
+
+        $this->assertEquals( $this->server->validate( $args ), "no\n\n",
+            "error on empty service" );
+
+        // No ticket
+
+        $args = array(
+            'service' => 'http://test.local/',
+            'ticket'  => '',
+            );
+
+        $this->assertEquals( $this->server->validate( $args ), "no\n\n",
+            "error on empty ticket" );
+
+        // Invalid ticket
+
+        $args = array(
+            'service' => 'http://test.local/',
+            'ticket'  => 'bad-ticket',
+            );
+
+        $this->assertEquals( $this->server->validate( $args ), "no\n\n",
+            "error on invalid ticket" );
 
         $this->markTestIncomplete();
+
+        // Valid ticket
+
+        $user_id = $this->factory->user->create();
+
+        wp_set_current_user( $user_id );
+
+        $user = get_user_by( 'id', $user_id );
+
+        // TODO: Generate ticket with login
+
+        $args = array(
+            'service' => 'http://test/',
+            'ticket'  => '',
+            );
+
+        $this->assertEquals( $this->server->validate( $args ), "yes\n" . $user->user_login . "\n",
+            "valid ticket" );
     }
 
 }

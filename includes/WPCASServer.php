@@ -151,14 +151,6 @@ class WPCASServer implements ICASServer {
                 continue;
             }
 
-            /**
-             * Filters the callback to be dispatched for the request.
-             * 
-             * @param (string|array) $callback Callback function or method.
-             * @param string         $path     Requested URI path.
-             */
-            $callback = apply_filters( 'cas_server_dispatch_callback', $callback, $path );
-
             if (!is_callable( $callback )) {
                 return new WP_Error( 'authenticationFailure',
                     __('The handler for the route is invalid.', 'wordpress-cas-server'),
@@ -309,7 +301,7 @@ class WPCASServer implements ICASServer {
      */
     protected function _xmlProxySuccess ( $user, $service = '' ) {
 
-        $expiration = WPCASServerPlugin::get_option( 'expiration', 15 );
+        $expiration = WPCASServerPlugin::get_option( 'expiration', 30 );
 
         $proxy_ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_PT, $expiration );
 
@@ -363,9 +355,9 @@ class WPCASServer implements ICASServer {
      * @param  WP_USER $user        WordPress user to authenticate.
      * @param  string  $service     Service URI.
      * @param  string  $type        Ticket type (default TYPE_ST).
-     * @param  int     $expiration  Ticket expiration time in seconds (default 15). The CAS
-     *                              specification recommends that the duration a ticket is valid be
-     *                              no longer than 5 minutes.
+     * @param  int     $expiration  Ticket expiration time in seconds (default 30). The CAS
+     *                              protocol specification recommends that a ticket should
+     *                              not be valid for longer than 5 minutes.
      * 
      * @return string               Generated ticket.
      * 
@@ -374,7 +366,7 @@ class WPCASServer implements ICASServer {
      * @uses set_transient()
      * @uses wp_hash()
      */
-    protected function _createTicket( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 15 ) {
+    protected function _createTicket( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 30 ) {
         /**
          * This filter allows developers to override the default ticket expiration period.
          * 
@@ -459,6 +451,10 @@ class WPCASServer implements ICASServer {
                 ICASServer::ERROR_INVALID_REQUEST );
         }
 
+        if (strpos( $ticket, '-' ) === false) {
+            $ticket = '-' . $ticket;
+        }
+
         list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
 
         $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
@@ -469,7 +465,7 @@ class WPCASServer implements ICASServer {
                 $error_code );
         }
 
-        if (empty( $ticket_elements )) {
+        if (count( $ticket_elements ) < 5) {
             return $this->_validateError( $error_slug,
                 __( 'Ticket is malformed.', 'wordpress-cas-server' ),
                 $error_code );
@@ -536,7 +532,7 @@ class WPCASServer implements ICASServer {
      */
     protected function _loginUser ( $user, $service ) {
 
-        $expiration = WPCASServerPlugin::get_option( 'expiration', 15 );
+        $expiration = WPCASServerPlugin::get_option( 'expiration', 30 );
 
         $ticket = $this->_createTicket( $user, $service, ICASServer::TYPE_ST, $expiration );
 

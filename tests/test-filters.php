@@ -91,32 +91,15 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
      * @group filter
      * @todo
      */
-    function test_cas_server_dispatch_callback () {
-        $filter   = 'cas_server_dispatch_callback';
-        $function = array( $this->server, 'handleRequest' );
-        $args     = array( '/login' );
-        
-        /*
-        $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
-            "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
-    }
-
-    /**
-     * @group filter
-     * @todo
-     */
     function test_cas_server_dispatch_args () {
         $filter   = 'cas_server_dispatch_args';
         $function = array( $this->server, 'handleRequest' );
         $args     = array( '/login' );
         
-        /*
+        $this->markTestIncomplete();
+
         $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
             "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
     /**
@@ -127,12 +110,11 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $filter   = 'cas_server_login_args';
         $function = array( $this->server, 'handleRequest' );
         $args     = array( '/login' );
-        
-        /*
+
+        $this->markTestIncomplete();
+
         $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
             "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
     /**
@@ -143,12 +125,17 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $filter   = 'cas_server_redirect_service';
         $function = array( $this->server, 'handleRequest' );
         $args     = array( '/login' );
-        
-        /*
+
+        $_GET     = array( 'service' => 'http://test.local/' );
+
+        $user_id  = $this->factory->user->create();
+
+        wp_set_current_user( $user_id );
+
+        $this->markTestIncomplete();
+
         $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
             "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
     /**
@@ -160,11 +147,10 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $function = array( $this->server, 'handleRequest' );
         $args     = array( '/login' );
         
-        /*
+        $this->markTestIncomplete();
+        
         $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
             "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
     /**
@@ -175,12 +161,11 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $filter   = 'cas_server_ticket_expiration';
         $function = array( $this->server, 'handleRequest' );
         $args     = array( '/login' );
+
+        $this->markTestIncomplete();
         
-        /*
         $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
             "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
     /**
@@ -192,11 +177,10 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $function = array( $this->server, 'handleRequest' );
         $args     = array( '/login' );
         
-        /*
+        $this->markTestIncomplete();
+        
         $this->assertTrue( $this->_is_filter_called( $filter, $function, $args ),
             "Filter callback for '$filter' is called." );
-        */
-        $this->markTestIncomplete( "Filter callback for '$filter' not tested until I find a way to get around exit and die()." );
     }
 
 }

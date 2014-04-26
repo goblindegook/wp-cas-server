@@ -142,10 +142,10 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
     function test_rewrite_rules () {
         global $wp_rewrite;
 
-        $options = get_option( WPCASServerPlugin::OPTIONS_KEY );
-        $this->assertNotEmpty( $options['path'], 'Plugin sets default URI path root.');
+        $path = WPCASServerPlugin::get_option( 'path' );
+        $this->assertNotEmpty( $path, 'Plugin sets default URI path root.');
 
-        $rule = '^' . $options['path'] . '/(.*)?';
+        $rule = '^' . $path . '/(.*)?';
 
         $this->markTestIncomplete( 'Test for rewrite rules.' );
     }

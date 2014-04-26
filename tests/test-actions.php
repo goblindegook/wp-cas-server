@@ -58,8 +58,6 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         
         $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
             "Action callback for '$action' is called." );
-
-        // TODO: Test did_action()
     }
 
     /**
@@ -91,7 +89,20 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
      * @todo
      */
     function test_cas_server_validation_success () {
-        $this->markTestIncomplete( 'TODO' );
+        $action   = 'cas_server_validation_success';
+        $function = array( $this->server, 'handleRequest' );
+        $args     = array( '/serviceValidate' );
+
+        $user_id  = $this->factory->user->create();
+
+        wp_set_current_user( $user_id );
+
+        // TODO: Generate a service ticket to validate.
+        
+        $this->markTestIncomplete();
+        
+        $this->assertTrue( $this->_is_action_called( $action, $function, $args ),
+            "Action callback for '$action' is called." );
     }
 
     /**
@@ -99,7 +110,16 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
      * @todo
      */
     function test_cas_server_validation_error () {
-        $this->markTestIncomplete( 'TODO' );
+        $action   = 'cas_server_validation_error';
+        $function = array( $this->server, 'handleRequest' );
+
+        $this->markTestIncomplete();
+
+        foreach (array( '/proxy', '/proxyValidate', '/serviceValidate' ) as $endpoint) {
+            $this->assertTrue( $this->_is_action_called( $action, $function, array( $endpoint ) ),
+                "Action callback for '$action' is called for '$endpoint'." );
+        }
+
     }
 
 }
