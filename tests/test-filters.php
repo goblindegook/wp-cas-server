@@ -142,8 +142,6 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $this->assertCount( 1, $this->_xpath_query_xml( '//cas:serviceResponse/cas:authenticationFailure', $xml ),
             "'cas_server_dispatch_args' may return WP_Error to abort request.");
 
-        $this->markTestIncomplete();
-
         $this->_assertFilterIsCalled( $filter, $function, $args );
     }
 
