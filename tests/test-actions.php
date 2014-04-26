@@ -8,6 +8,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     
     private $plugin;
     private $server;
+    private $redirect_location;
 
     /**
      * Setup a test method for the WP_TestWPCASServerPluginActions class.
@@ -16,6 +17,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         parent::setUp();
         $this->plugin = $GLOBALS[WPCASServerPlugin::SLUG];
         $this->server = new WPCASServer;
+        add_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
     }
 
     /**
@@ -24,6 +26,13 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
     function tearDown () {
         parent::tearDown();
         unset( $this->plugin );
+        unset( $this->redirect_location );
+        remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
+    }
+
+    function wp_redirect_handler ( $location ) {
+        $this->redirect_location = $location;
+        throw new WPDieException( "Redirecting to $location" );
     }
 
     /**
@@ -39,11 +48,19 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
 
         add_filter( $label, array( $mock, 'action' ) );
         ob_start();
-        call_user_func_array( $function, $args );
+
+        try {
+            call_user_func_array( $function, $args );
+        }
+        catch (WPDieException $message) {
+            ob_end_clean();
+            remove_filter( $label, array( $mock, 'action' ) );
+            return;
+        }
+
+        // finally not supported in PHP 5.3 and 5.4
         ob_end_clean();
         remove_filter( $label, array( $mock, 'action' ) );
-
-        unset( $mock );
     }
 
     /**
@@ -85,18 +102,30 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
      */
     function test_cas_server_validation_success () {
         $action   = 'cas_server_validation_success';
-        $function = array( $this->server, 'handleRequest' );
-        $args     = array( 'serviceValidate' );
+        $function = array( $this->server, 'serviceValidate' );
 
-        $user_id  = $this->factory->user->create();
+        $service = 'http://test/';
 
-        wp_set_current_user( $user_id );
+        wp_set_current_user( $this->factory->user->create() );
 
-        // TODO: Generate a service ticket to validate.
+        try {
+            $this->server->login( array( 'service' => $service ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+        }
+
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration' => 60,
+            'attributes' => array( 'user_email' ),
+            ) );
+
+        $args = array(
+            'service' => $service,
+            'ticket'  => $query['ticket'],
+            );
         
-        $this->markTestIncomplete();
-        
-        $this->_assertActionIsCalled( $action, $function, $args );
+        $this->_assertActionIsCalled( $action, $function, array( $args ) );
     }
 
     /**
