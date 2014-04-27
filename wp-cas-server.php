@@ -1,12 +1,12 @@
 <?php
 /*
-Plugin Name: WordPress CAS Server
+Plugin Name: WP CAS Server
 Version: 0.9.0
 Description: Provides authentication services based on Jasig CAS protocols.
 Author: Luís Rodrigues
 Author URI: http://goblindegook.net/
 Plugin URI: https://github.com/goblindegook/wordpress-cas-server
-Text Domain: wordpress-cas-server
+Text Domain: wp-cas-server
 Domain Path: /languages
 */
 
@@ -27,7 +27,7 @@ Domain Path: /languages
 */
 
 /**
- * WordPress CAS Server main plugin file.
+ * WP CAS Server main plugin file.
  * @package WPCASServerPlugin
  */
 
@@ -48,7 +48,7 @@ class WPCASServerPlugin {
     /**
      * Plugin slug.
      */
-    const SLUG = 'wordpress-cas-server';
+    const SLUG = 'wp-cas-server';
 
     /**
      * Plugin options key.
@@ -58,7 +58,7 @@ class WPCASServerPlugin {
     /**
      * Plugin file.
      */
-    const FILE = 'wordpress-cas-server/wordpress-cas-server.php';
+    const FILE = 'wp-cas-server/wp-cas-server.php';
 
     /**
      * Query variable used to pass the requested CAS route.
@@ -115,7 +115,7 @@ class WPCASServerPlugin {
         );
 
     /**
-     * WordPress CAS Server plugin constructor.
+     * WP CAS Server plugin constructor.
      */
     public function __construct ( ICASServer $server ) {
         register_activation_hook( __FILE__, array( $this, 'activation' ) );

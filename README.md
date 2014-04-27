@@ -1,3 +1,5 @@
+# WP CAS Server
+
 [![Build Status](https://travis-ci.org/goblindegook/wordpress-cas-server.svg?branch=master)](https://travis-ci.org/goblindegook/wordpress-cas-server)
 
 This plugin allows WordPress to act as a single sign-on authenticator using versions 1.0 and 2.0 of the Central Authentication Service protocol.

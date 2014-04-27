@@ -1,4 +1,4 @@
-=== WordPress CAS Server ===
+=== WP CAS Server ===
 Contributors: goblindegook
 Tags: authentication, CAS, Central Authentication Service, single sign-on
 Requires at least: 3.9
@@ -17,14 +17,14 @@ That way, users on your WordPress install may be able to access different applic
 
 By default, CAS method URIs are provided under the `wp-cas` endpoint:
 
-* `/wp-cas/login`: Allows a remote service to request that a user authenticate on the WordPress CAS Server. Will redirect back to the remote service along with a service ticket.
+* `/wp-cas/login`: Allows a remote service to request that a user authenticate on the WP CAS Server. Will redirect back to the remote service along with a service ticket.
 * `/wp-cas/logout`: Terminates the single sign-on session. May optionally back to the remote service.
 * `/wp-cas/proxy` [CAS 2.0]: Provides remote services with proxy tickets in exchange for proxy-granting tickets. Returns an XML response.
 * `/wp-cas/proxyValidate` [CAS 2.0]: Allows a remote service to validate a service or proxy ticket forwarded by the user on redirect. Returns an XML response.
 * `/wp-cas/serviceValidate` [CAS 2.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns an XML response.
 * `/wp-cas/validate` [CAS 1.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns a plaintext response.
 
-There are a few [client integration](http://www.jasig.org/cas/client-integration) libraries available for CAS, as well as a handy guide for [CASifying several existing applications](https://wiki.jasig.org/display/CASC/CASifying+Applications). Independent WordPress installations may integrate with the WordPress CAS Server using a client plugin such as [CAS Maestro](http://wordpress.org/plugins/cas-maestro/).
+There are a few [client integration](http://www.jasig.org/cas/client-integration) libraries available for CAS, as well as a handy guide for [CASifying several existing applications](https://wiki.jasig.org/display/CASC/CASifying+Applications). Independent WordPress installations may integrate with the WP CAS Server using a client plugin such as [CAS Maestro](http://wordpress.org/plugins/cas-maestro/).
 
 Please follow and contribute to this plugin's development on [Github](https://github.com/goblindegook/wordpress-cas-server).
 
@@ -33,7 +33,7 @@ Please follow and contribute to this plugin's development on [Github](https://gi
 = Using The WordPress Dashboard =
 
 1. Navigate to the 'Add New' in the plugins dashboard
-2. Search for 'wordpress cas server'
+2. Search for 'wp cas server'
 3. Click 'Install Now'
 4. Activate the plugin on the Plugin dashboard
 
@@ -41,15 +41,15 @@ Please follow and contribute to this plugin's development on [Github](https://gi
 
 1. Navigate to the 'Add New' in the plugins dashboard
 2. Navigate to the 'Upload' area
-3. Select `wordpress-cas-server.zip` from your computer
+3. Select `wp-cas-server.zip` from your computer
 4. Click 'Install Now'
 5. Activate the plugin in the Plugin dashboard
 
 = Using FTP =
 
-1. Download `wordpress-cas-server.zip`
-2. Extract the `wordpress-cas-server` directory to your computer
-3. Upload the `wordpress-cas-server` directory to the `/wp-content/plugins/` directory
+1. Download `wp-cas-server.zip`
+2. Extract the `wp-cas-server` directory to your computer
+3. Upload the `wp-cas-server` directory to the `/wp-content/plugins/` directory
 4. Activate the plugin in the Plugin dashboard
 
 == Frequently Asked Questions ==
@@ -74,7 +74,7 @@ You may peruse the CAS 1.0 and 2.0 protocol specifications in complete detail at
 
 = What types of tickets does this plugin support? =
 
-WordPress CAS Server sets and receives Ticket-Granting Cookies (TGC), Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
+WP CAS Server sets and receives Ticket-Granting Cookies (TGC), Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
 
 == Hooks ==
 

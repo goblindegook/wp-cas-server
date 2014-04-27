@@ -28,10 +28,10 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
      * Test plugin constant and static attributes.
      */
     function test_plugin_constants () {
-        $slug = 'wordpress-cas-server';
+        $slug = 'wp-cas-server';
         $this->assertEquals( $slug, WPCASServerPlugin::SLUG, "Plugin slug is $slug." );
 
-        $file = 'wordpress-cas-server/wordpress-cas-server.php';
+        $file = 'wp-cas-server/wp-cas-server.php';
         $this->assertEquals( $file, WPCASServerPlugin::FILE, "Plugin file is $file." );
     }
 

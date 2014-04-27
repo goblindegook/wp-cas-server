@@ -1,6 +1,6 @@
 <?php
 /**
- * Implements the ICASServer interface as required by the WordPress CAS Server plugin.
+ * Implements the ICASServer interface as required by the WP CAS Server plugin.
  * @package WPCASServerPlugin
  * @subpackage WPCASServer
  */
@@ -21,7 +21,7 @@ class WPCASServer implements ICASServer {
     protected $xmlResponse;
 
     /**
-     * WordPress CAS Server constructor.
+     * WP CAS Server constructor.
      * 
      * @uses get_option()
      */
