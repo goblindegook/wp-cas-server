@@ -1,33 +1,56 @@
-=== Plugin Name ===
+=== WordPress CAS Server ===
 Contributors: goblindegook
 Tags: authentication, CAS, Central Authentication Service, single sign-on
 Requires at least: 3.9
 Tested up to: 3.9
 Stable tag: trunk
+License: GPLv2
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Provides authentication services based on Jasig CAS protocols.
 
 == Description ==
 
-[![Build Status](https://travis-ci.org/goblindegook/wordpress-cas-server.svg?branch=master)](https://travis-ci.org/goblindegook/wordpress-cas-server)
-
 This plugin allows WordPress to act as a single sign-on authenticator using versions 1.0 and 2.0 of the Central Authentication Service protocol.
 
-That way, users on your WordPress install may be able to access different applications that support the CAS protocol while providing a single set of credentials, once only and without exposing the user's password.
+That way, users on your WordPress install may be able to access different applications that support the CAS protocol by providing a single set of credentials and without exposing the user's password.
 
-The following URIs are provided:
+By default, CAS method URIs are provided under the `wp-cas` endpoint:
 
-* `/wp-cas/login`: TODO
-* `/wp-cas/logout`: TODO
-* `/wp-cas/proxy` [CAS 2.0]: TODO
-* `/wp-cas/proxyValidate` [CAS 2.0]: TODO
-* `/wp-cas/serviceValidate` [CAS 2.0]: TODO
-* `/wp-cas/validate` [CAS 1.0]: TODO
+* `/wp-cas/login`: Allows a remote service to request that a user authenticate on the WordPress CAS Server. Will redirect back to the remote service along with a service ticket.
+* `/wp-cas/logout`: Terminates the single sign-on session. May optionally back to the remote service.
+* `/wp-cas/proxy` [CAS 2.0]: Provides remote services with proxy tickets in exchange for proxy-granting tickets. Returns an XML response.
+* `/wp-cas/proxyValidate` [CAS 2.0]: Allows a remote service to validate a service or proxy ticket forwarded by the user on redirect. Returns an XML response.
+* `/wp-cas/serviceValidate` [CAS 2.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns an XML response.
+* `/wp-cas/validate` [CAS 1.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns a plaintext response.
+
+There are a few [client integration](http://www.jasig.org/cas/client-integration) libraries available for CAS, as well as a handy guide for [CASifying several existing applications](https://wiki.jasig.org/display/CASC/CASifying+Applications). Independent WordPress installations may integrate with the WordPress CAS Server using a client plugin such as [CAS Maestro](http://wordpress.org/plugins/cas-maestro/).
+
+Please follow and contribute to this plugin's development on [Github](https://github.com/goblindegook/wordpress-cas-server).
 
 == Installation ==
 
-1. Upload `wordpress-cas-server` directory to the `/wp-content/plugins/` directory.
-1. Activate the plugin under 'Plugins' in the WordPress administration panel.
+= Using The WordPress Dashboard =
+
+1. Navigate to the 'Add New' in the plugins dashboard
+2. Search for 'wordpress cas server'
+3. Click 'Install Now'
+4. Activate the plugin on the Plugin dashboard
+
+= Uploading in WordPress Dashboard =
+
+1. Navigate to the 'Add New' in the plugins dashboard
+2. Navigate to the 'Upload' area
+3. Select `wordpress-cas-server.zip` from your computer
+4. Click 'Install Now'
+5. Activate the plugin in the Plugin dashboard
+
+= Using FTP =
+
+1. Download `wordpress-cas-server.zip`
+2. Extract the `wordpress-cas-server` directory to your computer
+3. Upload the `wordpress-cas-server` directory to the `/wp-content/plugins/` directory
+4. Activate the plugin in the Plugin dashboard
 
 == Frequently Asked Questions ==
 
@@ -41,6 +64,10 @@ Upon authenticating the user, the CAS server returns the user to the application
 
 Behind the scenes, the application then contacts the CAS server over a secure connection to independently verify that the security ticket is valid.  The CAS server responds with information about the user's status, confirming they are who they claim to be.
 
+= How can I change the default settings? =
+
+At the moment, the only way to change the default settings is through the Hooks API.
+
 = Where can I read about the CAS protocol specification? =
 
 You may peruse the CAS 1.0 and 2.0 protocol specifications in complete detail at the [official project site](http://www.jasig.org/cas/protocol).
@@ -51,16 +78,131 @@ WordPress CAS Server sets and receives Ticket-Granting Cookies (TGC), Service Ti
 
 == Hooks ==
 
-= Action: `cas_*` =
+= Action: `cas_server_before_request` =
 
-TODO
+Fires before a CAS request is processed.
 
-= Filter: `cas_*` =
+Parameters:
 
-TODO
+* _string_ `$path`: Requested URI path.
+
+= Action: `cas_server_after_request` =
+
+Fires after a CAS request is processed.
+
+Parameters:
+
+* _string_ `$path`: Requested URI path.
+
+= Action: `cas_server_error` =
+
+Fires if the CAS server has to return an XML error.
+
+Parameters:
+
+* _WP\_Error_ `$errpr`: WordPress error to return as XML.
+
+= Action: `cas_server_validation_success` =
+
+Fires on successful ticket validation.
+
+Parameters:
+
+* _WP\_User_ `$user`: WordPress user validated by ticket.
+* _string_ `$ticket`: Valid ticket string.
+
+= Action: `cas_server_validation_error` =
+
+Fires on an invalid ticket.
+
+Parameters:
+
+* _WP\_Error_ `$error`: Validation error for the ticket provided.
+
+= Filter: `cas_enabled` =
+
+Allows developers to disable CAS.
+
+Parameters:
+
+* _boolean_ `$cas_enabled`: Whether the server should respond to single sign-on requests.
+
+= Filter: `cas_server_routes` =
+
+Allows developers to override the default callback mapping, define additional endpoints and provide alternative implementations to the provided methods.
+
+Parameters:
+
+* _array_ `$cas_routes`: CAS endpoint to callback mapping.
+
+= Filter: `cas_server_response` =
+
+Lets developers change the CAS server response string.
+
+Parameters:
+
+* _string_ `$output`: Response output string.
+* _string_ `$path`: Requested URI path.
+
+= Filter: `cas_server_dispatch_args` =
+
+Filters the callback arguments to be dispatched for the request. Plugin developers may return a `WP_Error` object here to abort the request.
+
+Parameters:
+
+* _array_ `$args`: Arguments to pass the callback.
+* _(string|array)_ `$callback`: Callback function or method.
+* _string_ `$path`: Requested URI path.
+
+= Filter: `cas_server_login_args` =
+
+Allows developers to change the request parameters passed to a `/login` request.
+
+Parameters:
+
+* _array_ `$args`: HTTP request (GET, POST) parameters.
+
+= Filter: `cas_server_redirect_service` =
+
+Filters the redirect URI for the service requesting user authentication.
+
+Parameters:
+
+* _string_ `$service`: Service URI requesting user authentication.
+* _WP\_User_ `$user`: Logged in WordPress user.
+
+= Filter: `cas_server_custom_auth_uri` =
+
+Allows developers to redirect the user to a custom login form.
+
+Parameters:
+
+* _string_ `$custom_login_url`: URI for the custom login page.
+* _array_ `$args`: Login request parameters.
+
+= Filter: `cas_server_ticket_expiration` =
+
+This filter allows developers to override the default ticket expiration period.
+
+Parameters:
+
+* _int_ `$expiration`: Ticket expiration period (in seconds).
+* _string_ `$type`: Type of ticket to set.
+* _WP\_User_ `$user`: Authenticated user associated with the ticket.
+
+= Filter: `cas_server_validation_extra_attributes` =
+
+Allows developers to change the list of (key, value) pairs before they're included in a `/serviceValidate` response.
+
+Parameters:
+
+* _array_ `$attributes`: List of attributes to output.
+* _WP\_User_ `$user`: Authenticated user.
+
+== Upgrade Notice ==
 
 == Changelog ==
 
-= 1.0 =
+= 0.9.0 =
 
 * Initial release.

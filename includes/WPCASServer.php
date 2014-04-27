@@ -58,6 +58,13 @@ class WPCASServer implements ICASServer {
             'validate'        => array( $this, 'validate' ),
             );
 
+        /**
+         * Allows developers to override the default callback
+         * mapping, define additional endpoints and provide
+         * alternative implementations to the provided methods.
+         * 
+         * @param array $cas_routes CAS endpoint to callback mapping.
+         */
         return apply_filters( 'cas_server_routes', $cas_routes );
     }
 
@@ -140,7 +147,7 @@ class WPCASServer implements ICASServer {
         do_action( 'cas_server_after_request', $path );
 
         /**
-         * Filters the CAS server response string.
+         * Lets developers change the CAS server response string.
          * 
          * @param string $output Response output string.
          * @param string $path   Requested URI path.
@@ -163,6 +170,11 @@ class WPCASServer implements ICASServer {
      */
     protected function _dispatch ( $path ) {
 
+        /**
+         * Allows developers to disable CAS.
+         * 
+         * @param boolean $cas_enabled Whether the server should respond to single sign-on requests.
+         */
         $enabled = apply_filters( 'cas_enabled', true );
 
         if (!$enabled) {
@@ -300,13 +312,11 @@ class WPCASServer implements ICASServer {
             }
 
             /**
-             * Allows developers to filter a list of (key, value) pairs before they're included
+             * Allows developers to change the list of (key, value) pairs before they're included
              * in a `/serviceValidate` response.
              * 
-             * @param  array   $attributes List of attributes to filter.
+             * @param  array   $attributes List of attributes to output.
              * @param  WP_User $user       Authenticated user.
-             * 
-             * @return array               Filtered list of attributes.
              */
             $response_attributes = apply_filters( 'cas_server_validation_extra_attributes', $response_attributes, $user );
 
@@ -424,8 +434,6 @@ class WPCASServer implements ICASServer {
          * @param  int     $expiration Ticket expiration period (in seconds).
          * @param  string  $type       Type of ticket to set.
          * @param  WP_User $user       Authenticated user associated with the ticket.
-         * 
-         * @return int                 Filtered ticket expiration period (in seconds).
          */
         $expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
         $expires    = microtime( true ) + $expiration;
@@ -455,7 +463,7 @@ class WPCASServer implements ICASServer {
         /**
          * Fires on an invalid ticket.
          * 
-         * @param WP_Error $error   Validation error for the provided ticket.
+         * @param WP_Error $error   Validation error for the ticket provided.
          */
         do_action( 'cas_server_validation_error', $error );
 
@@ -562,7 +570,7 @@ class WPCASServer implements ICASServer {
         delete_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
 
         /**
-         * Fires on an valid ticket.
+         * Fires on successful ticket validation.
          * 
          * @param WP_User $user   WordPress user validated by ticket.
          * @param string  $ticket Valid ticket string.
@@ -595,8 +603,6 @@ class WPCASServer implements ICASServer {
              * 
              * @param  string  $service Service URI requesting user authentication.
              * @param  WP_User $user    Logged in WordPress user.
-             * 
-             * @return string           Filtered service URI requesting user authentication.
              */
             $service = apply_filters( 'cas_server_redirect_service', $service, $user );
 
@@ -645,6 +651,12 @@ class WPCASServer implements ICASServer {
     public function login ( $args = array() ) {
 
         $args = array_merge( $_POST, (array) $args );
+
+        /**
+         * Allows developers to change the request parameters passed to a `/login` request.
+         * 
+         * @param array $args HTTP request (GET, POST) parameters.
+         */
         $args = apply_filters( 'cas_server_login_args', $args );
 
         if (isset( $args['username'] ) && isset( $args['password'] ) && isset( $args['lt'] )) {
