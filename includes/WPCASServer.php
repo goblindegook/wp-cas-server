@@ -179,7 +179,7 @@ class WPCASServer implements ICASServer {
 
         if (!$enabled) {
             return new WP_Error( 'authenticationFailure',
-                __('The CAS server is disabled.', 'wordpress-cas-server'),
+                __('The CAS server is disabled.', 'wp-cas-server'),
                 array( 'code' => ICASServer::ERROR_INTERNAL_ERROR )
                 );
         }
@@ -194,7 +194,7 @@ class WPCASServer implements ICASServer {
 
             if (!is_callable( $callback )) {
                 return new WP_Error( 'authenticationFailure',
-                    __('The handler for the route is invalid.', 'wordpress-cas-server'),
+                    __('The handler for the route is invalid.', 'wp-cas-server'),
                     array( 'code' => ICASServer::ERROR_INTERNAL_ERROR )
                     );
             }
@@ -221,7 +221,7 @@ class WPCASServer implements ICASServer {
         }
 
         return new WP_Error( 'authenticationFailure',
-            __( 'The server does not support the method requested.', 'wordpress-cas-server' ),
+            __( 'The server does not support the method requested.', 'wp-cas-server' ),
             array( 'code' => ICASServer::ERROR_INVALID_REQUEST )
             );
     }
@@ -243,7 +243,7 @@ class WPCASServer implements ICASServer {
         wp_set_current_user( false );
 
         $session_exists = function_exists( 'session_status' ) && session_status() == PHP_SESSION_NONE;
-        if (headers_sent() || $session_exists || strlen( session_id() )) return;
+        if (headers_sent() || !$session_exists || !strlen( session_id() )) return;
 
         session_unset();
         session_destroy();
@@ -404,7 +404,7 @@ class WPCASServer implements ICASServer {
         }
 
         $response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-            "cas:authenticationFailure", __( 'Unknown error', 'wordpress-cas-server' ) );
+            "cas:authenticationFailure", __( 'Unknown error', 'wp-cas-server' ) );
 
         $response->setAttribute( "code", ICASServer::ERROR_INTERNAL_ERROR );
 
@@ -500,13 +500,13 @@ class WPCASServer implements ICASServer {
 
         if (empty( $service )) {
             return $this->_validateError( $error_slug,
-                __( 'Service is required.', 'wordpress-cas-server' ),
+                __( 'Service is required.', 'wp-cas-server' ),
                 ICASServer::ERROR_INVALID_REQUEST );
         }
 
         if (empty( $ticket )) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket is required.', 'wordpress-cas-server' ),
+                __( 'Ticket is required.', 'wp-cas-server' ),
                 ICASServer::ERROR_INVALID_REQUEST );
         }
 
@@ -520,13 +520,13 @@ class WPCASServer implements ICASServer {
 
         if ($ticket_type && !in_array( $ticket_type, $valid_ticket_types )) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket type cannot be validated.', 'wordpress-cas-server' ),
+                __( 'Ticket type cannot be validated.', 'wp-cas-server' ),
                 $error_code );
         }
 
         if (count( $ticket_elements ) < 4) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket is malformed.', 'wordpress-cas-server' ),
+                __( 'Ticket is malformed.', 'wp-cas-server' ),
                 $error_code );
         }
 
@@ -534,13 +534,13 @@ class WPCASServer implements ICASServer {
 
         if ( $ticket_service !== $service ) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket does not match service.', 'wordpress-cas-server' ),
+                __( 'Ticket does not match service.', 'wp-cas-server' ),
                 $error_code );
         }
 
         if ( $expires < time() ) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket has expired.', 'wordpress-cas-server' ),
+                __( 'Ticket has expired.', 'wp-cas-server' ),
                 $error_code );
         }
 
@@ -548,7 +548,7 @@ class WPCASServer implements ICASServer {
 
         if ( !$user ) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket does not match user.', 'wordpress-cas-server' ),
+                __( 'Ticket does not match user.', 'wp-cas-server' ),
                 $error_code );
         }
 
@@ -557,13 +557,13 @@ class WPCASServer implements ICASServer {
 
         if ($ticket_hash !== $hash) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket is corrupted.', 'wordpress-cas-server' ), $ticket, $service );
+                __( 'Ticket is corrupted.', 'wp-cas-server' ), $ticket, $service );
         }
 
         if (WPCASServerPlugin::get_option( 'allow_ticket_reuse' ) == false
             && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
             return $this->_validateError( $error_slug,
-                __( 'Ticket is not recognized.', 'wordpress-cas-server' ),
+                __( 'Ticket is not recognized.', 'wp-cas-server' ),
                 $error_code );
         }
 

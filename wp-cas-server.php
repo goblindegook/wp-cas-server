@@ -53,7 +53,7 @@ class WPCASServerPlugin {
     /**
      * Plugin options key.
      */
-    const OPTIONS_KEY = 'wordpress_cas_server';
+    const OPTIONS_KEY = 'wp_cas_server';
 
     /**
      * Plugin file.
