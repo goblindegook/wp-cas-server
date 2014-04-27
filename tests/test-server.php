@@ -50,6 +50,30 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         throw new WPDieException( "Redirecting to $location" );
     }
 
+    /**
+     * Run an XPath query on an XML string.
+     * 
+     * @param  string $query XPath query to run.
+     * @param  string $xml   Stringified XML.
+     * 
+     * @return array         Query results in array form.
+     */
+    private function _xpathQueryXML( $query, $xml ) {
+        $doc = new DOMDocument;
+        $doc->loadXML( $xml );
+
+        $xpath = new DOMXPath( $doc );
+        $results = $xpath->query( $query );
+
+        $output = array();
+
+        foreach ($results as $element) {
+            $output[] = $element;
+        }
+
+        return $output;
+    }
+
     function test_interface () {
         $this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
             'WPCASServer implements the ICASServer interface.' );
@@ -94,6 +118,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      * Tests /login requestor behaviour.
      * 
      * @covers ::login
+     * @covers ::_loginRequestor
      * @runInSeparateProcess
      */
     function test_login_requestor () {
@@ -208,9 +233,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      * Tests /login acceptor behaviour.
      * 
      * @covers ::login
+     * @covers ::_loginAcceptor
      * @runInSeparateProcess
      * 
-     * @todo Test support for the optional "warn" parameter.
+     * @todo Test support for the optional 'warn' parameter.
      */
     function test_login_acceptor () {
 
@@ -391,25 +417,293 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
     /**
      * @covers ::proxyValidate
-     * @todo
+     * 
+     * @todo Test support for the optional 'pgtUrl' parameter.
+     * @todo Test support for the optional 'renew' parameter.
      */
     function test_proxyValidate () {
 
-        $this->assertTrue( is_callable( array( $this->server, 'proxyValidate' ) ), "'proxyValidate' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'proxyValidate' ) ),
+            "'proxyValidate' method is callable." );
 
-        $this->markTestIncomplete();
+        $service = 'http://test/';
+
+        /**
+         * No service.
+         */
+        $args = array(
+            'service' => '',
+            'ticket'  => 'ticket',
+            );
+
+        $error = $this->server->proxyValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error if service not provided.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+            'INVALID_REQUEST error code if service not provided.' );
+
+        /**
+         * No ticket.
+         */
+        $args = array(
+            'service' => $service,
+            'ticket'  => '',
+            );
+
+        $error = $this->server->proxyValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error if ticket not provided.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+            'INVALID_REQUEST error code if ticket not provided.' );
+
+        /**
+         * Invalid ticket.
+         */
+        $args = array(
+            'service' => $service,
+            'ticket'  => 'bad-ticket',
+            );
+
+        $error = $this->server->proxyValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error on bad ticket.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+            'INVALID_TICKET error code on bad ticket.' );
+
+        /**
+         * Valid ticket.
+         */
+        $user_id = $this->factory->user->create();
+
+        wp_set_current_user( $user_id );
+
+        try {
+            $this->server->login( array( 'service' => $service ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+        }
+
+        $args = array(
+            'service' => $service,
+            'ticket'  => $query['ticket'],
+            );
+
+        $user = get_user_by( 'id', $user_id );
+
+        $xml = $this->server->proxyValidate( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            'Successful validation.' );
+
+        $xpath_query_results = $this->_xpathQueryXML( '//cas:serviceResponse/cas:authenticationSuccess/cas:user', $xml );
+
+        $this->assertCount( 1, $xpath_query_results,
+            "Ticket validation response returns a user.");
+
+        $this->assertEquals( $xpath_query_results[0]->nodeValue, $user->user_login,
+            "Ticket validation returns user login." );
+
+        /**
+         * Do not enforce single-use tickets.
+         */
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration'         => 60,
+            'allow_ticket_reuse' => true,
+            ) );
+
+        $xml = $this->server->proxyValidate( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            'Settings allow ticket reuse.' );
+
+        /**
+         * /proxyValidate may validate Proxy Tickets.
+         */
+        $args = array(
+            'service' => $service,
+            'ticket'  => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PT, $query['ticket'] ),
+            );
+
+        $xml = $this->server->proxyValidate( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            "'proxyValidate' may validate proxy tickets." );
+
+        /**
+         * Enforce single-use tickets.
+         */
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration'         => 60,
+            'allow_ticket_reuse' => false,
+            ) );
+
+        $args = array(
+            'service' => $service,
+            'ticket'  => $query['ticket'],
+            );
+
+        $error = $this->server->proxyValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            "Settings do not allow ticket reuse." );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+            'INVALID_TICKET error code on ticket reuse.' );
     }
 
     /**
      * @covers ::serviceValidate
-     * @todo
+     * 
+     * @todo Test support for the optional 'pgtUrl' parameter.
+     * @todo Test support for the optional 'renew' parameter.
      */
     function test_serviceValidate () {
 
         $this->assertTrue( is_callable( array( $this->server, 'serviceValidate' ) ),
             "'serviceValidate' method is callable." );
 
-        $this->markTestIncomplete();
+        $service = 'http://test/';
+
+        /**
+         * No service.
+         */
+        $args = array(
+            'service' => '',
+            'ticket'  => 'ticket',
+            );
+
+        $error = $this->server->serviceValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error if service not provided.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+            'INVALID_REQUEST error code if service not provided.' );
+
+        /**
+         * No ticket.
+         */
+        $args = array(
+            'service' => $service,
+            'ticket'  => '',
+            );
+
+        $error = $this->server->serviceValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error if ticket not provided.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+            'INVALID_REQUEST error code if ticket not provided.' );
+
+        /**
+         * Invalid ticket.
+         */
+        $args = array(
+            'service' => $service,
+            'ticket'  => 'bad-ticket',
+            );
+
+        $error = $this->server->serviceValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error on bad ticket.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+            'INVALID_TICKET error code on bad ticket.' );
+
+        /**
+         * Valid ticket.
+         */
+        $user_id = $this->factory->user->create();
+
+        wp_set_current_user( $user_id );
+
+        try {
+            $this->server->login( array( 'service' => $service ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+        }
+
+        $args = array(
+            'service' => $service,
+            'ticket'  => $query['ticket'],
+            );
+
+        $user = get_user_by( 'id', $user_id );
+
+        $xml = $this->server->serviceValidate( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            'Successful validation.' );
+
+        $xpath_query_results = $this->_xpathQueryXML( '//cas:serviceResponse/cas:authenticationSuccess/cas:user', $xml );
+
+        $this->assertCount( 1, $xpath_query_results,
+            "Ticket validation response returns a user.");
+
+        $this->assertEquals( $xpath_query_results[0]->nodeValue, $user->user_login,
+            "Ticket validation returns user login." );
+
+        /**
+         * Do not enforce single-use tickets.
+         */
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration'         => 60,
+            'allow_ticket_reuse' => true,
+            ) );
+
+        $xml = $this->server->serviceValidate( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            'Settings allow ticket reuse.' );
+
+        /**
+         * /serviceValidate should not validate Proxy Tickets.
+         */
+        $args = array(
+            'service' => $service,
+            'ticket'  => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PT, $query['ticket'] ),
+            );
+
+        $error = $this->server->serviceValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            "'serviceValidate' may not validate proxy tickets." );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+            'INVALID_TICKET error code on proxy ticket.' );
+
+        /**
+         * Enforce single-use tickets.
+         */
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration'         => 60,
+            'allow_ticket_reuse' => false,
+            ) );
+
+        $args = array(
+            'service' => $service,
+            'ticket'  => $query['ticket'],
+            );
+
+        $error = $this->server->serviceValidate( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            "Settings do not allow ticket reuse." );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+            'INVALID_TICKET error code on ticket reuse.' );
+
+        $this->markTestIncomplete( "Test support for the optional 'pgtUrl' and 'renew' parameters." );
     }
 
     /**
@@ -494,6 +788,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $this->assertEquals( $this->server->validate( $args ), "no\n\n",
             "Tickets may not be reused." );
+
+        $this->markTestIncomplete( "Test support for the optional 'pgtUrl' and 'renew' parameters." );
     }
 
 }
