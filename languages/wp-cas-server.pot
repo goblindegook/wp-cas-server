@@ -1,0 +1,85 @@
+# Copyright (C) 2014 WP CAS Server
+# This file is distributed under the same license as the WP CAS Server package.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP CAS Server 0.9.0\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/wp-cas-server\n"
+"POT-Creation-Date: 2014-04-27 17:25:19+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2014-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: includes/WPCASServer.php:182
+msgid "The CAS server is disabled."
+msgstr ""
+
+#: includes/WPCASServer.php:197
+msgid "The handler for the route is invalid."
+msgstr ""
+
+#: includes/WPCASServer.php:224
+msgid "The server does not support the method requested."
+msgstr ""
+
+#: includes/WPCASServer.php:407
+msgid "Unknown error"
+msgstr ""
+
+#: includes/WPCASServer.php:503
+msgid "Service is required."
+msgstr ""
+
+#: includes/WPCASServer.php:509
+msgid "Ticket is required."
+msgstr ""
+
+#: includes/WPCASServer.php:523
+msgid "Ticket type cannot be validated."
+msgstr ""
+
+#: includes/WPCASServer.php:529
+msgid "Ticket is malformed."
+msgstr ""
+
+#: includes/WPCASServer.php:537
+msgid "Ticket does not match service."
+msgstr ""
+
+#: includes/WPCASServer.php:543
+msgid "Ticket has expired."
+msgstr ""
+
+#: includes/WPCASServer.php:551
+msgid "Ticket does not match user."
+msgstr ""
+
+#: includes/WPCASServer.php:560
+msgid "Ticket is corrupted."
+msgstr ""
+
+#: includes/WPCASServer.php:566
+msgid "Ticket is not recognized."
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "WP CAS Server"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/goblindegook/wordpress-cas-server"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Provides authentication services based on Jasig CAS protocols."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Luís Rodrigues"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://goblindegook.net/"
+msgstr ""
