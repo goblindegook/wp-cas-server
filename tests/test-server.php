@@ -481,8 +481,6 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
             'pgt'           => $query['ticket'],
             );
 
-        $user = get_user_by( 'id', $user_id );
-
         $xml = $this->server->proxy( $args );
 
         $this->assertInstanceOf( 'WP_Error', $xml,
@@ -516,7 +514,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
             'expiration'         => 60,
             'allow_ticket_reuse' => true,
             ) );
-        
+
         $args = array(
             'targetService' => $targetService,
             'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PGT, $query['ticket'] ),
