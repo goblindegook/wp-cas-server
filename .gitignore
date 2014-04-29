@@ -1,0 +1,61 @@
+
+*.sublime-workspace
+
+# OS X
+
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+.Spotlight-V100
+.Trashes
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Composer
+
+composer.phar
+vendor/
+
+# Subversion
+
+.svn/
+
+# CVS
+
+/CVS/*
+*/CVS/*
+.cvsignore
+*/.cvsignore
+
+# Sublime Text
+
+*.sublime-workspace
+
+# JetBrains IDEs
+
+.idea/
+*.ipr
+*.iws
+*.iml
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# TextMate
+
+*.tmproj
+*.tmproject
+tmtags
+
+# Vim
+
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~

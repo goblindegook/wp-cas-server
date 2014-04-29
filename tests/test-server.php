@@ -406,13 +406,173 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
     /**
      * @covers ::proxy
-     * @todo
      */
     function test_proxy () {
 
-        $this->assertTrue( is_callable( array( $this->server, 'proxy' ) ), "'proxy' method is callable." );
+        $this->assertTrue( is_callable( array( $this->server, 'proxy' ) ),
+            "'proxy' method is callable." );
 
-        $this->markTestIncomplete();
+        $targetService = 'http://test/';
+
+        /**
+         * No target service.
+         */
+        $args = array(
+            'targetService' => '',
+            'pgt'           => 'pgt',
+            );
+
+        $error = $this->server->proxy( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error if target service not provided.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
+            'INVALID_REQUEST error code if target service not provided.' );
+
+        /**
+         * No proxy-granting ticket.
+         */
+        $args = array(
+            'targetService' => $targetService,
+            'pgt'           => '',
+            );
+
+        $error = $this->server->proxy( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error if proxy-granting ticket not provided.' );
+
+        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
+            'INVALID_REQUEST error code if proxy-granting ticket not provided.' );
+
+        /**
+         * Invalid proxy-granting ticket.
+         */
+        $args = array(
+            'targetService' => $targetService,
+            'pgt'           => 'bad-ticket',
+            );
+
+        $error = $this->server->proxy( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            'Error on bad proxy-granting ticket.' );
+
+        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+            'BAD_PGT error code on bad proxy-granting ticket.' );
+
+        /**
+         * /proxy should not validate service tickets.
+         */
+        $user_id = $this->factory->user->create();
+
+        wp_set_current_user( $user_id );
+
+        try {
+            $this->server->login( array( 'service' => $targetService ) );
+        }
+        catch (WPDieException $message) {
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+        }
+
+        $args = array(
+            'targetService' => $targetService,
+            'pgt'           => $query['ticket'],
+            );
+
+        $user = get_user_by( 'id', $user_id );
+
+        $xml = $this->server->proxy( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $xml,
+            "'proxy' should not validate service tickets." );
+
+        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+            'BAD_PGT error code on proxy ticket.' );
+
+        /**
+         * /proxy should not validate proxy tickets.
+         */
+
+        $args = array(
+            'targetService' => $targetService,
+            'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PT, $query['ticket'] ),
+            );
+
+        $xml = $this->server->proxy( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $xml,
+            "'proxy' should not validate proxy tickets." );
+
+        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+            'BAD_PGT error code on service ticket.' );
+
+        /**
+         * /proxy validates a Proxy-Granting Ticket successfully.
+         */
+        
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration'         => 60,
+            'allow_ticket_reuse' => true,
+            ) );
+        
+        $args = array(
+            'targetService' => $targetService,
+            'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PGT, $query['ticket'] ),
+            );
+
+        $xml = $this->server->proxy( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            'Successful validation on proxy-granting ticket.' );
+
+        $xpath_query_results = $this->_xpathQueryXML( '//cas:serviceResponse/cas:proxySuccess/cas:proxyTicket', $xml );
+
+        $this->assertCount( 1, $xpath_query_results,
+            "'/proxy' response returns a proxy ticket.");
+
+        $proxyTicket = $xpath_query_results[0]->nodeValue;
+
+        $args = array(
+            'service' => $targetService,
+            'ticket'  => $proxyTicket,
+            );
+
+        $xml = $this->server->proxyValidate( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            "'/proxy' response returns a valid proxy ticket." );
+
+        /**
+         * Do not enforce single-use tickets.
+         */
+
+        $args = array(
+            'targetService' => $targetService,
+            'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PGT, $query['ticket'] ),
+            );
+
+        $xml = $this->server->proxy( $args );
+
+        $this->assertNotInstanceOf( 'WP_Error', $xml,
+            'Settings allow ticket reuse.' );
+
+        /**
+         * Enforce single-use tickets.
+         */
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'expiration'         => 60,
+            'allow_ticket_reuse' => false,
+            ) );
+
+        $error = $this->server->proxy( $args );
+
+        $this->assertInstanceOf( 'WP_Error', $error,
+            "Settings do not allow ticket reuse." );
+
+        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+            'BAD_PGT error code on ticket reuse.' );
     }
 
     /**

@@ -444,7 +444,7 @@ class WPCASServer implements ICASServer {
 
         set_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key, $ticket, 5 * 60 );
 
-        return $type . '-' . urlencode( base64_encode( $ticket ) );
+        return $type . '-' . base64_encode( $ticket );
     }
 
     /**
@@ -486,9 +486,9 @@ class WPCASServer implements ICASServer {
      * @uses wp_hash()
      * @uses WP_Error
      */
-    protected function _validateTicket ( $ticket, $service = '', $valid_ticket_types = array() ) {
+    protected function _validateTicket ( $ticket, $service = '', $validTicketTypes = array() ) {
 
-        if (in_array( ICASServer::TYPE_PGT, $valid_ticket_types )) {
+        if (in_array( ICASServer::TYPE_PGT, $validTicketTypes )) {
             $error_slug = 'proxyFailure';
             $error_code = ICASServer::ERROR_BAD_PGT;
         }
@@ -518,7 +518,7 @@ class WPCASServer implements ICASServer {
 
         $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
 
-        if ($ticket_type && !in_array( $ticket_type, $valid_ticket_types )) {
+        if ($ticket_type && !in_array( $ticket_type, $validTicketTypes )) {
             return $this->_validateError( $error_slug,
                 __( 'Ticket type cannot be validated.', 'wp-cas-server' ),
                 $error_code );
@@ -745,7 +745,6 @@ class WPCASServer implements ICASServer {
      * @uses wp_logout()
      */
     protected function _loginRequestor ( $args = array() ) {
-        global $userdata, $user_ID;
 
         $this->_sessionStart();
 
@@ -829,11 +828,11 @@ class WPCASServer implements ICASServer {
         /**
          * `/proxy` checks the validity of the proxy-granting ticket passed.
          */
-        $valid_ticket_types = array(
+        $validTicketTypes = array(
             ICASServer::TYPE_PGT,
         );
 
-        $user = $this->_validateTicket( $pgt, $targetService, $valid_ticket_types );
+        $user = $this->_validateTicket( $pgt, $targetService, $validTicketTypes );
 
         if (is_wp_error( $user )) {
             return $user;
@@ -867,12 +866,12 @@ class WPCASServer implements ICASServer {
         /**
          * `/proxyValidate` checks the validity of both service and proxy tickets.
          */
-        $valid_ticket_types = array(
+        $validTicketTypes = array(
             ICASServer::TYPE_ST,
             ICASServer::TYPE_PT,
         );
 
-        $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
+        $user = $this->_validateTicket( $ticket, $service, $validTicketTypes );
 
         if (is_wp_error( $user )) {
             return $user;
@@ -911,11 +910,11 @@ class WPCASServer implements ICASServer {
          * authentication. CAS MUST respond with a ticket validation failure response when a proxy
          * ticket is passed to `/serviceValidate`.
          */
-        $valid_ticket_types = array(
+        $validTicketTypes = array(
             ICASServer::TYPE_ST,
         );
 
-        $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
+        $user = $this->_validateTicket( $ticket, $service, $validTicketTypes );
 
         if (is_wp_error( $user )) {
             return $user;
@@ -974,11 +973,11 @@ class WPCASServer implements ICASServer {
          * protocol and thus does not handle proxy authentication. CAS MUST respond with a ticket
          * validation failure response when a proxy ticket is passed to `/validate`.
          */
-        $valid_ticket_types = array(
+        $validTicketTypes = array(
             ICASServer::TYPE_ST,
         );
 
-        $user = $this->_validateTicket( $ticket, $service, $valid_ticket_types );
+        $user = $this->_validateTicket( $ticket, $service, $validTicketTypes );
 
         if ($user && !is_wp_error( $user )) {
             return "yes\n" . $user->user_login . "\n";
