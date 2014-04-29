@@ -29,6 +29,7 @@ Domain Path: /languages
 /**
  * WP CAS Server main plugin file.
  * @package WPCASServerPlugin
+ * @subpackage WPCASServerPlugin
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
@@ -181,9 +182,20 @@ class WPCASServerPlugin {
      * Plugin initialization callback.
      * 
      * @uses $wp
+     * @uses apply_filters()
+     * @uses load_plugin_textdomain()
+     * @uses load_textdomain()
+     * @uses trailingslashit()
      */
     public function init () {
         global $wp;
+
+        $domain = self::SLUG;
+        $locale = apply_filters( 'plugin_locale', get_locale(), 'wp-cas-server' );
+
+        load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
+        load_plugin_textdomain( $domain, FALSE, basename( plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
+
         $wp->add_query_var( self::QUERY_VAR_ROUTE );
         $this->_update_options();
         $this->_add_rewrite_rules();
@@ -277,4 +289,4 @@ class WPCASServerPlugin {
 
 $GLOBALS[WPCASServerPlugin::SLUG] = new WPCASServerPlugin( new WPCASServer );
 
-endif;
+endif; // !class_exists( 'WPCASServerPlugin' )
