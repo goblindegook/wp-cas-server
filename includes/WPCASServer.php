@@ -5,6 +5,8 @@
  * @subpackage WPCASServer
  */
 
+if (!defined( 'ABSPATH' )) exit; // No monkey business.
+
 require_once( dirname( __FILE__ ) . '/ICASServer.php');
 
 if (!class_exists( 'WPCASServer' )) :

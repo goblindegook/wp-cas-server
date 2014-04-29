@@ -33,6 +33,7 @@ Domain Path: /languages
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
+require_once( dirname( __FILE__ ) . '/includes/WPCASServerPluginAdmin.php' );
 
 if (!class_exists( 'WPCASServerPlugin' )):
 
@@ -78,6 +79,12 @@ class WPCASServerPlugin {
     protected $server;
 
     /**
+     * CAS server plugin admin instance.
+     * @var WPCASServerAdmin
+     */
+    protected $admin;
+
+    /**
      * Default plugin options.
      * @var array
      */
@@ -118,13 +125,14 @@ class WPCASServerPlugin {
     /**
      * WP CAS Server plugin constructor.
      */
-    public function __construct ( ICASServer $server ) {
+    public function __construct ( ICASServer $server, WPCASServerPluginAdmin $admin ) {
+        $this->server = $server;
+        $this->admin  = $admin;
+
         register_activation_hook( __FILE__, array( $this, 'activation' ) );
         register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
         add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
-
-        $this->server = $server;
     }
 
     /**
@@ -287,6 +295,6 @@ class WPCASServerPlugin {
 
 }
 
-$GLOBALS[WPCASServerPlugin::SLUG] = new WPCASServerPlugin( new WPCASServer );
+$GLOBALS[WPCASServerPlugin::SLUG] = new WPCASServerPlugin( new WPCASServer, new WPCASServerPluginAdmin );
 
 endif; // !class_exists( 'WPCASServerPlugin' )

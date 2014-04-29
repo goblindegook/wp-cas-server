@@ -5,6 +5,8 @@
  * @subpackage WPCASServer
  */
 
+if (!defined( 'ABSPATH' )) exit; // No monkey business.
+
 /**
  * CAS server class interface definition.
  */
