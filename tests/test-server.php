@@ -236,9 +236,12 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      * @covers ::_loginAcceptor
      * @runInSeparateProcess
      * 
+     * @todo Resolve issue with wp_sign_on() attempting to set headers.
      * @todo Test support for the optional 'warn' parameter.
      */
     function test_login_acceptor () {
+
+        $this->markTestIncomplete();
 
         $user = get_user_by( 'id', $this->factory->user->create() );
 

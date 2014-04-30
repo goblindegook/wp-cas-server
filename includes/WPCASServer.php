@@ -246,12 +246,12 @@ if (!class_exists( 'WPCASServer' )) {
          * Wraps calls to session destruction functions.
          */
         protected function _sessionDestroy () {
-            wp_logout();
             wp_set_current_user( false );
 
             $session_exists = function_exists( 'session_status' ) && session_status() == PHP_SESSION_NONE;
             if (headers_sent() || !$session_exists || !strlen( session_id() )) return;
 
+            wp_logout();
             session_unset();
             session_destroy();
         }
