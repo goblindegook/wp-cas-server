@@ -1,7 +1,7 @@
 <?php
 /**
  * @package WPCASServerPlugin
- * @subpackage WPCASServerPlugin_Tests
+ * @subpackage Tests
  */
 
 class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
@@ -116,14 +116,38 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
      * @covers WPCASServerPlugin::get_option
      */
     function test_get_option () {
-        $path = WPCASServerPlugin::get_option( 'path' );
-        $this->assertEquals( 'wp-cas', $path, 'Obtain the path setting.' );
+        $path = WPCASServerPlugin::get_option( 'endpoint_slug' );
+        $this->assertEquals( WPCASServerPlugin::ENDPOINT_SLUG, $path, 'Obtain the path setting.' );
 
-        $path = WPCASServerPlugin::get_option( 'path', 'default' );
-        $this->assertEquals( 'wp-cas', $path, 'Ignores default when obtaining an existing setting.' );
+        $path = WPCASServerPlugin::get_option( 'endpoint_slug', 'default' );
+        $this->assertEquals( WPCASServerPlugin::ENDPOINT_SLUG, $path, 'Ignores default when obtaining an existing setting.' );
 
         $unset = WPCASServerPlugin::get_option( 'unset', 'nothing' );
         $this->assertEquals( 'nothing', $unset, 'Obtain the default for a non-existing setting.' );
+    }
+
+    /**
+     * Test plugin settings setter.
+     * @covers WPCASServerPlugin::set_option
+     */
+    function test_set_option () {
+        WPCASServerPlugin::set_option( 'zero', 0 );
+        $this->assertSame( 0, WPCASServerPlugin::get_option( 'zero' ), 'Set 0 integer.' );
+
+        WPCASServerPlugin::set_option( 'integer', 99 );
+        $this->assertSame( 99, WPCASServerPlugin::get_option( 'integer' ), 'Set non-zero integer.' );
+
+        WPCASServerPlugin::set_option( 'float', 99.99 );
+        $this->assertSame( 99.99, WPCASServerPlugin::get_option( 'float' ), 'Set float.' ); 
+
+        WPCASServerPlugin::set_option( 'string', 'test' );
+        $this->assertSame( 'test', WPCASServerPlugin::get_option( 'string' ), 'Set string.' ); 
+
+        WPCASServerPlugin::set_option( 'array', array( 1, 2, 3 ) );
+        $this->assertSame( array( 1, 2, 3 ), WPCASServerPlugin::get_option( 'array' ), 'Set array.' );
+
+        WPCASServerPlugin::set_option( 'object', (object) array( 1, 2, 3 ) );
+        $this->assertEquals( (object) array( 1, 2, 3 ), WPCASServerPlugin::get_option( 'object' ), 'Set object.' );        
     }
 
     /**
@@ -135,7 +159,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         $no_schema_allowed = version_compare( phpversion(), '5.4.7', '>=' );        
 
         update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'path'             => 'wp-cas',
+            'endpoint_slug'    => 'wp-cas',
             'allowed_services' => array(
                 'http://test1/',
                 'http://test2:8080/',
@@ -177,7 +201,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
             'Allowed hosts are added to an existing list.');
 
         update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'path'             => 'wp-cas',
+            'endpoint_slug'    => 'wp-cas',
             'allowed_services' => false,
             ) );
 
@@ -193,7 +217,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
             'Invalid hosts are not added to an existing list.');
 
         update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'path'             => 'wp-cas',
+            'endpoint_slug'    => 'wp-cas',
             'allowed_services' => 'http://test-string/',
             ) );
 
@@ -208,12 +232,13 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
     /**
      * Test the rewrite rules set by the plugin.
-     * @todo
+     * 
+     * @todo Test rewrite rules.
+     * @todo Test that the endpoint_slug reverts to the default when empty.
      */
     function test_rewrite_rules () {
-        global $wp_rewrite;
-
-        $path = WPCASServerPlugin::get_option( 'path' );
+        
+        $path = WPCASServerPlugin::get_option( 'endpoint_slug' );
 
         $this->assertNotEmpty( $path, 'Plugin sets default URI path root.');
 
@@ -224,6 +249,12 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         // - Force SSL option ON and...
         //     - SSL ON           --> OK
         //     - SSL OFF          --> Error
+
+        // Plugin forces default endpoint slug
+        
+        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
+            'endpoint_slug'    => false,
+            ) );
 
         $this->markTestIncomplete();
     }

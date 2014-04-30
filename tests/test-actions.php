@@ -1,7 +1,7 @@
 <?php
 /**
  * @package WPCASServerPlugin
- * @subpackage WPCASServerPlugin_Tests
+ * @subpackage Tests
  */
 
 class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {

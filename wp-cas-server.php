@@ -28,14 +28,14 @@ Domain Path: /languages
 
 /**
  * WP CAS Server main plugin file.
- * @package WPCASServerPlugin
- * @subpackage WPCASServerPlugin
+ * 
+ * @package     WPCASServerPlugin
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
 require_once( dirname( __FILE__ ) . '/includes/WPCASServerPluginAdmin.php' );
 
-if (!class_exists( 'WPCASServerPlugin' )):
+if (!class_exists( 'WPCASServerPlugin' )) :
 
 /**
  * Main plugin class.
@@ -51,6 +51,11 @@ class WPCASServerPlugin {
      * Plugin slug.
      */
     const SLUG = 'wp-cas-server';
+
+    /**
+     * Default endpoint slug.
+     */
+    const ENDPOINT_SLUG = 'wp-cas';
 
     /**
      * Plugin options key.
@@ -92,7 +97,7 @@ class WPCASServerPlugin {
         /**
          * CAS server endpoint path fragment (e.g. `<scheme>://<host>/wp-cas/login`).
          */
-        'path'               => 'wp-cas',
+        'endpoint_slug'      => self::ENDPOINT_SLUG,
 
         /**
          * Service ticket expiration, in seconds [0..300].
@@ -124,10 +129,20 @@ class WPCASServerPlugin {
 
     /**
      * WP CAS Server plugin constructor.
+     * 
+     * @param ICASServer $server CAS server instance.
+     * 
+     * @uses is_admin()
+     * @uses register_activation_hook()
+     * @uses register_deactivation_hook()
+     * @uses add_action()
      */
-    public function __construct ( ICASServer $server, WPCASServerPluginAdmin $admin ) {
+    public function __construct ( ICASServer $server ) {
         $this->server = $server;
-        $this->admin  = $admin;
+
+        if (is_admin()) {
+            $this->admin  = new WPCASServerPluginAdmin;
+        }
 
         register_activation_hook( __FILE__, array( $this, 'activation' ) );
         register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
@@ -204,8 +219,11 @@ class WPCASServerPlugin {
         load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
         load_plugin_textdomain( $domain, FALSE, basename( plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
 
+        if (!get_option( self::OPTIONS_KEY )) {
+            $this->_set_default_options();
+        }
+
         $wp->add_query_var( self::QUERY_VAR_ROUTE );
-        $this->_update_options();
         $this->_add_rewrite_rules();
     }
 
@@ -262,6 +280,27 @@ class WPCASServerPlugin {
     }
 
     /**
+     * Set plugin option by key.
+     * 
+     * @param string $key   Plugin option key to set.
+     * @param mixed  $value Plugin option value to set.
+     */
+    static public function set_option ( $key, $value ) {
+        if (!isset( $key )) return;
+        $options = get_option( self::OPTIONS_KEY );
+
+        if (!isset( $value )) {
+            unset( $options[$key] );
+        }
+        else
+        {
+            $options[$key] = $value;
+        }
+
+        update_option( self::OPTIONS_KEY, $options );
+    }
+
+    /**
      * Update the plugin options in the database.
      * 
      * @param  array  $updated_options  Updated options to set (will be merged with existing options).
@@ -269,7 +308,7 @@ class WPCASServerPlugin {
      * @uses get_option()
      * @uses update_option()
      */
-    private function _update_options ( $updated_options = array() ) {
+    private function _set_default_options ( $updated_options = array() ) {
         $options = get_option( self::OPTIONS_KEY, $this->default_options );
         $options = array_merge( (array) $options, (array) $updated_options );
         update_option( self::OPTIONS_KEY, $options );
@@ -289,12 +328,17 @@ class WPCASServerPlugin {
             return;
         }
 
-        $path = self::get_option( 'path' );
+        $path = self::get_option( 'endpoint_slug' );
+
+        if (empty( $path )) {
+            $path = self::ENDPOINT_SLUG;
+        }
+
         add_rewrite_endpoint( $path, EP_ALL, self::QUERY_VAR_ROUTE );
     }
 
 }
 
-$GLOBALS[WPCASServerPlugin::SLUG] = new WPCASServerPlugin( new WPCASServer, new WPCASServerPluginAdmin );
+$GLOBALS[WPCASServerPlugin::SLUG] = new WPCASServerPlugin( new WPCASServer );
 
 endif; // !class_exists( 'WPCASServerPlugin' )

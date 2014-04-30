@@ -1,8 +1,9 @@
 <?php
 /**
  * Implements the ICASServer interface as required by the WP CAS Server plugin.
- * @package WPCASServerPlugin
- * @subpackage WPCASServer
+ * 
+ * @package     WPCASServerPlugin
+ * @subpackage  WPCASServer
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
@@ -86,11 +87,13 @@ class WPCASServer implements ICASServer {
      */
     protected function _redirect ( $location, $status = 302 ) {
 
-        if (!WPCASServerPlugin::get_option( 'allowed_services' )) {
-            wp_redirect( $location, $status );
+        $allowedServices = WPCASServerPlugin::get_option( 'allowed_services' );
+
+        if (is_array( $allowedServices ) && count( $allowedServices ) > 0) {
+            wp_safe_redirect( $location, $status );
         }
 
-        wp_safe_redirect( $location, $status );
+        wp_redirect( $location, $status );
 
         exit;
     }
@@ -990,4 +993,4 @@ class WPCASServer implements ICASServer {
 
 }
 
-endif;
+endif; // !class_exists( 'WPCASServer' )
