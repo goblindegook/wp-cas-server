@@ -30,7 +30,8 @@ Domain Path: /languages
 /**
  * WP CAS Server main plugin file.
  * 
- * @package     WPCASServerPlugin
+ * @package \WPCASServerPlugin
+ * @version 1.0.0
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
@@ -40,6 +41,8 @@ if (!class_exists( 'WPCASServerPlugin' )) :
 
 /**
  * Main plugin class.
+ * 
+ * @since 1.0.0
  */
 class WPCASServerPlugin {
 
@@ -142,7 +145,7 @@ class WPCASServerPlugin {
         $this->server = $server;
 
         if (is_admin()) {
-            $this->admin  = new WPCASServerPluginAdmin;
+            $this->admin  = new WPCASServerPluginAdmin();
         }
 
         register_activation_hook( __FILE__, array( $this, 'activation' ) );
@@ -155,6 +158,12 @@ class WPCASServerPlugin {
      * Plugin activation callback.
      * 
      * @param bool $network_wide Plugin is activated for the entire network.
+     * 
+     * @uses flush_rewrite_rules()
+     * @uses is_multisite()
+     * @uses restore_current_blog()
+     * @uses switch_to_blog()
+     * @uses wp_get_sites()
      */
     public function activation ( $network_wide ) {
         if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
@@ -177,6 +186,12 @@ class WPCASServerPlugin {
      * Plugin deactivation callback to flush rewrite rules.
      * 
      * @param bool $network_wide Plugin is activated for the entire network.
+     * 
+     * @uses flush_rewrite_rules()
+     * @uses is_multisite()
+     * @uses restore_current_blog()
+     * @uses switch_to_blog()
+     * @uses wp_get_sites()
      */
     public function deactivation ( $network_wide ) {
         if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
@@ -195,6 +210,9 @@ class WPCASServerPlugin {
 
     /**
      * Plugin loading callback.
+     * 
+     * @uses add_action()
+     * @uses add_filter()
      */
     public function plugins_loaded () {
         add_action( 'init'                  , array( $this, 'init' ) );
@@ -205,7 +223,8 @@ class WPCASServerPlugin {
     /**
      * Plugin initialization callback.
      * 
-     * @uses $wp
+     * @global WP $wp
+     * 
      * @uses apply_filters()
      * @uses load_plugin_textdomain()
      * @uses load_textdomain()
@@ -230,6 +249,8 @@ class WPCASServerPlugin {
 
     /**
      * Serve the CAS request and stop.
+     * 
+     * @global WP $wp
      */
     public function template_redirect () {
         global $wp;

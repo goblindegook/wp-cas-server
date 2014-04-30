@@ -1,14 +1,17 @@
 <?php
 /**
  * Contains a CAS Server interface.
- * @package WPCASServerPlugin
- * @subpackage WPCASServer
+ * 
+ * @package \WPCASServerPlugin\Server
+ * @version 1.0.0
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
 
 /**
  * CAS server class interface definition.
+ * 
+ * @since 1.0.0
  */
 interface ICASServer {
 	

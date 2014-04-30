@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <phpdoc>
-  <title>WordPress CAS Server</title>
+  <title>Cassava: A WordPress CAS Server</title>
   <parser>
     <target>docs</target>
   </parser>
@@ -13,4 +13,7 @@
     <ignore>bin/*</ignore>
     <ignore>tests/*</ignore>
   </files>
+  <transformation>
+    <template name="checkstyle"/>
+  </transformation>
 </phpdoc>

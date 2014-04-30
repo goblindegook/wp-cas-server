@@ -2,8 +2,8 @@
 /**
  * Implements the ICASServer interface as required by the WP CAS Server plugin.
  * 
- * @package     WPCASServerPlugin
- * @subpackage  WPCASServer
+ * @package \WPCASServerPlugin\Server
+ * @version 1.0.0
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
@@ -14,6 +14,8 @@ if (!class_exists( 'WPCASServer' )) :
 
 /**
  * Class providing all public CAS methods.
+ * 
+ * @since 1.0.0
  */
 class WPCASServer implements ICASServer {
 
@@ -702,7 +704,7 @@ class WPCASServer implements ICASServer {
      * @uses wp_signon()
      * @uses wp_verify_nonce()
      * 
-     * @todo Support for the optional "warn" parameter.
+     * @todo Support for the optional warn parameter.
      */
     protected function _loginAcceptor ( $args = array() ) {
 
@@ -711,8 +713,6 @@ class WPCASServer implements ICASServer {
         $lt         = preg_replace( '@^' . ICASServer::TYPE_LT . '-@', '', $args['lt'] );
         $service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
         $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
-
-        // TODO: Support for the optional "warn" parameter.
 
         if (!wp_verify_nonce( $lt, 'lt' )) {
             $this->_authRedirect( $args );
@@ -865,8 +865,8 @@ class WPCASServer implements ICASServer {
 
         $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
         $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
-        $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : ''; // TODO
-        $renew   = isset( $args['renew'] ) && 'true' === $args['renew']; // TODO
+        $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
+        $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
 
         /**
          * `/proxyValidate` checks the validity of both service and proxy tickets.
@@ -907,8 +907,8 @@ class WPCASServer implements ICASServer {
         
         $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
         $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
-        $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : ''; // TODO
-        $renew   = isset( $args['renew'] ) && 'true' === $args['renew']; // TODO
+        $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
+        $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
 
         /**
          * `/serviceValidate` checks the validity of a service ticket and does not handle proxy

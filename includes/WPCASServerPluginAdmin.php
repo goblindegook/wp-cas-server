@@ -2,8 +2,8 @@
 /**
  * Implements the Cassava plugin's administration interface components.
  * 
- * @package     WPCASServerPlugin
- * @subpackage  WPCASServerPluginAdmin
+ * @package \WPCASServerPlugin\Admin
+ * @version 1.0.0
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
@@ -12,6 +12,8 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) :
 
 /**
  * Plugin administration class.
+ * 
+ * @since 1.0.0
  */
 class WPCASServerPluginAdmin {
 
