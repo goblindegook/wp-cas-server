@@ -3,7 +3,7 @@
  * Implements the ICASServer interface as required by the WP CAS Server plugin.
  * 
  * @package \WPCASServerPlugin\Server
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.

@@ -3,7 +3,7 @@
  * Contains a CAS Server interface.
  * 
  * @package \WPCASServerPlugin\Server
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.

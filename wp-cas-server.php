@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Cassava: A WordPress CAS Server
-Version: 1.0.0
+Version: 1.0.1
 Description: Provides authentication services based on the Jasig CAS protocol.
 Author: Luís Rodrigues
 Author URI: http://goblindegook.net/
@@ -31,7 +31,7 @@ Domain Path: /languages
  * WP CAS Server main plugin file.
  * 
  * @package \WPCASServerPlugin
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );
@@ -49,7 +49,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
         /**
          * Plugin version.
          */
-        const VERSION = '0.9.0';
+        const VERSION = '1.0.1';
 
         /**
          * Plugin slug.
@@ -107,12 +107,6 @@ if (!class_exists( 'WPCASServerPlugin' )) {
              * Service ticket expiration, in seconds [0..300].
              */
             'expiration'         => 30,
-
-            /**
-             * @todo Disable the server if SSL is not enabled on WordPress and reject
-             * requests from services not operating over SSL.
-             */
-            'force_ssl'          => false,
 
             /**
              * `allow_ticket_reuse` exists as a workaround for potential issues with
@@ -346,7 +340,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
             /**
              * Enforce SSL
              */
-            if (self::get_option( 'force_ssl' ) && !is_ssl()) {
+            if (!is_ssl()) {
                 return;
             }
 
