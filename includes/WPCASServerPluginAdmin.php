@@ -11,7 +11,7 @@ if (!defined( 'ABSPATH' )) exit; // No monkey business.
 if (!class_exists( 'WPCASServerPluginAdmin' )) :
 
 /**
- * WC_Admin_Permalink_Settings Class
+ * Plugin administration class.
  */
 class WPCASServerPluginAdmin {
 

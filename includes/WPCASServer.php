@@ -480,7 +480,7 @@ class WPCASServer implements ICASServer {
      * 
      * @param  string               $ticket             Service or proxy ticket.
      * @param  string               $service            Service URI.
-     * @param  array                $valid_ticket_types Ticket must be of the specified types.
+     * @param  array                $validTicketTypes   Ticket must be of the specified types.
      * 
      * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
      * 
