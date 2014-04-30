@@ -3,7 +3,7 @@ Contributors: goblindegook
 Tags: authentication, cas, central authentication service, single sign-on, jasig cas, sso
 Requires at least: 3.9
 Tested up to: 3.9
-Stable tag: trunk
+Stable tag: 1.0.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ That way, users on your WordPress install may be able to access different applic
 
 By default, CAS method URIs are provided under the `wp-cas` endpoint:
 
-* `/wp-cas/login`: Allows a remote service to request that a user authenticate on the WP CAS Server. Will redirect back to the remote service along with a service ticket.
+* `/wp-cas/login`: Allows a remote service to request that a user authenticate on the CAS server. Will redirect back to the remote service along with a service ticket.
 * `/wp-cas/logout`: Terminates the single sign-on session. May optionally back to the remote service.
 * `/wp-cas/proxy` [CAS 2.0]: Provides remote services with proxy tickets in exchange for proxy-granting tickets. Returns an XML response.
 * `/wp-cas/proxyValidate` [CAS 2.0]: Allows a remote service to validate a service or proxy ticket forwarded by the user on redirect. Returns an XML response.
@@ -26,7 +26,7 @@ By default, CAS method URIs are provided under the `wp-cas` endpoint:
 
 There are a few [client integration](http://www.jasig.org/cas/client-integration) libraries available for CAS, as well as a handy guide for [CASifying several existing applications](https://wiki.jasig.org/display/CASC/CASifying+Applications). Independent WordPress installations may integrate Cassava using a client plugin such as [CAS Maestro](http://wordpress.org/plugins/cas-maestro/).
 
-Please follow and contribute to Cassava's development on [Github](https://github.com/goblindegook/wordpress-cas-server).
+Please follow and contribute to Cassava's development on [Github](https://github.com/goblindegook/wp-cas-server).
 
 == Installation ==
 
@@ -66,7 +66,7 @@ Behind the scenes, the application then contacts the CAS server over a secure co
 
 = Does the plugin require HTTPS to function? =
 
-No, but **HTTPS is strongly recommended**.  I can't stress this enough.  Because applications trade security tickets via HTTP requests, it's important that this information be encrypted so as not to be easily intercepted.
+No, but **HTTPS is strongly recommended**.  I can't stress this enough.  Because applications trade security tickets via HTTP requests, it is very important that this information be encrypted so as not to be easily intercepted.
 
 By running a single sign-on service over an unencrypted channel such as plain HTTP, you run a considerable risk of allowing unauthorized persons into your network.
 
@@ -74,7 +74,7 @@ By running a single sign-on service over an unencrypted channel such as plain HT
 
 By default, the plugin provides methods under the `wp-cas` endpoint.  So, if you're configuring a CAS client to use your site at `www.my-site.com`, then the full URI should be something like `https://www.my-site.com/wp-cas/`.
 
-The endpoint may be changed at any time by navigating to Settings > Permalinks in the Admin Dashboard.  Bear in mind that changing the endpoint will force you to reconfigure all CAS clients that use the service.
+The endpoint may be changed at any time by navigating to **Settings > Permalinks** in the Admin Dashboard.  Bear in mind that if you change the endpoint you will also need to reconfigure all CAS clients that use the service.
 
 = What do I do if a malicious agent forges or alters my security tickets? =
 
@@ -90,7 +90,7 @@ You may peruse the CAS 1.0 and 2.0 protocol specifications in complete detail at
 
 = What types of tickets does this plugin support? =
 
-WP CAS Server sets and receives Ticket-Granting Cookies (TGC), Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
+Cassava sets and receives Service Tickets (ST), Proxy-Granting Tickets (PGT), Proxy-Granting Ticket IOUs (PGTIOU) and Proxy Tickets (PT).
 
 == Hooks ==
 
@@ -219,6 +219,6 @@ Parameters:
 
 == Changelog ==
 
-= 0.9.0 =
+= 1.0.0 =
 
 * Initial release.

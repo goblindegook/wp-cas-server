@@ -14,7 +14,7 @@ if (!defined( 'ABSPATH' )) exit; // No monkey business.
  * @since 1.0.0
  */
 interface ICASServer {
-	
+
     /**
      * CAS XML Namespace URI
      */
@@ -87,35 +87,35 @@ interface ICASServer {
      * 
      * @return string          Request response.
      */
-	public function handleRequest ( $path );
+    public function handleRequest ( $path );
 
     /**
      * Handles `/login` method requests [CAS 1.0 and 2.0].
      * 
      * @param  array $args Request arguments.
      */
-	public function login ( $args );
+    public function login ( $args );
 
     /**
      * Handles `/logout` method requests [CAS 1.0 and 2.0].
      * 
      * @param  array $args Request arguments.
      */
-	public function logout ( $args );
+    public function logout ( $args );
 
     /**
      * Handles `/proxy` method requests [CAS 2.0].
      * 
      * @param  array $args Request arguments.
      */
-	public function proxy ( $args );
+    public function proxy ( $args );
 
     /**
      * Handles `/proxyValidate` method requests [CAS 2.0].
      * 
      * @param  array $args Request arguments.
      */
-	public function proxyValidate ( $args );
+    public function proxyValidate ( $args );
 
     /**
      * Handles `/serviceValidate` method requests [CAS 2.0].
@@ -124,7 +124,7 @@ interface ICASServer {
      * 
      * @return string      Validation response.
      */
-	public function serviceValidate ( $args );
+    public function serviceValidate ( $args );
 
     /**
      * Handles `/validate` method requests [CAS 1.0].
@@ -133,5 +133,5 @@ interface ICASServer {
      * 
      * @return string      Validation response.
      */
-	public function validate ( $args );
+    public function validate ( $args );
 }
