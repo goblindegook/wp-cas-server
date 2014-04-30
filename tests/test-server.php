@@ -117,9 +117,9 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     /**
      * Tests /login requestor behaviour.
      * 
+     * @runInSeparateProcess
      * @covers ::login
      * @covers ::_loginRequestor
-     * @runInSeparateProcess
      */
     function test_login_requestor () {
 
@@ -232,16 +232,16 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     /**
      * Tests /login acceptor behaviour.
      * 
+     * @runInSeparateProcess
      * @covers ::login
      * @covers ::_loginAcceptor
-     * @runInSeparateProcess
      * 
      * @todo Resolve issue with wp_sign_on() attempting to set headers.
      * @todo Test support for the optional 'warn' parameter.
      */
     function test_login_acceptor () {
 
-        $this->markTestIncomplete();
+        // $this->markTestIncomplete();
 
         $user = get_user_by( 'id', $this->factory->user->create() );
 
@@ -358,8 +358,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     }
 
     /**
-     * @covers ::logout
      * @runInSeparateProcess
+     * @covers ::logout
      */
     function test_logout () {
 
@@ -408,6 +408,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     }
 
     /**
+     * @runInSeparateProcess
      * @covers ::proxy
      */
     function test_proxy () {
@@ -577,6 +578,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     }
 
     /**
+     * @runInSeparateProcess
      * @covers ::proxyValidate
      * 
      * @todo Test support for the optional 'pgtUrl' parameter.
@@ -720,6 +722,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     }
 
     /**
+     * @runInSeparateProcess
      * @covers ::serviceValidate
      * 
      * @todo Test support for the optional 'pgtUrl' parameter.
@@ -868,8 +871,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     }
 
     /**
-     * @covers ::validate
      * @runInSeparateProcess
+     * @covers ::validate
      */
     function test_validate () {
 
