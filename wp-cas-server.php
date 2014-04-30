@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: WP CAS Server
+Plugin Name: Cassava: A WordPress CAS Server
 Version: 0.9.0
-Description: Provides authentication services based on Jasig CAS protocols.
+Description: Provides authentication services based on the Jasig CAS protocol.
 Author: Luís Rodrigues
 Author URI: http://goblindegook.net/
-Plugin URI: https://github.com/goblindegook/wordpress-cas-server
+Plugin URI: https://github.com/goblindegook/wp-cas-server
 Text Domain: wp-cas-server
 Domain Path: /languages
 */

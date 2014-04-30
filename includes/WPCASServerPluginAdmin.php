@@ -1,6 +1,6 @@
 <?php
 /**
- * Implements the WordPress CAS Server plugin's administration interface components.
+ * Implements the Cassava plugin's administration interface components.
  * 
  * @package     WPCASServerPlugin
  * @subpackage  WPCASServerPluginAdmin
