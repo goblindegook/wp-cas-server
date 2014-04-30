@@ -217,6 +217,10 @@ Parameters:
 
 == Changelog ==
 
+= 1.0.1 =
+
+* SSL is a requirement. No endpoints are exposed over unencrypted HTTP.
+
 = 1.0.0 =
 
 * Initial release.
