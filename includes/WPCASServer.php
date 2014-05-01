@@ -54,7 +54,7 @@ if (!class_exists( 'WPCASServer' )) {
          */
         public function routes () {
 
-            $cas_routes = array(
+            $casRoutes = array(
                 'login'           => array( $this, 'login' ),
                 'logout'          => array( $this, 'logout' ),
                 'proxy'           => array( $this, 'proxy' ),
@@ -70,7 +70,7 @@ if (!class_exists( 'WPCASServer' )) {
              * 
              * @param array $cas_routes CAS endpoint to callback mapping.
              */
-            return apply_filters( 'cas_server_routes', $cas_routes );
+            return apply_filters( 'cas_server_routes', $casRoutes );
         }
 
         /**
@@ -96,7 +96,6 @@ if (!class_exists( 'WPCASServer' )) {
             }
 
             wp_redirect( $location, $status );
-
             exit;
         }
 
@@ -139,13 +138,10 @@ if (!class_exists( 'WPCASServer' )) {
                 $path = isset( $_SERVER['PATH_INFO'] ) ? $_SERVER['PATH_INFO'] : '/';
             }
 
-            $result = $this->dispatch( $path );
+            $output = $this->dispatch( $path );
 
-            if (is_wp_error( $result )) {
-                $output = $this->xmlError( $result );
-            }
-            else {
-                $output = $result;
+            if (is_wp_error( $output )) {
+                $output = $this->xmlError( $output );
             }
             
             /**
@@ -173,6 +169,8 @@ if (!class_exists( 'WPCASServer' )) {
          * @param  string            $path Requested URI path.
          * 
          * @return (string|WP_Error)       Service response string or WordPress error.
+         * 
+         * @global $_GET
          * 
          * @uses apply_filters()
          * @uses is_wp_error()
@@ -314,10 +312,10 @@ if (!class_exists( 'WPCASServer' )) {
             
             if (is_array( $attributes ) && count( $attributes ) > 0) {
 
-                $response_attributes = array();
+                $responseAttributes = array();
 
                 foreach ($attributes as $key) {
-                    $response_attributes[$key] = $user->get( $key );
+                    $responseAttributes[$key] = $user->get( $key );
                 }
 
                 /**
@@ -327,11 +325,11 @@ if (!class_exists( 'WPCASServer' )) {
                  * @param  array   $attributes List of attributes to output.
                  * @param  WP_User $user       Authenticated user.
                  */
-                $response_attributes = apply_filters( 'cas_server_validation_extra_attributes', $response_attributes, $user );
+                $responseAttributes = apply_filters( 'cas_server_validation_extra_attributes', $responseAttributes, $user );
 
                 $xmlAttributes = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:attributes" );
 
-                foreach ($response_attributes as $key => $value) {
+                foreach ($responseAttributes as $key => $value) {
                     $xmlAttribute = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:$key", $value );
                     $xmlAttributes->appendChild( $xmlAttribute );
                 }
@@ -374,13 +372,13 @@ if (!class_exists( 'WPCASServer' )) {
 
             $expiration = WPCASServerPlugin::getOption( 'expiration', 30 );
 
-            $proxy_ticket = $this->createTicket( $user, $service, ICASServer::TYPE_PT, $expiration );
+            $proxyTicket = $this->createTicket( $user, $service, ICASServer::TYPE_PT, $expiration );
 
             $response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
                 "cas:proxySuccess" );
 
             $response->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-                "cas:proxyTicket", $proxy_ticket ) );
+                "cas:proxyTicket", $proxyTicket ) );
 
             return $response;
         }
@@ -421,6 +419,45 @@ if (!class_exists( 'WPCASServer' )) {
         }
 
         /**
+         * Remember a ticket as unused.
+         * 
+         * @param  string $key     Transient key used to reference the ticket.
+         * @param  string $ticket  Ticket to remember as unused.
+         * @param  int    $expires Expiration time until ticket is no longer fresh, in
+         *                         seconds (default: 300).
+         * 
+         * @uses set_transient()
+         */
+        protected function markTicketUnused ( $key, $ticket, $expires = 300 ) {
+            set_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key, $ticket, 5 * 60 );
+        }
+
+        /**
+         * Remember a ticket as having been used.
+         * 
+         * @param string $key Transient key used to reference the ticket.
+         * 
+         * @uses delete_transient()
+         */
+        protected function markTicketUsed ( $key ) {
+            delete_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
+        }
+
+        /**
+         * Validates whether a ticket hass been used.
+         * 
+         * @param  string  $key Transient key used to reference the ticket.
+         * 
+         * @return boolean      Whether the ticket has been used.
+         * 
+         * @uses get_transient()
+         */
+        protected function isTicketUsed ( $key ) {
+            return WPCASServerPlugin::getOption( 'allow_ticket_reuse' ) == false
+                && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
+        }
+
+        /**
          * Generate a new security ticket for the CAS service.
          * 
          * @param  WP_USER $user        WordPress user to authenticate.
@@ -433,10 +470,9 @@ if (!class_exists( 'WPCASServer' )) {
          * @return string               Generated ticket.
          * 
          * @uses apply_filters()
-         * @uses set_transient()
          * @uses wp_hash()
          */
-        protected function createTicket( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 30 ) {
+        protected function createTicket ( $user, $service = '', $type = ICASServer::TYPE_ST, $expiration = 30 ) {
             /**
              * This filter allows developers to override the default ticket expiration period.
              * 
@@ -451,7 +487,7 @@ if (!class_exists( 'WPCASServer' )) {
             $hash       = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
             $ticket     = $user->user_login . '|' . $service . '|' . $expires . '|' . $hash;
 
-            set_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key, $ticket, 5 * 60 );
+            $this->markTicketUnused( $key, $ticket, 5 * 60 );
 
             return $type . '-' . base64_encode( $ticket );
         }
@@ -488,33 +524,29 @@ if (!class_exists( 'WPCASServer' )) {
          * 
          * @return (WP_User|WP_Error)                       Authenticated WordPress user or error.
          * 
-         * @uses delete_transient()
          * @uses do_action()
-         * @uses get_transient()
          * @uses get_user_by()
          * @uses wp_hash()
          * @uses WP_Error
          */
         protected function validateTicket ( $ticket, $service = '', $validTicketTypes = array() ) {
 
+            $errorSlug = 'authenticationFailure';
+            $errorCode = ICASServer::ERROR_INVALID_TICKET;
+
             if (in_array( ICASServer::TYPE_PGT, $validTicketTypes )) {
-                $error_slug = 'proxyFailure';
-                $error_code = ICASServer::ERROR_BAD_PGT;
-            }
-            else
-            {
-                $error_slug = 'authenticationFailure';
-                $error_code = ICASServer::ERROR_INVALID_TICKET;
+                $errorSlug = 'proxyFailure';
+                $errorCode = ICASServer::ERROR_BAD_PGT;
             }
 
             if (empty( $service )) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Service is required.', 'wp-cas-server' ),
                     ICASServer::ERROR_INVALID_REQUEST );
             }
 
             if (empty( $ticket )) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Ticket is required.', 'wp-cas-server' ),
                     ICASServer::ERROR_INVALID_REQUEST );
             }
@@ -525,58 +557,58 @@ if (!class_exists( 'WPCASServer' )) {
 
             list( $ticket_type, $ticket_content ) = explode( '-', $ticket, 2 );
 
-            $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
-
             if ($ticket_type && !in_array( $ticket_type, $validTicketTypes )) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Ticket type cannot be validated.', 'wp-cas-server' ),
-                    $error_code );
+                    $errorCode );
             }
 
+            $ticket_elements = explode( '|', base64_decode( $ticket_content ) );
+
             if (count( $ticket_elements ) < 4) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Ticket is malformed.', 'wp-cas-server' ),
-                    $error_code );
+                    $errorCode );
             }
 
             list( $user_login, $ticket_service, $expires, $ticket_hash ) = $ticket_elements;
 
             if ( $ticket_service !== $service ) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Ticket does not match service.', 'wp-cas-server' ),
-                    $error_code );
+                    $errorCode );
             }
 
             if ( $expires < time() ) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Ticket has expired.', 'wp-cas-server' ),
-                    $error_code );
+                    $errorCode );
             }
 
             $user = get_user_by( 'login', $user_login );
 
             if ( !$user ) {
-                return $this->validateError( $error_slug,
+                return $this->validateError( $errorSlug,
                     __( 'Ticket does not match user.', 'wp-cas-server' ),
-                    $error_code );
+                    $errorCode );
             }
 
             $key  = wp_hash( $user->user_login . '|' . substr( $user->user_pass, 8, 4 ) . '|' . $expires );
             $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
 
             if ($ticket_hash !== $hash) {
-                return $this->validateError( $error_slug,
-                    __( 'Ticket is corrupted.', 'wp-cas-server' ), $ticket, $service );
+                return $this->validateError( $errorSlug,
+                    __( 'Ticket is corrupted.', 'wp-cas-server' ),
+                    $errorCode );
             }
 
-            if (WPCASServerPlugin::getOption( 'allow_ticket_reuse' ) == false
-                && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key )) {
-                return $this->validateError( $error_slug,
-                    __( 'Ticket is not recognized.', 'wp-cas-server' ),
-                    $error_code );
+            if ($this->isTicketUsed( $key )) {
+                return $this->validateError( $errorSlug,
+                    __( 'Ticket is unknown or has already been used.', 'wp-cas-server' ),
+                    $errorCode );
             }
 
-            delete_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
+            $this->markTicketUsed( $key );
 
             /**
              * Fires on successful ticket validation.
@@ -656,6 +688,8 @@ if (!class_exists( 'WPCASServer' )) {
          * requestor or a credential acceptor.
          * 
          * @param  array $args Request arguments.
+         * 
+         * @global $_POST
          */
         public function login ( $args = array() ) {
 
@@ -670,11 +704,12 @@ if (!class_exists( 'WPCASServer' )) {
 
             if (isset( $args['username'] ) && isset( $args['password'] ) && isset( $args['lt'] )) {
                 $this->loginAcceptor( $args );
+                return;
             }
-            else
-            {
-                $this->loginRequestor( $args );
-            }
+
+            $this->loginRequestor( $args );
+
+            return;
         }
 
         /**
@@ -714,7 +749,7 @@ if (!class_exists( 'WPCASServer' )) {
             $password   = $args['password'];
             $lt         = preg_replace( '@^' . ICASServer::TYPE_LT . '-@', '', $args['lt'] );
             $service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
-            $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
+            // $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
 
             if (!wp_verify_nonce( $lt, 'lt' )) {
                 $this->authRedirect( $args );
@@ -867,8 +902,8 @@ if (!class_exists( 'WPCASServer' )) {
 
             $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
             $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
-            $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
-            $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
+            // $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
+            // $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
 
             /**
              * `/proxyValidate` checks the validity of both service and proxy tickets.
@@ -909,8 +944,8 @@ if (!class_exists( 'WPCASServer' )) {
             
             $service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
             $ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
-            $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
-            $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
+            // $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
+            // $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
 
             /**
              * `/serviceValidate` checks the validity of a service ticket and does not handle proxy

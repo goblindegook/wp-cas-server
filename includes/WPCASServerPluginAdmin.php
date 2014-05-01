@@ -28,39 +28,12 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
 
         /**
          * Initializes the admin panel and registers settings fields.
+         * 
+         * @SuppressWarnings(CamelCaseMethodName)
          */
         public function admin_init () {
-            $this->addSettingsFields();
             $this->savePermalinks();
-        }
-
-        /**
-         * Register plugin settings fields.
-         * 
-         * @uses add_settings_field()
-         */
-        protected function addSettingsFields () {
-
-            add_settings_field(
-                'cas_server_endpoint_slug',
-                __( 'CAS server base', 'wp-cas-server' ),
-                array( $this, 'permalinkEndpointSlugField' ),
-                'permalink',
-                'optional'
-            );
-
-        }
-
-        /**
-         * Show the configuration field for the CAS endpoint.
-         * 
-         * @uses esc_attr()
-         */
-        public function permalinkEndpointSlugField () {
-            $endpoint = WPCASServerPlugin::getOption( 'endpoint_slug' );
-            ?>
-            <input name="cas_server_endpoint_slug" type="text" class="regular-text code" value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>" placeholder="<?php echo WPCASServerPlugin::ENDPOINT_SLUG ?>" />
-            <?php
+            $this->addSettingsFields();
         }
 
         /**
@@ -79,6 +52,35 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
             ) {
                 WPCASServerPlugin::setOption( 'endpoint_slug', trim( sanitize_text_field( $_POST['cas_server_endpoint_slug'] ) ) );
             }
+        }
+
+        /**
+         * Register plugin settings fields.
+         * 
+         * @uses add_settings_field()
+         */
+        protected function addSettingsFields () {
+
+            add_settings_field(
+                'cas_server_endpoint_slug',
+                __( 'CAS server base', 'wp-cas-server' ),
+                array( $this, 'permalinksEndpointSlugField' ),
+                'permalink',
+                'optional'
+            );
+
+        }
+
+        /**
+         * Show the configuration field for the CAS endpoint.
+         * 
+         * @uses esc_attr()
+         */
+        public function permalinksEndpointSlugField () {
+            $endpoint = WPCASServerPlugin::getOption( 'endpoint_slug' );
+            ?>
+            <input name="cas_server_endpoint_slug" type="text" class="regular-text code" value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>" placeholder="<?php echo WPCASServerPlugin::ENDPOINT_SLUG ?>" />
+            <?php
         }
 
     }
