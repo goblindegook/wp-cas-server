@@ -113,50 +113,52 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
     /**
      * Test plugin settings getter.
-     * @covers WPCASServerPlugin::get_option
+     * @covers WPCASServerPlugin::getOption
      */
-    function test_get_option () {
-        $path = WPCASServerPlugin::get_option( 'endpoint_slug' );
+    function testGetOption () {
+        $path = WPCASServerPlugin::getOption( 'endpoint_slug' );
         $this->assertEquals( WPCASServerPlugin::ENDPOINT_SLUG, $path, 'Obtain the path setting.' );
 
-        $path = WPCASServerPlugin::get_option( 'endpoint_slug', 'default' );
+        $path = WPCASServerPlugin::getOption( 'endpoint_slug', 'default' );
         $this->assertEquals( WPCASServerPlugin::ENDPOINT_SLUG, $path, 'Ignores default when obtaining an existing setting.' );
 
-        $unset = WPCASServerPlugin::get_option( 'unset', 'nothing' );
+        $unset = WPCASServerPlugin::getOption( 'unset', 'nothing' );
         $this->assertEquals( 'nothing', $unset, 'Obtain the default for a non-existing setting.' );
     }
 
     /**
      * Test plugin settings setter.
-     * @covers WPCASServerPlugin::set_option
+     * 
+     * @covers WPCASServerPlugin::getOption
+     * @covers WPCASServerPlugin::setOption
      */
-    function test_set_option () {
-        WPCASServerPlugin::set_option( 'zero', 0 );
-        $this->assertSame( 0, WPCASServerPlugin::get_option( 'zero' ), 'Set 0 integer.' );
+    function testSetOption () {
+        WPCASServerPlugin::setOption( 'zero', 0 );
+        $this->assertSame( 0, WPCASServerPlugin::getOption( 'zero' ), 'Set 0 integer.' );
 
-        WPCASServerPlugin::set_option( 'integer', 99 );
-        $this->assertSame( 99, WPCASServerPlugin::get_option( 'integer' ), 'Set non-zero integer.' );
+        WPCASServerPlugin::setOption( 'integer', 99 );
+        $this->assertSame( 99, WPCASServerPlugin::getOption( 'integer' ), 'Set non-zero integer.' );
 
-        WPCASServerPlugin::set_option( 'float', 99.99 );
-        $this->assertSame( 99.99, WPCASServerPlugin::get_option( 'float' ), 'Set float.' ); 
+        WPCASServerPlugin::setOption( 'float', 99.99 );
+        $this->assertSame( 99.99, WPCASServerPlugin::getOption( 'float' ), 'Set float.' ); 
 
-        WPCASServerPlugin::set_option( 'string', 'test' );
-        $this->assertSame( 'test', WPCASServerPlugin::get_option( 'string' ), 'Set string.' ); 
+        WPCASServerPlugin::setOption( 'string', 'test' );
+        $this->assertSame( 'test', WPCASServerPlugin::getOption( 'string' ), 'Set string.' ); 
 
-        WPCASServerPlugin::set_option( 'array', array( 1, 2, 3 ) );
-        $this->assertSame( array( 1, 2, 3 ), WPCASServerPlugin::get_option( 'array' ), 'Set array.' );
+        WPCASServerPlugin::setOption( 'array', array( 1, 2, 3 ) );
+        $this->assertSame( array( 1, 2, 3 ), WPCASServerPlugin::getOption( 'array' ), 'Set array.' );
 
-        WPCASServerPlugin::set_option( 'object', (object) array( 1, 2, 3 ) );
-        $this->assertEquals( (object) array( 1, 2, 3 ), WPCASServerPlugin::get_option( 'object' ), 'Set object.' );        
+        WPCASServerPlugin::setOption( 'object', (object) array( 1, 2, 3 ) );
+        $this->assertEquals( (object) array( 1, 2, 3 ), WPCASServerPlugin::getOption( 'object' ), 'Set object.' );        
     }
 
     /**
      * Test allowed_redirect_hosts filter callback.
      * @covers WPCASServerPlugin::allowed_redirect_hosts
      */
-    function test_allowed_redirect_hosts () {
+    function testAllowedRedirectHosts () {
 
-        $no_schema_allowed = version_compare( phpversion(), '5.4.7', '>=' );        
+        $noSchemaAllowed = version_compare( phpversion(), '5.4.7', '>=' );        
 
         update_option( WPCASServerPlugin::OPTIONS_KEY, array(
             'endpoint_slug'    => 'wp-cas',
@@ -190,12 +192,12 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         $this->assertContains( 'test5', $hosts,
             'test5 is added to the allowed redirect hosts list.' );
 
-        if ($no_schema_allowed) {
+        if ($noSchemaAllowed) {
             $this->assertContains( 'test6', $hosts,
                 'test6 is added to the allowed redirect hosts list.' );
         }
 
-        $expected_count = $no_schema_allowed ? 7 : 6;
+        $expected_count = $noSchemaAllowed ? 7 : 6;
 
         $this->assertCount( $expected_count, $hosts,
             'Allowed hosts are added to an existing list.');
@@ -238,7 +240,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
      */
     function test_rewrite_rules () {
         
-        $path = WPCASServerPlugin::get_option( 'endpoint_slug' );
+        $path = WPCASServerPlugin::getOption( 'endpoint_slug' );
 
         $this->assertNotEmpty( $path, 'Plugin sets default URI path root.');
 

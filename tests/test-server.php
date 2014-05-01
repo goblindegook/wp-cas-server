@@ -236,7 +236,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
      * @covers ::login
      * @covers ::_loginAcceptor
      * 
-     * @todo Resolve issue on PHPUnit 4.x with login() attempting to set headers.
+     * @todo Resolve errors with Travis's PHPUnit 4.0.14 around attempts to set headers
+     *       in spite of process isolation.
      * @todo Test support for the optional 'warn' parameter.
      */
     function test_login_acceptor () {

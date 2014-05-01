@@ -97,7 +97,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * Default plugin options.
          * @var array
          */
-        private $default_options = array(
+        private $defaultOptions = array(
             /**
              * CAS server endpoint path fragment (e.g. `<scheme>://<host>/wp-cas/login`).
              */
@@ -158,22 +158,26 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * @uses restore_current_blog()
          * @uses switch_to_blog()
          * @uses wp_get_sites()
+         * 
+         * @SuppressWarnings(CamelCaseParameterName)
+         * @SuppressWarnings(CamelCaseVariableName)
          */
         public function activation ( $network_wide ) {
+
             if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
                 $sites = wp_get_sites();
                 foreach ($sites as $site) {
                     switch_to_blog( $site['blog_id'] );
-                    $this->_add_rewrite_rules();
+                    $this->addRewriteRules();
                     flush_rewrite_rules();
                 }
                 restore_current_blog();
+                return;
             }
-            else
-            {
-                $this->_add_rewrite_rules();
-                flush_rewrite_rules();
-            }
+
+            $this->addRewriteRules();
+            flush_rewrite_rules();
+            return;
         }
 
         /**
@@ -186,8 +190,12 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * @uses restore_current_blog()
          * @uses switch_to_blog()
          * @uses wp_get_sites()
+         * 
+         * @SuppressWarnings(CamelCaseParameterName)
+         * @SuppressWarnings(CamelCaseVariableName)
          */
         public function deactivation ( $network_wide ) {
+
             if (function_exists( 'is_multisite' ) && is_multisite() && $network_wide) {
                 $sites = wp_get_sites();
                 foreach ($sites as $site) {
@@ -195,11 +203,10 @@ if (!class_exists( 'WPCASServerPlugin' )) {
                     flush_rewrite_rules();
                 }
                 restore_current_blog();
+                return;
             }
-            else
-            {
-                flush_rewrite_rules();
-            }
+
+            flush_rewrite_rules();
         }
 
         /**
@@ -207,6 +214,8 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * 
          * @uses add_action()
          * @uses add_filter()
+         * 
+         * @SuppressWarnings(CamelCaseMethodName)
          */
         public function plugins_loaded () {
             add_action( 'init'                  , array( $this, 'init' ) );
@@ -227,18 +236,18 @@ if (!class_exists( 'WPCASServerPlugin' )) {
         public function init () {
             global $wp;
 
-            $domain = self::SLUG;
+            $domain = static::SLUG;
             $locale = apply_filters( 'plugin_locale', get_locale(), 'wp-cas-server' );
 
             load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
             load_plugin_textdomain( $domain, FALSE, basename( plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
 
-            if (!get_option( self::OPTIONS_KEY )) {
-                $this->_set_default_options();
+            if (!get_option( static::OPTIONS_KEY )) {
+                $this->setDefaultOptions();
             }
 
-            $wp->add_query_var( self::QUERY_VAR_ROUTE );
-            $this->_add_rewrite_rules();
+            $wp->add_query_var( static::QUERY_VAR_ROUTE );
+            $this->addRewriteRules();
         }
 
         /**
@@ -250,11 +259,11 @@ if (!class_exists( 'WPCASServerPlugin' )) {
             global $wp;
 
             // Abort unless processing a CAS request:
-            if (empty( $wp->query_vars[self::QUERY_VAR_ROUTE] )) {
+            if (empty( $wp->query_vars[static::QUERY_VAR_ROUTE] )) {
                 return;
             }
 
-            echo $this->server->handleRequest( $wp->query_vars[self::QUERY_VAR_ROUTE] );
+            echo $this->server->handleRequest( $wp->query_vars[static::QUERY_VAR_ROUTE] );
 
             exit;
         }
@@ -265,10 +274,12 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * @param  array $allowed List of valid redirection target hosts.
          * 
          * @return array          Filtered list of valid redirection target hosts.
+         * 
+         * @SuppressWarnings(CamelCaseMethodName)
          */
         public function allowed_redirect_hosts ( $allowed = array() ) {
 
-            foreach ((array) self::get_option( 'allowed_services' ) as $uri) {
+            foreach ((array) static::getOption( 'allowed_services' ) as $uri) {
                 // `allowed_redirect_hosts` returns a list of **hosts**, not URIs:
                 $host = parse_url( $uri, PHP_URL_HOST );
 
@@ -290,8 +301,8 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * 
          * @uses get_option()
          */
-        public static function get_option ( $key = null, $default = false ) {
-            $options = get_option( self::OPTIONS_KEY );
+        public static function getOption ( $key = '', $default = null ) {
+            $options = get_option( static::OPTIONS_KEY );
             return isset( $options[$key] ) ? $options[$key] : $default;
         }
 
@@ -301,9 +312,10 @@ if (!class_exists( 'WPCASServerPlugin' )) {
          * @param string $key   Plugin option key to set.
          * @param mixed  $value Plugin option value to set.
          */
-        public static function set_option ( $key, $value ) {
+        public static function setOption ( $key, $value ) {
             if (!isset( $key )) return;
-            $options = get_option( self::OPTIONS_KEY );
+
+            $options = get_option( static::OPTIONS_KEY );
 
             if (!isset( $value )) {
                 unset( $options[$key] );
@@ -313,29 +325,28 @@ if (!class_exists( 'WPCASServerPlugin' )) {
                 $options[$key] = $value;
             }
 
-            update_option( self::OPTIONS_KEY, $options );
+            update_option( static::OPTIONS_KEY, $options );
         }
 
         /**
-         * Update the plugin options in the database.
-         * 
-         * @param  array  $updated_options  Updated options to set (will be merged with existing options).
+         * Set the default plugin options in the database.
          * 
          * @uses get_option()
          * @uses update_option()
          */
-        private function _set_default_options ( $updated_options = array() ) {
-            $options = get_option( self::OPTIONS_KEY, $this->default_options );
-            $options = array_merge( (array) $options, (array) $updated_options );
-            update_option( self::OPTIONS_KEY, $options );
+        private function setDefaultOptions () {
+            $options = get_option( static::OPTIONS_KEY, $this->defaultOptions );
+            update_option( static::OPTIONS_KEY, $options );
         }
 
         /**
          * Register new rewrite rules for the CAS server URIs.
          * 
          * @uses add_rewrite_endpoint()
+         * 
+         * @SuppressWarnings(CamelCaseMethodName)
          */
-        private function _add_rewrite_rules () {
+        private function addRewriteRules () {
 
             /**
              * Enforce SSL
@@ -344,13 +355,13 @@ if (!class_exists( 'WPCASServerPlugin' )) {
                 return;
             }
 
-            $path = self::get_option( 'endpoint_slug' );
+            $path = static::getOption( 'endpoint_slug' );
 
             if (empty( $path )) {
-                $path = self::ENDPOINT_SLUG;
+                $path = static::ENDPOINT_SLUG;
             }
 
-            add_rewrite_endpoint( $path, EP_ALL, self::QUERY_VAR_ROUTE );
+            add_rewrite_endpoint( $path, EP_ALL, static::QUERY_VAR_ROUTE );
         }
 
     }
