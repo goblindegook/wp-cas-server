@@ -419,7 +419,7 @@ if (!class_exists( 'WPCASServer' )) {
         }
 
         /**
-         * Remember a ticket as unused.
+         * Remember a fresh ticket using WordPress's Transients API.
          * 
          * @param  string $key     Transient key used to reference the ticket.
          * @param  string $ticket  Ticket to remember as unused.
@@ -429,11 +429,11 @@ if (!class_exists( 'WPCASServer' )) {
          * @uses set_transient()
          */
         protected function markTicketUnused ( $key, $ticket, $expires = 300 ) {
-            set_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key, $ticket, 5 * 60 );
+            set_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key, $ticket, $expires );
         }
 
         /**
-         * Remember a ticket as having been used.
+         * Remember a ticket as having been used using WordPress's Transients API.
          * 
          * @param string $key Transient key used to reference the ticket.
          * 
@@ -444,7 +444,7 @@ if (!class_exists( 'WPCASServer' )) {
         }
 
         /**
-         * Validates whether a ticket hass been used.
+         * Checks whether a ticket has been used using WordPress's Transients API.
          * 
          * @param  string  $key Transient key used to reference the ticket.
          * 
@@ -455,6 +455,30 @@ if (!class_exists( 'WPCASServer' )) {
         protected function isTicketUsed ( $key ) {
             return WPCASServerPlugin::getOption( 'allow_ticket_reuse' ) == false
                 && !get_transient( WPCASServerPlugin::TRANSIENT_PREFIX . $key );
+        }
+
+        /**
+         * Generate ticket key.
+         * @param  WP_User $user      WordPress user to whom the ticket belongs.
+         * @param  int     $expires   Expiration timestamp.
+         * @return string             Ticket key.
+         */
+        protected function createTicketKey ( $user, $expires ) {
+            return wp_hash( $user->user_login . '|' . substr($user->user_pass, 8, 4) . '|' . $expires );
+        }
+
+        /**
+         * Create a ticket signature by concatenating components and signing them with a key.
+         * 
+         * @param  WP_User $user      WordPress user to whom the ticket belongs.
+         * @param  string  $service   URL for the service requesting authentication.
+         * @param  int     $expires   Expiration timestamp.
+         * @param  string  $key       Key to sign the content with.
+         * 
+         * @return string             Signature hash.
+         */
+        protected function createTicketSignature ( $user, $service, $expires, $key ) {
+            return hash_hmac( 'sha1', implode( '|', array( $user->login, $service, $expires ) ), $key );
         }
 
         /**
@@ -483,11 +507,12 @@ if (!class_exists( 'WPCASServer' )) {
             $expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
             $expires    = microtime( true ) + $expiration;
 
-            $key        = wp_hash( $user->user_login . '|' . substr($user->user_pass, 8, 4) . '|' . $expires );
-            $hash       = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
-            $ticket     = $user->user_login . '|' . $service . '|' . $expires . '|' . $hash;
+            $key        = $this->createTicketKey( $user, $expires );
+            $hash       = $this->createTicketSignature( $user, $service, $expires, $key );
 
-            $this->markTicketUnused( $key, $ticket, 5 * 60 );
+            $ticket     = implode( '|', array( $user->user_login, $service, $expires, $hash ) );
+
+            $this->markTicketUnused( $key, $ticket, $expiration );
 
             return $type . '-' . base64_encode( $ticket );
         }
@@ -593,8 +618,8 @@ if (!class_exists( 'WPCASServer' )) {
                     $errorCode );
             }
 
-            $key  = wp_hash( $user->user_login . '|' . substr( $user->user_pass, 8, 4 ) . '|' . $expires );
-            $hash = hash_hmac( 'sha1', $user->user_login . '|' . $service . '|' . $expires, $key );
+            $key        = $this->createTicketKey( $user, $expires );
+            $hash       = $this->createTicketSignature( $user, $service, $expires, $key );
 
             if ($ticket_hash !== $hash) {
                 return $this->validateError( $errorSlug,
