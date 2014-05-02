@@ -75,6 +75,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 
     /**
      * @covers ::fromString
+     * @todo Test exceptions.
      */
     function test_fromString () {
         $this->markTestIncomplete();

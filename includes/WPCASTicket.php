@@ -4,22 +4,30 @@
  * 
  * @package \WPCASServerPlugin\Ticket
  * @version 1.1.0
+ * @since   1.1.0
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
 
-if (!class_exists( 'WPCASTicket' )) {
 
+if (!class_exists( 'WPCASTicketException' )) {
     /**
      * Ticket exception.
+     * 
+     * @version 1.1.0
+     * @since   1.1.0
      */
     class WPCASTicketException extends Exception { }
+}
 
+
+if (!class_exists( 'WPCASTicket' )) {
 
     /**
      * Class that implements CAS tickets.
      * 
-     * @since 1.1.0
+     * @version 1.1.0
+     * @since   1.1.0
      */
     class WPCASTicket {
 

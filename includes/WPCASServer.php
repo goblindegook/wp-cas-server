@@ -3,7 +3,7 @@
  * Implements the ICASServer interface as required by the WP CAS Server plugin.
  * 
  * @package \WPCASServerPlugin\Server
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
@@ -11,13 +11,18 @@ if (!defined( 'ABSPATH' )) exit; // No monkey business.
 require_once( dirname( __FILE__ ) . '/ICASServer.php');
 require_once( dirname( __FILE__ ) . '/WPCASTicket.php');
 
-if (!class_exists( 'WPCASServer' )) {
 
+if (!class_exists( 'WPCASRequestException' )) {
     /**
      * Request exception.
+     * 
+     * @since 1.1.0
      */
     class WPCASRequestException extends Exception { }
+}
 
+
+if (!class_exists( 'WPCASServer' )) {
 
     /**
      * Class providing all public CAS methods.
@@ -88,8 +93,8 @@ if (!class_exists( 'WPCASServer' )) {
          * 
          * Calling WPCASServer::_redirect() will _always_ terminate the request.
          * 
-         * @param  string  $location [description]
-         * @param  integer $status   [description]
+         * @param  string  $location URI to redirect to.
+         * @param  integer $status   HTTP status code (default 302).
          * 
          * @uses wp_redirect()
          * @uses wp_safe_redirect()
@@ -294,11 +299,11 @@ if (!class_exists( 'WPCASServer' )) {
         /**
          * XML success response to a CAS 2.0 validation request.
          * 
-         * @param  WP_User    $user                 Authenticated WordPress user.
-         * @param  string     $proxyGrantingTicket  Generated Proxy-Granting Ticket (PGT) to return.
-         * @param  array      $proxies              List of proxy URIs.
+         * @param  WPCASTicket $ticket               Validated ticket.
+         * @param  string      $proxyGrantingTicket  Generated Proxy-Granting Ticket (PGT) to return.
+         * @param  array       $proxies              List of proxy URIs.
          * 
-         * @return DOMElement                       CAS success response XML fragment.
+         * @return DOMElement                        CAS success response XML fragment.
          * 
          * @uses apply_filters()
          * @uses get_userdata()
@@ -684,9 +689,7 @@ if (!class_exists( 'WPCASServer' )) {
             $service = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
 
             if ($renew) {
-                if (!headers_sent()) {
-                    wp_logout();
-                }
+                wp_logout();
 
                 $schema = is_ssl() ? 'https://' : 'http://';
                 $url    = $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
