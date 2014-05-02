@@ -1,7 +1,6 @@
 <?php
 /**
- * @package WPCASServerPlugin
- * @subpackage WPCASServerPlugin_Tests
+ * @package \WPCASServerPlugin\Tests
  */
 
 $_tests_dir = getenv('WP_TESTS_DIR');

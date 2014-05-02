@@ -1,7 +1,6 @@
 <?php
 /**
- * @package WPCASServerPlugin
- * @subpackage Tests
+ * @package \WPCASServerPlugin\Tests
  */
 
 /**
@@ -190,7 +189,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertNotEmpty( $query['ticket'],
             "'login' generates ticket." );
 
-        $this->assertStringStartsWith( ICASServer::TYPE_ST, $query['ticket'],
+        $this->assertStringStartsWith( WPCASTicket::TYPE_ST, $query['ticket'],
             "'login' generates a service ticket." );
 
         $this->assertStringStartsWith( $service, $this->redirect_location,
@@ -274,7 +273,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertNotEmpty( $query['ticket'],
             "'login' generates ticket." );
 
-        $this->assertStringStartsWith( ICASServer::TYPE_ST, $query['ticket'],
+        $this->assertStringStartsWith( WPCASTicket::TYPE_ST, $query['ticket'],
             "'login' generates a service ticket." );
 
         $this->assertStringStartsWith( $service, $this->redirect_location,
@@ -500,7 +499,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $args = array(
             'targetService' => $targetService,
-            'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PT, $query['ticket'] ),
+            'pgt'           => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PT, $query['ticket'] ),
             );
 
         $xml = $this->server->proxy( $args );
@@ -514,15 +513,12 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         /**
          * /proxy validates a Proxy-Granting Ticket successfully.
          */
-        
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => true,
-            ) );
+
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
         $args = array(
             'targetService' => $targetService,
-            'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PGT, $query['ticket'] ),
+            'pgt'           => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PGT, $query['ticket'] ),
             );
 
         $xml = $this->server->proxy( $args );
@@ -553,7 +549,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $args = array(
             'targetService' => $targetService,
-            'pgt'           => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PGT, $query['ticket'] ),
+            'pgt'           => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PGT, $query['ticket'] ),
             );
 
         $xml = $this->server->proxy( $args );
@@ -564,10 +560,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         /**
          * Enforce single-use tickets.
          */
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => false,
-            ) );
+        
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
 
         $error = $this->server->proxy( $args );
 
@@ -677,10 +671,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         /**
          * Do not enforce single-use tickets.
          */
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => true,
-            ) );
+        
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
         $xml = $this->server->proxyValidate( $args );
 
@@ -692,7 +684,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
          */
         $args = array(
             'service' => $service,
-            'ticket'  => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PT, $query['ticket'] ),
+            'ticket'  => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PT, $query['ticket'] ),
             );
 
         $xml = $this->server->proxyValidate( $args );
@@ -703,10 +695,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         /**
          * Enforce single-use tickets.
          */
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => false,
-            ) );
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
 
         $args = array(
             'service' => $service,
@@ -821,10 +810,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         /**
          * Do not enforce single-use tickets.
          */
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => true,
-            ) );
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
         $xml = $this->server->serviceValidate( $args );
 
@@ -836,7 +822,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
          */
         $args = array(
             'service' => $service,
-            'ticket'  => preg_replace( '@^' . ICASServer::TYPE_ST . '@', ICASServer::TYPE_PT, $query['ticket'] ),
+            'ticket'  => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PT, $query['ticket'] ),
             );
 
         $error = $this->server->serviceValidate( $args );
@@ -850,10 +836,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         /**
          * Enforce single-use tickets.
          */
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => false,
-            ) );
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
 
         $args = array(
             'service' => $service,
@@ -938,18 +921,12 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertEquals( $this->server->validate( $args ), "yes\n" . $user->user_login . "\n",
             "Valid ticket." );
 
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => true,
-            ) );
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
         $this->assertEquals( $this->server->validate( $args ), "yes\n" . $user->user_login . "\n",
             "Tickets may reused." );
 
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration'         => 60,
-            'allow_ticket_reuse' => false,
-            ) );
+        WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
 
         $this->assertEquals( $this->server->validate( $args ), "no\n\n",
             "Tickets may not be reused." );

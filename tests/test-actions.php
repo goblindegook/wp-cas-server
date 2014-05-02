@@ -124,10 +124,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
             parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
         }
 
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'expiration' => 60,
-            'attributes' => array( 'user_email' ),
-            ) );
+        WPCASServerPlugin::setOption( 'attributes', array( 'user_email' ) );
 
         $args = array(
             'service' => $service,

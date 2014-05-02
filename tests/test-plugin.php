@@ -160,16 +160,13 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
         $noSchemaAllowed = version_compare( phpversion(), '5.4.7', '>=' );        
 
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'endpoint_slug'    => 'wp-cas',
-            'allowed_services' => array(
-                'http://test1/',
-                'http://test2:8080/',
-                'https://test3/',
-                'http://test4/path/',
-                'http://user@test5/',
-                '//test6',
-                ),
+        WPCASServerPlugin::setOption( 'allowed_services', array(
+            'http://test1/',
+            'http://test2:8080/',
+            'https://test3/',
+            'http://test4/path/',
+            'http://user@test5/',
+            '//test6',
             ) );
 
         $hosts = $this->plugin->allowed_redirect_hosts( array( 'test.local' ));
@@ -202,10 +199,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         $this->assertCount( $expected_count, $hosts,
             'Allowed hosts are added to an existing list.');
 
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'endpoint_slug'    => 'wp-cas',
-            'allowed_services' => false,
-            ) );
+        WPCASServerPlugin::setOption( 'allowed_services', false );
 
         $hosts = $this->plugin->allowed_redirect_hosts( array( 'test.local' ));
 
@@ -218,10 +212,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
         $this->assertCount( 1, $hosts,
             'Invalid hosts are not added to an existing list.');
 
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'endpoint_slug'    => 'wp-cas',
-            'allowed_services' => 'http://test-string/',
-            ) );
+        WPCASServerPlugin::setOption( 'allowed_services', 'http://test-string/' );
 
         $hosts = $this->plugin->allowed_redirect_hosts();
 
@@ -254,9 +245,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
         // Plugin forces default endpoint slug
         
-        update_option( WPCASServerPlugin::OPTIONS_KEY, array(
-            'endpoint_slug'    => false,
-            ) );
+        WPCASServerPlugin::setOption( 'endpoint_slug', '' );
 
         $this->markTestIncomplete();
     }

@@ -44,37 +44,7 @@ interface ICASServer {
      * Bad Proxy-Granting Ticket Error
      */
     const ERROR_BAD_PGT         = 'BAD_PGT';
-
-    /**
-     * Service Ticket
-     */
-    const TYPE_ST               = 'ST';
-
-    /**
-     * Proxy Ticket
-     */
-    const TYPE_PT               = 'PT';
-
-    /**
-     * Proxy-Granting Ticket
-     */
-    const TYPE_PGT              = 'PGT';
-
-    /**
-     * Proxy-Granting Ticket IOU
-     */
-    const TYPE_PGTIOU           = 'PGTIOU';
-
-    /**
-     * Ticket-Granting Cookie
-     */
-    const TYPE_TGC              = 'TGC';
-
-    /**
-     * Login Ticket
-     */
-    const TYPE_LT               = 'LT';
-
+    
     /**
      * RFC 1123 Date-Time Format
      */
