@@ -361,7 +361,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
                 $path = static::ENDPOINT_SLUG;
             }
 
-            add_rewrite_endpoint( $path, EP_ALL, static::QUERY_VAR_ROUTE );
+            add_rewrite_endpoint( $path, EP_ROOT, static::QUERY_VAR_ROUTE );
         }
 
     }
