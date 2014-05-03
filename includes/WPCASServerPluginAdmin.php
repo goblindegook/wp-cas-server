@@ -29,11 +29,45 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
         /**
          * Initializes the admin panel and registers settings fields.
          * 
+         * Triggered by the `admin_init` action.
+         * 
+         * @uses add_action()
+         * 
          * @SuppressWarnings(CamelCaseMethodName)
          */
         public function admin_init () {
             $this->savePermalinks();
             $this->addSettingsFields();
+
+            add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+        }
+
+        /**
+         * Presents admin notices.
+         * 
+         * Triggered by the `admin_notices` action.
+         * 
+         * @uses current_user_can()
+         * @uses is_ssl()
+         * 
+         * @uses ::adminNoticeNoSSL()
+         */
+        public function admin_notices () {
+            if (!is_ssl() && current_user_can( 'install_plugins' )) {
+                $this->adminNoticeNoSSL();
+            }
+        }
+
+        /**
+         * Nags the user with an administration notice explaining that the plugin will only
+         * work if HTTP
+         */
+        protected function adminNoticeNoSSL () {
+            ?>
+            <div class="update-nag">
+                <?php _e( 'Cassava CAS Server requires that this site be configured for HTTPS. For more information, contact your system administrator or hosting provider.', 'wp-cas-server' ); ?>
+            </div>
+            <?php
         }
 
         /**
