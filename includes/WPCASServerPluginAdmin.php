@@ -51,6 +51,8 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
          * @uses is_ssl()
          * 
          * @uses ::adminNoticeNoSSL()
+         * 
+         * @SuppressWarnings(CamelCaseMethodName)
          */
         public function admin_notices () {
             if (!is_ssl() && current_user_can( 'install_plugins' )) {

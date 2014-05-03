@@ -134,17 +134,4 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
         $this->_assertActionIsCalled( $action, $function, array( $args ) );
     }
 
-    /**
-     * @group action
-     */
-    function test_cas_server_validation_error () {
-        $action   = 'cas_server_validation_error';
-        $function = array( $this->server, 'handleRequest' );
-
-        foreach (array( 'proxy', 'proxyValidate', 'serviceValidate' ) as $endpoint) {
-            $this->_assertActionIsCalled( $action, $function, array( $endpoint ) );
-        }
-
-    }
-
 }

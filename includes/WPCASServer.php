@@ -8,18 +8,9 @@
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
 
+require_once( dirname( __FILE__ ) . '/WPCASServerException.php' );
 require_once( dirname( __FILE__ ) . '/ICASServer.php');
 require_once( dirname( __FILE__ ) . '/WPCASTicket.php');
-
-
-if (!class_exists( 'WPCASRequestException' )) {
-    /**
-     * Request exception.
-     * 
-     * @since 1.1.0
-     */
-    class WPCASRequestException extends Exception { }
-}
 
 
 if (!class_exists( 'WPCASServer' )) {
@@ -178,9 +169,9 @@ if (!class_exists( 'WPCASServer' )) {
          * Dispatch the request for processing by the relevant callback as determined by the routes
          * list returned by `WPCASServer::routes()`.
          * 
-         * @param  string            $path Requested URI path.
+         * @param  string $path Requested URI path.
          * 
-         * @return (string|WP_Error)       Service response string or WordPress error.
+         * @return mixed        Service response string or WordPress error.
          * 
          * @global $_GET
          * 
@@ -197,9 +188,9 @@ if (!class_exists( 'WPCASServer' )) {
             $enabled = apply_filters( 'cas_enabled', true );
 
             if (!$enabled) {
-                return $this->requestError( 'authenticationFailure',
+                return $this->requestError( WPCASServerException::SLUG_AUTHENTICATION,
                     __('The CAS server is disabled.', 'wp-cas-server'),
-                    ICASServer::ERROR_INTERNAL_ERROR
+                    WPCASServerException::ERROR_INTERNAL_ERROR
                     );
             }
 
@@ -212,9 +203,9 @@ if (!class_exists( 'WPCASServer' )) {
                 }
 
                 if (!is_callable( $callback )) {
-                    return $this->requestError(  'authenticationFailure',
+                    return $this->requestError(  WPCASServerException::SLUG_AUTHENTICATION,
                         __('The handler for the route is invalid.', 'wp-cas-server'),
-                        ICASServer::ERROR_INTERNAL_ERROR
+                        WPCASServerException::ERROR_INTERNAL_ERROR
                         );
                 }
 
@@ -226,9 +217,11 @@ if (!class_exists( 'WPCASServer' )) {
                  * Plugin developers may return a WP_Error object via the cas_server_dispatch_args
                  * filter to abort the request.
                  * 
-                 * @param array          $args     Arguments to pass the callback.
-                 * @param (string|array) $callback Callback function or method.
-                 * @param string         $path     Requested URI path.
+                 * @param  array  $args     Arguments to pass the callback.
+                 * @param  mixed  $callback Callback function or method.
+                 * @param  string $path     Requested URI path.
+                 * 
+                 * @return mixed            Arguments to pass the callback, or `WP_Error`.
                  */
                 $args = apply_filters( 'cas_server_dispatch_args', $args, $callback, $path );
 
@@ -239,9 +232,9 @@ if (!class_exists( 'WPCASServer' )) {
                 return call_user_func( $callback, $args );
             }
 
-            return $this->requestError( 'authenticationFailure',
+            return $this->requestError( WPCASServerException::SLUG_AUTHENTICATION,
                 __( 'The server does not support the method requested.', 'wp-cas-server' ),
-                ICASServer::ERROR_INVALID_REQUEST
+                WPCASRequestException::ERROR_INVALID_REQUEST
                 );
         }
 
@@ -413,7 +406,7 @@ if (!class_exists( 'WPCASServer' )) {
              */
             do_action( 'cas_server_error', $error );
 
-            foreach (array( 'authenticationFailure', 'proxyFailure' ) as $slug) {
+            foreach (array( WPCASServerException::SLUG_AUTHENTICATION, WPCASServerException::SLUG_PROXY ) as $slug) {
                 if (isset( $error->errors[$slug] ) && $error->errors[$slug]) {
                     $element = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
                         "cas:$slug", implode( "\n", $error->errors[$slug] ) );
@@ -423,17 +416,16 @@ if (!class_exists( 'WPCASServer' )) {
             }
 
             $response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-                "cas:authenticationFailure", __( 'Unknown error', 'wp-cas-server' ) );
+                "cas:" . WPCASServerException::SLUG_AUTHENTICATION,
+                __( 'Unknown error', 'wp-cas-server' ) );
 
-            $response->setAttribute( "code", ICASServer::ERROR_INTERNAL_ERROR );
+            $response->setAttribute( "code", WPCASServerException::ERROR_INTERNAL_ERROR );
 
             return $this->xmlResponse( $response );
         }
 
         /**
          * Generates a WordPress error object on invalid requests.
-         * 
-         * Triggers the `cas_server_validation_error` action.
          * 
          * @param  string   $slug    Error slug.
          * @param  string   $message Error message.
@@ -444,16 +436,7 @@ if (!class_exists( 'WPCASServer' )) {
          * @uses WP_Error
          */
         protected function requestError ( $slug, $message = '', $code = '' ) {
-            $error = new WP_Error( $slug, $message, array( 'code' => $code ) );
-
-            /**
-             * Fires on an invalid ticket.
-             * 
-             * @param WP_Error $error   Validation error for the ticket provided.
-             */
-            do_action( 'cas_server_validation_error', $error );
-
-            return $error;
+            return new WP_Error( $slug, $message, array( 'code' => $code ) );
         }
 
         /**
@@ -471,7 +454,7 @@ if (!class_exists( 'WPCASServer' )) {
 
             $isProxyRequest = in_array( WPCASTicket::TYPE_PGT, $validTicketTypes );
 
-            $errorSlug      = $isProxyRequest ? 'proxyFailure' : 'authenticationFailure';
+            $errorSlug      = $isProxyRequest ? WPCASServerException::SLUG_PROXY : WPCASServerException::SLUG_AUTHENTICATION;
 
             try {
 
@@ -498,10 +481,10 @@ if (!class_exists( 'WPCASServer' )) {
                 $ticket->markUsed();
 
             } catch (WPCASRequestException $exception) {
-                return $this->requestError( $errorSlug, $exception->getMessage(), ICASServer::ERROR_INVALID_REQUEST );
+                return $this->requestError( $errorSlug, $exception->getMessage(), WPCASRequestException::ERROR_INVALID_REQUEST );
 
             } catch (WPCASTicketException $exception) {
-                $code  = $isProxyRequest ? ICASServer::ERROR_BAD_PGT : ICASServer::ERROR_INVALID_TICKET;
+                $code  = $isProxyRequest ? WPCASTicketException::ERROR_BAD_PGT : WPCASTicketException::ERROR_INVALID_TICKET;
                 return $this->requestError( $errorSlug, $exception->getMessage(), $code );
             }
 

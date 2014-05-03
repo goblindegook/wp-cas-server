@@ -125,14 +125,6 @@ Parameters:
 * _WP_User_ `$user`: WordPress user validated by ticket.
 * _string_ `$ticket`: Valid ticket string.
 
-= Action: cas_server_validation_error =
-
-Fires on an invalid ticket.
-
-Parameters:
-
-* _WP_Error_ `$error`: Validation error for the ticket provided.
-
 = Filter: cas_enabled =
 
 Allows developers to disable CAS.

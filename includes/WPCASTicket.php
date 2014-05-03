@@ -7,19 +7,6 @@
  * @since   1.1.0
  */
 
-if (!defined( 'ABSPATH' )) exit; // No monkey business.
-
-
-if (!class_exists( 'WPCASTicketException' )) {
-    /**
-     * Ticket exception.
-     * 
-     * @version 1.1.0
-     * @since   1.1.0
-     */
-    class WPCASTicketException extends Exception { }
-}
-
 
 if (!class_exists( 'WPCASTicket' )) {
 
@@ -92,8 +79,8 @@ if (!class_exists( 'WPCASTicket' )) {
          * @param WP_User $user       Authenticated WordPress user who owns the ticket.
          * @param string  $service    URL for the service that requested authentication.
          * @param integer $expiration Time until ticket expires, in seconds.
-         * @param float   $expires    Expiration timestamp, in seconds. Freshly generated tickets
-         *                            should not provide this value.
+         * @param float   $expires    Expiration timestamp, in seconds.
+         *                            Freshly generated tickets should not provide this value.
          */
         public function __construct ( $type, $user, $service, $expiration = 0, $expires = 0 ) {
 
@@ -139,6 +126,9 @@ if (!class_exists( 'WPCASTicket' )) {
          * @return WPCASTicket         Ticket object.
          * 
          * @throws WPCASTicketException Invalid ticket exception.
+         * 
+         * @uses get_user_by()
+         * @uses is_wp_error()
          */
         public static function fromString ( $ticket ) {
 

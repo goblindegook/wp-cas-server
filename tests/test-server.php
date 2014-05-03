@@ -431,7 +431,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error if target service not provided.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
+        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
             'INVALID_REQUEST error code if target service not provided.' );
 
         /**
@@ -447,7 +447,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error if proxy-granting ticket not provided.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
+        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
             'INVALID_REQUEST error code if proxy-granting ticket not provided.' );
 
         /**
@@ -463,7 +463,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error on bad proxy-granting ticket.' );
 
-        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
             'BAD_PGT error code on bad proxy-granting ticket.' );
 
         /**
@@ -490,7 +490,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $xml,
             "'proxy' should not validate service tickets." );
 
-        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
             'BAD_PGT error code on proxy ticket.' );
 
         /**
@@ -507,7 +507,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $xml,
             "'proxy' should not validate proxy tickets." );
 
-        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
             'BAD_PGT error code on service ticket.' );
 
         /**
@@ -568,7 +568,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             "Settings do not allow ticket reuse." );
 
-        $this->assertEquals( ICASServer::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
             'BAD_PGT error code on ticket reuse.' );
     }
 
@@ -599,7 +599,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error if service not provided.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
             'INVALID_REQUEST error code if service not provided.' );
 
         /**
@@ -615,7 +615,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error if ticket not provided.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
             'INVALID_REQUEST error code if ticket not provided.' );
 
         /**
@@ -631,7 +631,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error on bad ticket.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
             'INVALID_TICKET error code on bad ticket.' );
 
         /**
@@ -707,7 +707,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             "Settings do not allow ticket reuse." );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
             'INVALID_TICKET error code on ticket reuse.' );
     }
 
@@ -738,7 +738,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error if service not provided.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
             'INVALID_REQUEST error code if service not provided.' );
 
         /**
@@ -754,7 +754,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error if ticket not provided.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
             'INVALID_REQUEST error code if ticket not provided.' );
 
         /**
@@ -770,7 +770,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             'Error on bad ticket.' );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
             'INVALID_TICKET error code on bad ticket.' );
 
         /**
@@ -830,7 +830,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             "'serviceValidate' may not validate proxy tickets." );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
             'INVALID_TICKET error code on proxy ticket.' );
 
         /**
@@ -848,7 +848,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertInstanceOf( 'WP_Error', $error,
             "Settings do not allow ticket reuse." );
 
-        $this->assertEquals( ICASServer::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
             'INVALID_TICKET error code on ticket reuse.' );
 
         $this->markTestIncomplete( "Test support for the optional 'pgtUrl' and 'renew' parameters." );
