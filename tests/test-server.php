@@ -49,6 +49,14 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         throw new WPDieException( "Redirecting to $location" );
     }
 
+    /**
+     * Evaluate XPath expression.
+     * 
+     * @param  string $xpath XPath query to evaluate.
+     * @param  string $xml   XML content.
+     * 
+     * @return mixed         XPath query result.
+     */
     protected function xpathEvaluate ( $xpath, $xml ) {
         $dom = new DOMDocument();
         $dom->loadXML( trim( $xml ) );
@@ -59,10 +67,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
     /**
      * Run an XPath query on an XML string.
      * 
-     * @param  [type] $xml      [description]
-     * @param  [type] $expected [description]
-     * @param  [type] $xpath    [description]
-     * @param  [type] $message  [description]
+     * @param  mixed  $expected Expected XPath query output.
+     * @param  string $xpath    XPath query.
+     * @param  string $xml      XML content.
+     * @param  string $message  Assert message to print.
      */
     protected function assertXPathMatch ( $expected, $xpath, $xml, $message = null ) {
         $this->assertEquals(
@@ -108,6 +116,18 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $this->assertTrue( is_callable( array( $this->server, 'handleRequest' ) ),
             "'handleRequest' method is callable." );
+
+        $error = $this->server->handleRequest( 'invalid-endpoint' );
+
+        $this->assertTrue( defined( 'CAS_REQUEST' ), 'handleRequest defines CAS_REQUEST constant.');
+
+        $this->assertTrue( CAS_REQUEST, 'handleRequest sets CAS_REQUEST constant to true.');
+
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
+            "Handling invalid endpoint returns an error." );
+
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
+            'Handling invalid endpoint returns an invalid request error.' );
 
         $this->markTestIncomplete();
     }

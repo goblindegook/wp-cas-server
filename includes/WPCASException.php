@@ -34,7 +34,7 @@ if (!class_exists( 'WPCASException' )) {
 	     * @param string $message Exception message.
 	     * @param string $casCode CAS error code (default: "INTERNAL_ERROR").
 	     */
-    	public function __construct ( $message, $casCode = self::ERROR_INTERNAL_ERROR ) {
+    	public function __construct ( $message = '', $casCode = self::ERROR_INTERNAL_ERROR ) {
             parent::__construct( $message );
 
     		$this->casCode = $casCode;
@@ -101,7 +101,7 @@ if (!class_exists( 'WPCASRequestException' )) {
          * @param string $message Exception description.
          * @param string $casCode CAS error code (default: "INVALID_REQUEST").
          */
-        public function __construct ( $message, $casCode = self::ERROR_INVALID_REQUEST ) {
+        public function __construct ( $message = '', $casCode = self::ERROR_INVALID_REQUEST ) {
             parent::__construct( $message, $casCode );
         }
 
@@ -134,7 +134,7 @@ if (!class_exists( 'WPCASTicketException' )) {
          * @param string $message Exception description.
          * @param string $casCode CAS error code (default: "INVALID_TICKET").
          */
-        public function __construct ( $message, $casCode = self::ERROR_INVALID_TICKET ) {
+        public function __construct ( $message = '', $casCode = self::ERROR_INVALID_TICKET ) {
             parent::__construct( $message, $casCode );
         }
 
