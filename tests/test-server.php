@@ -49,28 +49,27 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         throw new WPDieException( "Redirecting to $location" );
     }
 
+    protected function xpathEvaluate ( $xpath, $xml ) {
+        $dom = new DOMDocument();
+        $dom->loadXML( trim( $xml ) );
+        $xpathObj = new DOMXPath( $dom );
+        return $xpathObj->evaluate( $xpath );
+    }
+
     /**
      * Run an XPath query on an XML string.
      * 
-     * @param  string $query XPath query to run.
-     * @param  string $xml   Stringified XML.
-     * 
-     * @return array         Query results in array form.
+     * @param  [type] $xml      [description]
+     * @param  [type] $expected [description]
+     * @param  [type] $xpath    [description]
+     * @param  [type] $message  [description]
      */
-    private function _xpathQueryXML( $query, $xml ) {
-        $doc = new DOMDocument;
-        $doc->loadXML( $xml );
-
-        $xpath = new DOMXPath( $doc );
-        $results = $xpath->query( $query );
-
-        $output = array();
-
-        foreach ($results as $element) {
-            $output[] = $element;
-        }
-
-        return $output;
+    protected function assertXPathMatch ( $expected, $xpath, $xml, $message = null ) {
+        $this->assertEquals(
+            $expected,
+            $this->xpathEvaluate( $xpath, $xml ),
+            $message
+        );
     }
 
     function test_interface () {
@@ -419,22 +418,6 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $targetService = 'http://test/';
 
         /**
-         * No target service.
-         */
-        $args = array(
-            'targetService' => '',
-            'pgt'           => 'pgt',
-            );
-
-        $error = $this->server->proxy( $args );
-
-        $this->assertInstanceOf( 'WP_Error', $error,
-            'Error if target service not provided.' );
-
-        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
-            'INVALID_REQUEST error code if target service not provided.' );
-
-        /**
          * No proxy-granting ticket.
          */
         $args = array(
@@ -444,11 +427,27 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxy( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
             'Error if proxy-granting ticket not provided.' );
 
-        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['proxyFailure']['code'],
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:proxyFailure[1]/@code)', $error,
             'INVALID_REQUEST error code if proxy-granting ticket not provided.' );
+
+        /**
+         * No target service.
+         */
+        $args = array(
+            'targetService' => '',
+            'pgt'           => 'pgt',
+            );
+
+        $error = $this->server->proxy( $args );
+
+        $this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
+            'Error if target service not provided.' );
+
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:proxyFailure[1]/@code)', $error,
+            'INVALID_REQUEST error code if target service not provided.' );
 
         /**
          * Invalid proxy-granting ticket.
@@ -460,10 +459,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxy( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
             'Error on bad proxy-granting ticket.' );
 
-        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $error,
             'BAD_PGT error code on bad proxy-granting ticket.' );
 
         /**
@@ -487,10 +486,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxy( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $xml,
             "'proxy' should not validate service tickets." );
 
-        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $xml,
             'BAD_PGT error code on proxy ticket.' );
 
         /**
@@ -504,10 +503,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxy( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $xml,
             "'proxy' should not validate proxy tickets." );
 
-        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $xml,
             'BAD_PGT error code on service ticket.' );
 
         /**
@@ -523,15 +522,13 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxy( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:proxySuccess)', $xml,
             'Successful validation on proxy-granting ticket.' );
 
-        $xpath_query_results = $this->_xpathQueryXML( '//cas:serviceResponse/cas:proxySuccess/cas:proxyTicket', $xml );
+        $this->assertXPathMatch( 1, 'count(//cas:proxySuccess/cas:proxyTicket)', $xml,
+            "'/proxy' response returns a proxy ticket." );
 
-        $this->assertCount( 1, $xpath_query_results,
-            "'/proxy' response returns a proxy ticket.");
-
-        $proxyTicket = $xpath_query_results[0]->nodeValue;
+        $proxyTicket = $this->xpathEvaluate( 'string(//cas:proxySuccess[1]/cas:proxyTicket[1])', $xml );
 
         $args = array(
             'service' => $targetService,
@@ -540,7 +537,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxyValidate( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             "'/proxy' response returns a valid proxy ticket." );
 
         /**
@@ -554,7 +551,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxy( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:proxySuccess)', $xml,
             'Settings allow ticket reuse.' );
 
         /**
@@ -565,10 +562,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxy( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
             "Settings do not allow ticket reuse." );
 
-        $this->assertEquals( WPCASTicketException::ERROR_BAD_PGT, $error->error_data['proxyFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $error,
             'BAD_PGT error code on ticket reuse.' );
     }
 
@@ -596,10 +593,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxyValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             'Error if service not provided.' );
 
-        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_REQUEST error code if service not provided.' );
 
         /**
@@ -612,10 +609,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxyValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             'Error if ticket not provided.' );
 
-        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_REQUEST error code if ticket not provided.' );
 
         /**
@@ -628,10 +625,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxyValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             'Error on bad ticket.' );
 
-        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_TICKET error code on bad ticket.' );
 
         /**
@@ -657,15 +654,13 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxyValidate( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             'Successful validation.' );
 
-        $xpath_query_results = $this->_xpathQueryXML( '//cas:serviceResponse/cas:authenticationSuccess/cas:user', $xml );
-
-        $this->assertCount( 1, $xpath_query_results,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess/cas:user)', $xml,
             "Ticket validation response returns a user.");
 
-        $this->assertEquals( $xpath_query_results[0]->nodeValue, $user->user_login,
+        $this->assertXPathMatch( $user->user_login, 'string(//cas:authenticationSuccess[1]/cas:user[1])', $xml,
             "Ticket validation returns user login." );
 
         /**
@@ -675,8 +670,8 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
         $xml = $this->server->proxyValidate( $args );
-
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             'Settings allow ticket reuse.' );
 
         /**
@@ -689,7 +684,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->proxyValidate( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             "'proxyValidate' may validate proxy tickets." );
 
         /**
@@ -704,10 +699,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->proxyValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             "Settings do not allow ticket reuse." );
 
-        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_TICKET error code on ticket reuse.' );
     }
 
@@ -735,10 +730,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->serviceValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             'Error if service not provided.' );
 
-        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_REQUEST error code if service not provided.' );
 
         /**
@@ -751,10 +746,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->serviceValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             'Error if ticket not provided.' );
 
-        $this->assertEquals( WPCASRequestException::ERROR_INVALID_REQUEST, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_REQUEST error code if ticket not provided.' );
 
         /**
@@ -767,10 +762,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->serviceValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             'Error on bad ticket.' );
 
-        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_TICKET error code on bad ticket.' );
 
         /**
@@ -796,15 +791,13 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->serviceValidate( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             'Successful validation.' );
 
-        $xpath_query_results = $this->_xpathQueryXML( '//cas:serviceResponse/cas:authenticationSuccess/cas:user', $xml );
-
-        $this->assertCount( 1, $xpath_query_results,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess/cas:user)', $xml,
             "Ticket validation response returns a user.");
 
-        $this->assertEquals( $xpath_query_results[0]->nodeValue, $user->user_login,
+        $this->assertXPathMatch( $user->user_login, 'string(//cas:authenticationSuccess[1]/cas:user[1])', $xml,
             "Ticket validation returns user login." );
 
         /**
@@ -814,7 +807,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $xml = $this->server->serviceValidate( $args );
 
-        $this->assertNotInstanceOf( 'WP_Error', $xml,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             'Settings allow ticket reuse.' );
 
         /**
@@ -827,10 +820,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->serviceValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             "'serviceValidate' may not validate proxy tickets." );
 
-        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_TICKET error code on proxy ticket.' );
 
         /**
@@ -845,10 +838,10 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $error = $this->server->serviceValidate( $args );
 
-        $this->assertInstanceOf( 'WP_Error', $error,
+        $this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
             "Settings do not allow ticket reuse." );
 
-        $this->assertEquals( WPCASTicketException::ERROR_INVALID_TICKET, $error->error_data['authenticationFailure']['code'],
+        $this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
             'INVALID_TICKET error code on ticket reuse.' );
 
         $this->markTestIncomplete( "Test support for the optional 'pgtUrl' and 'renew' parameters." );

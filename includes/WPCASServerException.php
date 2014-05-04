@@ -28,16 +28,6 @@ if (!class_exists( 'WPCASServerException' )) {
 	    const ERROR_INVALID_SERVICE = 'INVALID_SERVICE';
 
 	    /**
-	     * Authentication error slug.
-	     */
-	    const SLUG_AUTHENTICATION = 'authenticationFailure';
-
-	    /**
-	     * Proxy validation error slug.
-	     */
-	    const SLUG_PROXY = 'proxyFailure';
-
-	    /**
 	     * Error code.
 	     * @var string
 	     */
@@ -71,7 +61,7 @@ if (!class_exists( 'WPCASServerException' )) {
          * 
     	 * @return WP_Error       WordPress error.
     	 */
-    	public function getErrorInstance ( $slug = self::SLUG_AUTHENTICATION ) {
+    	public function getErrorInstance ( $slug = 'authenticationFailure' ) {
     		return new WP_Error( $slug, $this->message, array( 'code' => $this->casCode ) );
     	}
 
