@@ -190,6 +190,22 @@ if (!class_exists( 'WPCASTicket' )) {
         }
 
         /**
+         * Validates a ticket string against a list of expected types.
+         * 
+         * @param  string $ticket Ticket string to validate.
+         * @param  array  $types  List of allowed type prefixes.
+         * 
+         * @throws WPCASTicketException
+         */
+        public static function validateAllowedTypes ( $ticket, $types = array() ) {
+            list( $type ) = explode( '-', $ticket, 2 );
+
+            if (!in_array( $type, $types )) {
+                throw new WPCASTicketException( __( 'Ticket type cannot be validated.', 'wp-cas-server' ) );
+            }
+        }
+
+        /**
          * Remember a fresh ticket using WordPress's Transients API.
          * 
          * @uses set_transient()

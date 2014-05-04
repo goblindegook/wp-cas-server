@@ -138,10 +138,6 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
         $function = array( $this->server, 'handleRequest' );
         $args     = array( 'login' );
 
-        $handler = function () {
-            return new WP_Error();
-        };
-
         $mock = $this->getMock( 'stdClass', array( 'filter' ) );
         $mock->expects( $this->once() )->method( 'filter' )->will( $this->returnValue( new WP_Error() ) );
 

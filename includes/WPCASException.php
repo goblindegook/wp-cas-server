@@ -9,23 +9,18 @@
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
 
 
-if (!class_exists( 'WPCASServerException' )) {
+if (!class_exists( 'WPCASException' )) {
     /**
      * Request exception.
      * 
      * @since 1.1.0
      */
-    class WPCASServerException extends Exception {
+    class WPCASException extends Exception {
 
 	    /**
 	     * Internal Error
 	     */
 	    const ERROR_INTERNAL_ERROR  = 'INTERNAL_ERROR';
-
-	    /**
-	     * Invalid Service Error
-	     */
-	    const ERROR_INVALID_SERVICE = 'INVALID_SERVICE';
 
 	    /**
 	     * Error code.
@@ -40,10 +35,23 @@ if (!class_exists( 'WPCASServerException' )) {
 	     * @param string $casCode CAS error code (default: "INTERNAL_ERROR").
 	     */
     	public function __construct ( $message, $casCode = self::ERROR_INTERNAL_ERROR ) {
-    		parent::__construct( $message );
+            parent::__construct( $message );
 
     		$this->casCode = $casCode;
     	}
+
+        /**
+         * Generate a new exception instance from a WordPress error.
+         * 
+         * @param  WP_Error       $error WordPress error.
+         * 
+         * @return WPCASException        WordPress error as an exception.
+         */
+        public static function fromError ( WP_Error $error ) {
+            $code    = $error->get_error_code();
+            $message = $error->get_error_message( $code );
+            return new static ($message, $code);
+        }
 
     	/**
     	 * Error code getter.
@@ -61,8 +69,8 @@ if (!class_exists( 'WPCASServerException' )) {
          * 
     	 * @return WP_Error       WordPress error.
     	 */
-    	public function getErrorInstance ( $slug = 'authenticationFailure' ) {
-    		return new WP_Error( $slug, $this->message, array( 'code' => $this->casCode ) );
+    	public function getErrorInstance () {
+    		return new WP_Error( $this->casCode, $this->message );
     	}
 
     }
@@ -75,12 +83,17 @@ if (!class_exists( 'WPCASRequestException' )) {
      * 
      * @since 1.1.0
      */
-    class WPCASRequestException extends WPCASServerException {
+    class WPCASRequestException extends WPCASException {
 
 	    /**
 	     * Invalid Request Error
 	     */
 	    const ERROR_INVALID_REQUEST = 'INVALID_REQUEST';
+
+        /**
+         * Invalid Service Error
+         */
+        const ERROR_INVALID_SERVICE = 'INVALID_SERVICE';
 
         /**
          * Generates a new ticket exception.
@@ -103,7 +116,7 @@ if (!class_exists( 'WPCASTicketException' )) {
      * @version 1.1.0
      * @since   1.1.0
      */
-    class WPCASTicketException extends WPCASServerException {
+    class WPCASTicketException extends WPCASException {
 
 	    /**
 	     * Invalid Ticket Error

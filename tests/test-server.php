@@ -168,7 +168,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
             $this->server->login( array() );
         }
         catch (WPDieException $message) {
-            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query_repeated );
+            parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
         }
 
         $this->assertStringStartsWith( home_url(), $this->redirect_location,
@@ -670,7 +670,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
         $xml = $this->server->proxyValidate( $args );
-        
+
         $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             'Settings allow ticket reuse.' );
 

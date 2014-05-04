@@ -62,7 +62,6 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
         $user       = get_user_by( 'id', $this->factory->user->create() );
         $service    = 'https://test/';
         $expiration = 30;
-        $expires    = microtime() + $expiration;
 
         $ticket     = new WPCASTicket( $type, $user, $service, $expiration );
 
@@ -91,7 +90,6 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
         $user       = get_user_by( 'id', $this->factory->user->create() );
         $service    = 'https://test/';
         $expiration = 30;
-        $expires    = microtime() + $expiration;
 
         $ticket     = new WPCASTicket( $type, $user, $service, $expiration );
 
