@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Cassava: A WordPress CAS Server 1.0.1\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/wp-cas-server\n"
-"POT-Creation-Date: 2014-05-03 22:23:26+00:00\n"
+"POT-Creation-Date: 2014-05-04 13:04:07+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,66 +12,66 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 
-#: includes/WPCASServer.php:201
+#: includes/WPCASServer.php:196
 msgid "The CAS server is disabled."
 msgstr ""
 
-#: includes/WPCASServer.php:216
+#: includes/WPCASServer.php:208
 msgid "The handler for the route is invalid."
 msgstr ""
 
-#: includes/WPCASServer.php:243
+#: includes/WPCASServer.php:234
 msgid "The server does not support the method requested."
 msgstr ""
 
-#: includes/WPCASServer.php:426
+#: includes/WPCASServer.php:414
 msgid "Unknown error"
 msgstr ""
 
-#: includes/WPCASServer.php:479
+#: includes/WPCASServer.php:448
 msgid "Ticket is required."
 msgstr ""
 
-#: includes/WPCASServer.php:483
+#: includes/WPCASServer.php:452
 msgid "Service is required."
 msgstr ""
 
-#: includes/WPCASServer.php:489
-msgid "Ticket type cannot be validated."
+#: includes/WPCASServer.php:476
+msgid "Ticket does not match the service provided."
 msgstr ""
 
-#: includes/WPCASServer.php:495
-msgid "Ticket does not match service."
-msgstr ""
-
-#: includes/WPCASServerPluginAdmin.php:68
+#: includes/WPCASServerPluginAdmin.php:70
 msgid ""
 "Cassava CAS Server requires that this site be configured for HTTPS. For more "
 "information, contact your system administrator or hosting provider."
 msgstr ""
 
-#: includes/WPCASServerPluginAdmin.php:100
+#: includes/WPCASServerPluginAdmin.php:102
 msgid "CAS server base"
 msgstr ""
 
-#: includes/WPCASTicket.php:154
+#: includes/WPCASTicket.php:144
 msgid "Ticket is malformed."
 msgstr ""
 
-#: includes/WPCASTicket.php:160
+#: includes/WPCASTicket.php:150
 msgid "Ticket has expired."
 msgstr ""
 
-#: includes/WPCASTicket.php:166
+#: includes/WPCASTicket.php:156
 msgid "Ticket does not match a valid user."
 msgstr ""
 
-#: includes/WPCASTicket.php:172
+#: includes/WPCASTicket.php:162
 msgid "Ticket is corrupted."
 msgstr ""
 
-#: includes/WPCASTicket.php:176
+#: includes/WPCASTicket.php:166
 msgid "Ticket is unknown or has already been used."
+msgstr ""
+
+#: includes/WPCASTicket.php:204
+msgid "Ticket type cannot be validated."
 msgstr ""
 
 #. Plugin Name of the plugin/theme

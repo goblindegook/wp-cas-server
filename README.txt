@@ -114,7 +114,7 @@ Fires if the CAS server has to return an XML error.
 
 Parameters:
 
-* _WP_Error_ `$errpr`: WordPress error to return as XML.
+* _WP_Error_ `$error`: WordPress error to return as XML.
 
 = Action: cas_server_validation_success =
 
