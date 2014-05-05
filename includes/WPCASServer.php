@@ -213,8 +213,9 @@ if (!class_exists( 'WPCASServer' )) {
                 /**
                  * Filters the callback arguments to be dispatched for the request.
                  * 
-                 * Plugin developers may return a WP_Error object via the cas_server_dispatch_args
-                 * filter to abort the request.
+                 * Plugin developers may return a WP_Error object via the `cas_server_dispatch_args`
+                 * filter to abort the request. Avoid throwing a `WPCASException` exception here
+                 * because that would interrupt the filter callback chain.
                  * 
                  * @param  array  $args     Arguments to pass the callback.
                  * @param  mixed  $callback Callback function or method.
@@ -271,9 +272,13 @@ if (!class_exists( 'WPCASServer' )) {
         /**
          * Wrap a CAS 2.0 XML response and output it as a string.
          * 
+         * This method attempts to set a `Content-Type: text/xml` HTTP response header.
+         * 
          * @param  DOMNode $response XML response contents for a CAS 2.0 request.
          * 
          * @return string            CAS 2.0 server response as an XML string.
+         * 
+         * @uses get_bloginfo()
          */
         protected function xmlResponse ( DOMNode $response ) {
             $this->setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_bloginfo( 'charset' ) );
@@ -316,14 +321,14 @@ if (!class_exists( 'WPCASServer' )) {
 
             // CAS attributes:
             
-            $attributes = WPCASServerPlugin::getOption( 'attributes' );
+            $attributeKeys = WPCASServerPlugin::getOption( 'attributes' );
             
-            if (is_array( $attributes ) && count( $attributes ) > 0) {
+            if (is_array( $attributeKeys ) && count( $attributeKeys ) > 0) {
 
-                $responseAttributes = array();
+                $attributes = array();
 
-                foreach ($attributes as $key) {
-                    $responseAttributes[$key] = $ticket->user->get( $key );
+                foreach ($attributeKeys as $key) {
+                    $attributes[$key] = $ticket->user->get( $key );
                 }
 
                 /**
@@ -333,11 +338,11 @@ if (!class_exists( 'WPCASServer' )) {
                  * @param  array   $attributes List of attributes to output.
                  * @param  WP_User $user       Authenticated user.
                  */
-                $responseAttributes = apply_filters( 'cas_server_validation_extra_attributes', $responseAttributes, $ticket->user );
+                $attributes = apply_filters( 'cas_server_validation_extra_attributes', $attributes, $ticket->user );
 
                 $xmlAttributes = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:attributes" );
 
-                foreach ($responseAttributes as $key => $value) {
+                foreach ($attributes as $key => $value) {
                     $xmlAttribute = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:$key", $value );
                     $xmlAttributes->appendChild( $xmlAttribute );
                 }
