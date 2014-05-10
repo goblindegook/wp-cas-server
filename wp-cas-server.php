@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Cassava: A WordPress CAS Server
-Version: 1.0.1
+Version: 1.1.0
 Description: Provides authentication services based on the Jasig CAS protocol.
 Author: Luís Rodrigues
 Author URI: http://goblindegook.net/
@@ -31,7 +31,7 @@ Domain Path: /languages
  * WP CAS Server main plugin file.
  * 
  * @package \WPCASServerPlugin
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );

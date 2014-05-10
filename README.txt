@@ -2,8 +2,8 @@
 Contributors: goblindegook
 Tags: authentication, cas, central authentication service, single sign-on, jasig cas, sso
 Requires at least: 3.9
-Tested up to: 3.9
-Stable tag: 1.0.1
+Tested up to: 3.9.1
+Stable tag: 1.1.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,7 +76,7 @@ If you suspect someone may have compromised the integrity of the security ticket
 
 By default, the plugin provides methods under the `wp-cas` endpoint.  So, if you're configuring a CAS client to authenticate using your server at `https://www.my-site.com/`, then the full URI should be something like `https://www.my-site.com/wp-cas/`.
 
-The endpoint may be changed at any time by navigating to **Settings > Permalinks** in the Admin Dashboard.  Bear in mind that if you change the endpoint you will also need to reconfigure all CAS clients that use the service.
+The endpoint may be changed at any time by navigating to **Settings > Permalinks** in the dashboard.  Bear in mind that if you change the endpoint you will also need to reconfigure all CAS clients currently using the service.
 
 = How can I change other settings? =
 
@@ -196,7 +196,7 @@ Parameters:
 * _string_ `$type`: Type of ticket to set.
 * _WP_User_ `$user`: Authenticated user associated with the ticket.
 
-= Filter: cas_server_validation_extra_attributes =
+= Filter: cas_server_validation_user_attributes =
 
 Allows developers to change the list of (key, value) pairs before they're included in a `/serviceValidate` response.
 
@@ -205,9 +205,29 @@ Parameters:
 * _array_ `$attributes`: List of attributes to output.
 * _WP_User_ `$user`: Authenticated user.
 
+= Filter:cas_server_settings_user_attribute_options =
+
+Allows developers to change the list of user attributes that appear in the dashboard for an administrator to set to return on successful validation requests.
+
+Options are stored in an associative array, with user attribute slugs as array keys and option labels as array values.
+
+These settings are valid only for CAS 2.0 validation requests.
+
+Parameters:
+
+* _array_ `$attributeOptions` Attribute options an administrator can set on the dashboard.
+
 == Upgrade Notice ==
 
 == Changelog ==
+
+= 1.1.0 =
+
+* Settings now allow a successful CAS 2.0 validation response to return user attributes.
+* Miscellaneous under-the-hood improvements and bug fixes.
+* Developers: New filter `cas_server_validation_user_attribute_options`.
+* Developers: Renamed filter `cas_server_validation_extra_attributes` to `cas_server_validation_user_attributes`.
+* Developers: Removed filter `cas_server_validation_error`.
 
 = 1.0.1 =
 

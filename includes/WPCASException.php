@@ -8,12 +8,12 @@
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
 
-
 if (!class_exists( 'WPCASException' )) {
     /**
      * Request exception.
      * 
-     * @since 1.1.0
+     * @version 1.1.0
+     * @since   1.1.0
      */
     class WPCASException extends Exception {
 
