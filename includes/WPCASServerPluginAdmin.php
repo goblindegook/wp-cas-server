@@ -4,6 +4,7 @@
  * 
  * @package \WPCASServerPlugin\Admin
  * @version 1.0.1
+ * @since   1.0.0
  */
 
 if (!defined( 'ABSPATH' )) exit; // No monkey business.
@@ -24,6 +25,7 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
          */
         public function __construct () {
             add_action( 'admin_init', array( $this, 'admin_init' ) );
+            add_action( 'admin_menu', array( $this, 'admin_menu' ) );
         }
 
         /**
@@ -37,9 +39,26 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
          */
         public function admin_init () {
             $this->savePermalinks();
-            $this->addSettingsFields();
+            $this->addSettings();
 
             add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+        }
+
+        /**
+         * Register the menu entry for the plugin's settings page.
+         * 
+         * @since 1.1.0
+         */
+        public function admin_menu () {
+
+            add_options_page(
+                __( 'Cassava CAS Server', 'wp-cas-server' ),
+                __( 'Cassava CAS Server', 'wp-cas-server' ),
+                'manage_options',
+                WPCASServerPlugin::SLUG,
+                array( $this, 'pageSettings' )
+            );
+
         }
 
         /**
@@ -91,16 +110,52 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
         }
 
         /**
-         * Register plugin settings fields.
+         * Validates and updates CAS server plugin settings.
+         * 
+         * @since 1.1.0
+         */
+        public function validateSettings ( $input ) {
+            $options = get_option( WPCASServerPlugin::OPTIONS_KEY );
+
+            $options['attributes'] = (array) $input['attributes'];
+
+            return $options;
+        }
+
+        /**
+         * Register plugin settings.
          * 
          * @uses add_settings_field()
+         * @uses add_settings_section()
+         * @uses register_setting()
+         * 
+         * @since   1.0.0
          */
-        protected function addSettingsFields () {
+        protected function addSettings () {
+
+            register_setting(
+                WPCASServerPlugin::SLUG,
+                WPCASServerPlugin::OPTIONS_KEY,
+                array( $this, 'validateSettings' )
+            );
+
+            // Default plugin settings:
+
+            add_settings_section( 'default', '', false, WPCASServerPlugin::SLUG );
 
             add_settings_field(
-                'cas_server_endpoint_slug',
+                'attributes',
+                __( 'User Attributes', 'wp-cas-server' ),
+                array( $this, 'fieldUserAttributes' ),
+                WPCASServerPlugin::SLUG
+            );
+
+            // Permalink settings:
+
+            add_settings_field(
+                WPCASServerPlugin::OPTIONS_KEY . '_endpoint_slug',
                 __( 'CAS server base', 'wp-cas-server' ),
-                array( $this, 'permalinksEndpointSlugField' ),
+                array( $this, 'fieldPermalinksEndpointSlug' ),
                 'permalink',
                 'optional'
             );
@@ -108,17 +163,111 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
         }
 
         /**
-         * Show the configuration field for the CAS endpoint.
+         * Display the configuration field for the CAS endpoint.
          * 
          * @uses esc_attr()
+         * 
+         * @since 1.0.0
          */
-        public function permalinksEndpointSlugField () {
+        public function fieldPermalinksEndpointSlug () {
             $endpoint = WPCASServerPlugin::getOption( 'endpoint_slug' );
             ?>
-            <input name="cas_server_endpoint_slug" type="text" class="regular-text code" value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>" placeholder="<?php echo WPCASServerPlugin::ENDPOINT_SLUG ?>" />
+            <input id="<?php echo WPCASServerPlugin::OPTIONS_KEY; ?>_endpoint_slug"
+                name="<?php echo WPCASServerPlugin::OPTIONS_KEY; ?>_endpoint_slug"
+                type="text" class="regular-text code"
+                value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>"
+                placeholder="<?php echo WPCASServerPlugin::ENDPOINT_OPTIONS_KEY; ?>" />
             <?php
         }
 
+        /**
+         * Displays the CAS server settings page in the dashboard.
+         * 
+         * @uses _e()
+         * @uses do_settings_sections()
+         * @uses settings_fields()
+         * @uses submit_button()
+         * 
+         * @since 1.1.0
+         */
+        public function pageSettings () {
+            ?>
+            <div>
+                <h2><?php _e( 'Cassava CAS Server', 'wp-cas-server' ); ?></h2>
+
+                <p><?php _e( 'Configuration panel for the Central Authentication Service provided by this site.', 'wp-cas-server' ); ?></p>
+
+                <form action="options.php" method="POST">
+                    <?php do_settings_sections( WPCASServerPlugin::SLUG ); ?>
+                    <?php settings_fields( WPCASServerPlugin::SLUG ); ?>
+                    <?php submit_button(); ?>
+                </form>
+            </div>
+            <?php
+        }
+
+        /**
+         * Display the configuration fieldset for the user attributs to return on successful
+         * requests.
+         * 
+         * Checked attributes for the authenticated user will be returned on successful
+         * `/validateService` request responses inside an optional `<cas:attributes></cas:attributes>`
+         * tag.
+         * 
+         * @uses _e()
+         * @uses apply_filters()
+         * 
+         * @since 1.1.0
+         */
+        public function fieldUserAttributes () {
+
+            $user = wp_get_current_user();
+
+            $attributeOptions = array(
+                'first_name'   => __( 'First Name', 'wp-cas-server' ),
+                'last_name'    => __( 'Last Name', 'wp-cas-server' ),
+                'display_name' => __( 'Display Name', 'wp-cas-server' ),
+                'user_email'   => __( 'Email', 'wp-cas-server' ),
+                'user_url'     => __( 'Website', 'wp-cas-server' ),
+            );
+
+            /**
+             * Allow developers to change the list of user attributes an administrator can set to return
+             * on successful validation requests.
+             * 
+             * These are stored in an associative array, with option values as keys and option labels as
+             * values.
+             * 
+             * @param  array $attributeOptions Attribute options an administrator can set on the dashboard.
+             * 
+             * @return array                   Attribute options to display.
+             * 
+             * @since 1.1.0
+             */
+            $attributeOptions = apply_filters( 'cas_server_settings_user_attribute_options', $attributeOptions );
+
+            $attributes = WPCASServerPlugin::getOption( 'attributes' );
+
+            ?>
+
+            <fieldset>
+            <legend class="screen-reader-text"><?php _e( 'User Attributes', 'wp-cas-server' ) ?></legend>
+                <?php foreach ($attributeOptions as $value => $label) : ?>
+                <label>
+                    <input id="<?php echo WPCASServerPlugin::OPTIONS_KEY . '-attribute-' . $value ?>"
+                    name="<?php echo WPCASServerPlugin::OPTIONS_KEY ?>[attributes][]"
+                    type="checkbox" <?php if (in_array( $value, $attributes )) echo "checked" ?>
+                    value="<?php echo $value ?>">
+                    <span><?php echo $label ?></span>
+                    <?php if ($user->get( $value )) : ?>
+                    <span class="description"><?php printf( __( '(e.g. %s)', 'wp-cas-server' ), $user->get( $value ) ); ?></span>
+                    <?php endif; ?>
+                </label><br>
+                <?php endforeach; ?>
+                <p class="description"><?php _e( 'User attributes to disclose on successful validation requests (CAS 2.0 only).', 'wp-cas-server' ) ?></p>
+            </fieldset>
+            <?php
+        }
     }
 
 } // !class_exists( 'WPCASServerPluginAdmin' )
