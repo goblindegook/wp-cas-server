@@ -817,7 +817,7 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
         $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess/cas:user)', $xml,
             "Ticket validation response returns a user.");
 
-        $this->assertXPathMatch( $user->user_login, 'string(//cas:authenticationSuccess[1]/cas:user[1])', $xml,
+        $this->assertXPathMatch( $user->user_login, 'string(//cas:authenticationSuccess/cas:user)', $xml,
             "Ticket validation returns user login." );
 
         /**
@@ -829,6 +829,29 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 
         $this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
             'Settings allow ticket reuse.' );
+
+        /**
+         * Validate does not return any user attributes.
+         */
+
+        $this->assertXPathMatch( 0, 'count(//cas:authenticationSuccess/cas:attributes)', $xml,
+            "Ticket validation returns no user attributes.");
+
+        /**
+         * Validate returns selected user attributes.
+         */
+
+        WPCASServerPlugin::setOption( 'attributes', array( 'display_name', 'user_email' ) );
+
+        $xml = $this->server->serviceValidate( $args );
+
+        $this->assertXPathMatch( $user->get( 'display_name' ),
+            'string(//cas:authenticationSuccess/cas:attributes/cas:display_name)', $xml,
+            'Ticket validation returns the user display name.' );
+
+        $this->assertXPathMatch( $user->get( 'user_email' ),
+            'string(//cas:authenticationSuccess/cas:attributes/cas:user_email)', $xml,
+            'Ticket validation returns the user email.' );
 
         /**
          * /serviceValidate should not validate Proxy Tickets.

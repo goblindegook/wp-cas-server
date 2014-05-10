@@ -328,7 +328,7 @@ if (!class_exists( 'WPCASServer' )) {
                 $attributes = array();
 
                 foreach ($attributeKeys as $key) {
-                    $attributes[$key] = $ticket->user->get( $key );
+                    $attributes[$key] = implode( ',', (array) $ticket->user->get( $key ) );
                 }
 
                 /**
@@ -338,7 +338,7 @@ if (!class_exists( 'WPCASServer' )) {
                  * @param  array   $attributes List of attributes to output.
                  * @param  WP_User $user       Authenticated user.
                  */
-                $attributes = apply_filters( 'cas_server_validation_extra_attributes', $attributes, $ticket->user );
+                $attributes = apply_filters( 'cas_server_validation_user_attributes', $attributes, $ticket->user );
 
                 $xmlAttributes = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:attributes" );
 

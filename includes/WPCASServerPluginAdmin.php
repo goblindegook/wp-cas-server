@@ -110,19 +110,6 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
         }
 
         /**
-         * Validates and updates CAS server plugin settings.
-         * 
-         * @since 1.1.0
-         */
-        public function validateSettings ( $input ) {
-            $options = get_option( WPCASServerPlugin::OPTIONS_KEY );
-
-            $options['attributes'] = (array) $input['attributes'];
-
-            return $options;
-        }
-
-        /**
          * Register plugin settings.
          * 
          * @uses add_settings_field()
@@ -145,7 +132,7 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
 
             add_settings_field(
                 'attributes',
-                __( 'User Attributes', 'wp-cas-server' ),
+                __( 'User Attributes To Return', 'wp-cas-server' ),
                 array( $this, 'fieldUserAttributes' ),
                 WPCASServerPlugin::SLUG
             );
@@ -160,6 +147,19 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
                 'optional'
             );
 
+        }
+
+        /**
+         * Validates and updates CAS server plugin settings.
+         * 
+         * @since 1.1.0
+         */
+        public function validateSettings ( $input ) {
+            $options = get_option( WPCASServerPlugin::OPTIONS_KEY );
+
+            $options['attributes'] = (array) $input['attributes'];
+
+            return $options;
         }
 
         /**
@@ -192,8 +192,8 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
          */
         public function pageSettings () {
             ?>
-            <div>
-                <h2><?php _e( 'Cassava CAS Server', 'wp-cas-server' ); ?></h2>
+            <div class="wrap">
+                <h2><?php _e( 'Cassava CAS Server Settings', 'wp-cas-server' ); ?></h2>
 
                 <p><?php _e( 'Configuration panel for the Central Authentication Service provided by this site.', 'wp-cas-server' ); ?></p>
 
@@ -221,22 +221,25 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
          */
         public function fieldUserAttributes () {
 
-            $user = wp_get_current_user();
+            $user       = wp_get_current_user();
+            $attributes = WPCASServerPlugin::getOption( 'attributes' );
 
             $attributeOptions = array(
                 'first_name'   => __( 'First Name', 'wp-cas-server' ),
                 'last_name'    => __( 'Last Name', 'wp-cas-server' ),
-                'display_name' => __( 'Display Name', 'wp-cas-server' ),
+                'display_name' => __( 'Public Name', 'wp-cas-server' ),
                 'user_email'   => __( 'Email', 'wp-cas-server' ),
                 'user_url'     => __( 'Website', 'wp-cas-server' ),
             );
 
             /**
-             * Allow developers to change the list of user attributes an administrator can set to return
-             * on successful validation requests.
+             * Allows developers to change the list of user attributes that appear in the dashboard for
+             * an administrator to set to return on successful validation requests.
              * 
-             * These are stored in an associative array, with option values as keys and option labels as
-             * values.
+             * Options are stored in an associative array, with user attribute slugs as array keys and
+             * option labels as array values.
+             * 
+             * These settings are valid only for CAS 2.0 validation requests.
              * 
              * @param  array $attributeOptions Attribute options an administrator can set on the dashboard.
              * 
@@ -245,9 +248,6 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
              * @since 1.1.0
              */
             $attributeOptions = apply_filters( 'cas_server_settings_user_attribute_options', $attributeOptions );
-
-            $attributes = WPCASServerPlugin::getOption( 'attributes' );
-
             ?>
 
             <fieldset>
@@ -260,14 +260,16 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
                     value="<?php echo $value ?>">
                     <span><?php echo $label ?></span>
                     <?php if ($user->get( $value )) : ?>
-                    <span class="description"><?php printf( __( '(e.g. %s)', 'wp-cas-server' ), $user->get( $value ) ); ?></span>
+                    <span class="description"><?php
+                        printf( __( '(e.g. %s)', 'wp-cas-server' ), implode( ',', (array) $user->get( $value ) )  );
+                    ?></span>
                     <?php endif; ?>
                 </label><br>
                 <?php endforeach; ?>
-                <p class="description"><?php _e( 'User attributes to disclose on successful validation requests (CAS 2.0 only).', 'wp-cas-server' ) ?></p>
+                <p class="description"><?php _e( 'Checked attributes are disclosed on successful validation requests (CAS 2.0 only).', 'wp-cas-server' ) ?></p>
             </fieldset>
             <?php
         }
-    }
+    } // class WPCASServerPluginAdmin
 
-} // !class_exists( 'WPCASServerPluginAdmin' )
+} // if (!class_exists( 'WPCASServerPluginAdmin' ))

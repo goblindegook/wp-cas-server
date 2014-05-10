@@ -216,8 +216,8 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
     /**
      * @group filter
      */
-    function test_cas_server_validation_extra_attributes () {
-        $filter   = 'cas_server_validation_extra_attributes';
+    function test_cas_server_validation_user_attributes () {
+        $filter   = 'cas_server_validation_user_attributes';
         $function = array( $this->server, 'serviceValidate' );
         
         $service = 'http://test/';
@@ -239,6 +239,15 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
             );
 
         $this->_assertFilterIsCalled( $filter, $function, array( $args ) );
+    }
+
+    /**
+     * @group filter
+     */
+    function test_cas_server_validation_user_attribute_options () {
+        $filter   = 'cas_server_validation_user_attribute_options';
+
+        $this->markTestIncomplete();
     }
 
 }

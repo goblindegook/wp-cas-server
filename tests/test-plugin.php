@@ -4,6 +4,9 @@
  * @subpackage Tests
  */
 
+/**
+ * @coversDefaultClass WPCASServerPlugin
+ */
 class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
     private $plugin;
