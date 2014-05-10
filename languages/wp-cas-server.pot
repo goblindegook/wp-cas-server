@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Cassava: A WordPress CAS Server 1.0.1\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/wp-cas-server\n"
-"POT-Creation-Date: 2014-05-04 13:04:07+00:00\n"
+"POT-Creation-Date: 2014-05-10 11:23:24+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,34 +20,87 @@ msgstr ""
 msgid "The handler for the route is invalid."
 msgstr ""
 
-#: includes/WPCASServer.php:234
+#: includes/WPCASServer.php:235
 msgid "The server does not support the method requested."
 msgstr ""
 
-#: includes/WPCASServer.php:414
+#: includes/WPCASServer.php:419
 msgid "Unknown error"
 msgstr ""
 
-#: includes/WPCASServer.php:448
+#: includes/WPCASServer.php:453
 msgid "Ticket is required."
 msgstr ""
 
-#: includes/WPCASServer.php:452
+#: includes/WPCASServer.php:457
 msgid "Service is required."
 msgstr ""
 
-#: includes/WPCASServer.php:476
+#: includes/WPCASServer.php:481
 msgid "Ticket does not match the service provided."
 msgstr ""
 
-#: includes/WPCASServerPluginAdmin.php:70
+#: includes/WPCASServerPluginAdmin.php:55
+#: includes/WPCASServerPluginAdmin.php:56
+msgid "Cassava CAS Server"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:89
 msgid ""
 "Cassava CAS Server requires that this site be configured for HTTPS. For more "
 "information, contact your system administrator or hosting provider."
 msgstr ""
 
-#: includes/WPCASServerPluginAdmin.php:102
+#: includes/WPCASServerPluginAdmin.php:135
+msgid "User Attributes To Return"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:144
 msgid "CAS server base"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:196
+msgid "Cassava CAS Server Settings"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:198
+msgid ""
+"Configuration panel for the Central Authentication Service provided by this "
+"site."
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:228
+msgid "First Name"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:229
+msgid "Last Name"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:230
+msgid "Public Name"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:231
+msgid "Email"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:232
+msgid "Website"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:254
+msgid "User Attributes"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:264
+msgid "(e.g. %s)"
+msgstr ""
+
+#: includes/WPCASServerPluginAdmin.php:269
+msgid ""
+"Checked attributes are disclosed on successful validation requests (CAS 2.0 "
+"only)."
 msgstr ""
 
 #: includes/WPCASTicket.php:144
