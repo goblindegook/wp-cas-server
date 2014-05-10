@@ -30,7 +30,7 @@ Please follow and contribute to Cassava's development on [Github](https://github
 
 == Installation ==
 
-= Using The WordPress Dashboard =
+= Using the WordPress Dashboard =
 
 1. Navigate to the 'Add New' in the plugins dashboard
 2. Search for 'wp cas server'
@@ -78,9 +78,15 @@ By default, the plugin provides methods under the `wp-cas` endpoint.  So, if you
 
 The endpoint may be changed at any time by navigating to **Settings > Permalinks** in the dashboard.  Bear in mind that if you change the endpoint you will also need to reconfigure all CAS clients currently using the service.
 
+= How can I make information besides the user's login name available to external applications? =
+
+To return user data along with a validation response, navigate to **Settings > Cassava CAS Server** and check the attributes you want the server to return.
+
+Only version 2.0 of the protocol can disclose user attributes, these options will not change how the earlier CAS 1.0 validation method works.  Also note that making user attributes visible does not guarantee the remote application will use them.
+
 = How can I change other settings? =
 
-At the moment, the only way to change the plugin's behaviour is through the Hooks API.
+At the moment, the only way to change the plugin's behaviour is through the [Hooks API](http://codex.wordpress.org/Plugin_API/Hooks). Please refer to the [Other Notes](/plugins/wp-cas-server/other-notes/) page for a list of actions and filters supported by the plugin.
 
 = Where can I read about the CAS protocol specification? =
 
@@ -205,7 +211,7 @@ Parameters:
 * _array_ `$attributes`: List of attributes to output.
 * _WP_User_ `$user`: Authenticated user.
 
-= Filter:cas_server_settings_user_attribute_options =
+= Filter: cas_server_settings_user_attribute_options =
 
 Allows developers to change the list of user attributes that appear in the dashboard for an administrator to set to return on successful validation requests.
 
