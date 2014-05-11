@@ -152,6 +152,10 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
         /**
          * Validates and updates CAS server plugin settings.
          * 
+         * @param  array $input Unvalidated input arguments when settings are updated.
+         * 
+         * @return array        Validated plugin settings to be saved in the database.
+         * 
          * @since 1.1.0
          */
         public function validateSettings ( $input ) {

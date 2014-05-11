@@ -1,6 +1,3 @@
-
-*.sublime-workspace
-
 # OS X
 
 .DS_Store
@@ -20,6 +17,10 @@ Temporary Items
 
 composer.phar
 vendor/
+
+# PHPdocumentor
+
+docs/*
 
 # Subversion
 
