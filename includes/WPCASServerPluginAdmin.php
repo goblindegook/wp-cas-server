@@ -180,7 +180,7 @@ if (!class_exists( 'WPCASServerPluginAdmin' )) {
                 name="<?php echo WPCASServerPlugin::OPTIONS_KEY; ?>_endpoint_slug"
                 type="text" class="regular-text code"
                 value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>"
-                placeholder="<?php echo WPCASServerPlugin::ENDPOINT_OPTIONS_KEY; ?>" />
+                placeholder="<?php echo WPCASServerPlugin::ENDPOINT_SLUG; ?>" />
             <?php
         }
 
