@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Cassava: A WordPress CAS Server
-Version: 1.1.1
+Version: 1.1.2
 Description: Provides authentication services based on the Jasig CAS protocol.
 Author: Luís Rodrigues
 Author URI: http://goblindegook.net/
@@ -14,7 +14,7 @@ Domain Path: /languages
 /*  Copyright 2014  Luís Rodrigues  <hello@goblindegook.net>
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as 
+    it under the terms of the GNU General Public License, version 2, as
     published by the Free Software Foundation.
 
     This program is distributed in the hope that it will be useful,
@@ -29,7 +29,7 @@ Domain Path: /languages
 
 /**
  * WP CAS Server main plugin file.
- * 
+ *
  * @package \WPCASServerPlugin
  * @version 1.1.0
  */
@@ -41,7 +41,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
     /**
      * Main plugin class.
-     * 
+     *
      * @since 1.0.0
      */
     class WPCASServerPlugin {
@@ -49,7 +49,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
         /**
          * Plugin version.
          */
-        const VERSION = '1.0.1';
+        const VERSION = '1.1.2';
 
         /**
          * Plugin slug.
@@ -127,9 +127,9 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * WP CAS Server plugin constructor.
-         * 
+         *
          * @param ICASServer $server CAS server instance.
-         * 
+         *
          * @uses is_admin()
          * @uses register_activation_hook()
          * @uses register_deactivation_hook()
@@ -150,15 +150,15 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Plugin activation callback.
-         * 
+         *
          * @param bool $network_wide Plugin is activated for the entire network.
-         * 
+         *
          * @uses flush_rewrite_rules()
          * @uses is_multisite()
          * @uses restore_current_blog()
          * @uses switch_to_blog()
          * @uses wp_get_sites()
-         * 
+         *
          * @SuppressWarnings(CamelCaseParameterName)
          * @SuppressWarnings(CamelCaseVariableName)
          */
@@ -182,15 +182,15 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Plugin deactivation callback to flush rewrite rules.
-         * 
+         *
          * @param bool $network_wide Plugin is activated for the entire network.
-         * 
+         *
          * @uses flush_rewrite_rules()
          * @uses is_multisite()
          * @uses restore_current_blog()
          * @uses switch_to_blog()
          * @uses wp_get_sites()
-         * 
+         *
          * @SuppressWarnings(CamelCaseParameterName)
          * @SuppressWarnings(CamelCaseVariableName)
          */
@@ -211,10 +211,10 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Plugin loading callback.
-         * 
+         *
          * @uses add_action()
          * @uses add_filter()
-         * 
+         *
          * @SuppressWarnings(CamelCaseMethodName)
          */
         public function plugins_loaded () {
@@ -225,9 +225,9 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Plugin initialization callback.
-         * 
+         *
          * @global WP $wp
-         * 
+         *
          * @uses apply_filters()
          * @uses load_plugin_textdomain()
          * @uses load_textdomain()
@@ -252,7 +252,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Serve the CAS request and stop.
-         * 
+         *
          * @global WP $wp
          */
         public function template_redirect () {
@@ -270,11 +270,11 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Callback to filter the hosts WordPress allows redirecting to.
-         * 
+         *
          * @param  array $allowed List of valid redirection target hosts.
-         * 
+         *
          * @return array          Filtered list of valid redirection target hosts.
-         * 
+         *
          * @SuppressWarnings(CamelCaseMethodName)
          */
         public function allowed_redirect_hosts ( $allowed = array() ) {
@@ -293,12 +293,12 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Get plugin option by key.
-         * 
+         *
          * @param  string $key     Plugin option key to return.
          * @param  mixed  $default Option value to return if `$key` is not found.
-         * 
+         *
          * @return mixed           Plugin option value.
-         * 
+         *
          * @uses get_option()
          */
         public static function getOption ( $key = '', $default = null ) {
@@ -308,7 +308,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Set plugin option by key.
-         * 
+         *
          * @param string $key   Plugin option key to set.
          * @param mixed  $value Plugin option value to set.
          */
@@ -330,7 +330,7 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Set the default plugin options in the database.
-         * 
+         *
          * @uses get_option()
          * @uses update_option()
          */
@@ -341,9 +341,9 @@ if (!class_exists( 'WPCASServerPlugin' )) {
 
         /**
          * Register new rewrite rules for the CAS server URIs.
-         * 
+         *
          * @uses add_rewrite_endpoint()
-         * 
+         *
          * @SuppressWarnings(CamelCaseMethodName)
          */
         private function addRewriteRules () {
