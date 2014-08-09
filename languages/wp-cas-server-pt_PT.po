@@ -1,0 +1,135 @@
+# Translation of Cassava CAS Server in Portuguese (Portugal)
+# This file is distributed under the same license as the Cassava CAS Server package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2014-08-09 21:15:28+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/0.1\n"
+"Project-Id-Version: Cassava CAS Server\n"
+
+#: includes/WPCASServer.php:196
+msgid "The CAS server is disabled."
+msgstr "O servidor CAS está desativado."
+
+#: includes/WPCASServer.php:208
+msgid "The handler for the route is invalid."
+msgstr "O suporte para a rota é inválido."
+
+#: includes/WPCASServer.php:235
+msgid "The server does not support the method requested."
+msgstr "O servidor não suporta o método pedido."
+
+#: includes/WPCASServer.php:419
+msgid "Unknown error"
+msgstr "Erro desconhecido"
+
+#: includes/WPCASServer.php:453
+msgid "Ticket is required."
+msgstr "É obrigatório o ticket."
+
+#: includes/WPCASServer.php:457
+msgid "Service is required."
+msgstr "É obrigatório o service."
+
+#: includes/WPCASServer.php:481
+msgid "Ticket does not match the service provided."
+msgstr "O ticket não corresponde ao service indicado."
+
+#: includes/WPCASServerPluginAdmin.php:55
+#: includes/WPCASServerPluginAdmin.php:56
+msgid "Cassava CAS Server"
+msgstr "Cassava CAS Server"
+
+#: includes/WPCASServerPluginAdmin.php:89
+msgid "Cassava CAS Server requires that this site be configured for HTTPS. For more information, contact your system administrator or hosting provider."
+msgstr "O Cassava CAS Server precisa que este site se encontre configurado para HTTPS. Para mais informações, contacte o seu administrador de sistemas ou prestador de alojamento."
+
+#: includes/WPCASServerPluginAdmin.php:135
+msgid "User Attributes To Return"
+msgstr "Atributos do utilizador a devolver"
+
+#: includes/WPCASServerPluginAdmin.php:144
+msgid "CAS server base"
+msgstr "Base do servidor CAS"
+
+#: includes/WPCASServerPluginAdmin.php:196
+msgid "Cassava CAS Server Settings"
+msgstr "Definições do Cassava CAS Server"
+
+#: includes/WPCASServerPluginAdmin.php:198
+msgid "Configuration panel for the Central Authentication Service provided by this site."
+msgstr "Painel de configuração para o Serviço Central de Autenticação (CAS) prestado por este site."
+
+#: includes/WPCASServerPluginAdmin.php:228
+msgid "First Name"
+msgstr "Nome"
+
+#: includes/WPCASServerPluginAdmin.php:229
+msgid "Last Name"
+msgstr "Apelido"
+
+#: includes/WPCASServerPluginAdmin.php:230
+msgid "Public Name"
+msgstr "Nome público"
+
+#: includes/WPCASServerPluginAdmin.php:231
+msgid "Email"
+msgstr "Correio eletrónico"
+
+#: includes/WPCASServerPluginAdmin.php:232
+msgid "Website"
+msgstr "Website"
+
+#: includes/WPCASServerPluginAdmin.php:254
+msgid "User Attributes"
+msgstr "Atributos do utilizador"
+
+#: includes/WPCASServerPluginAdmin.php:264
+msgid "(e.g. %s)"
+msgstr "(ex: %s)"
+
+#: includes/WPCASServerPluginAdmin.php:269
+msgid "Checked attributes are disclosed on successful validation requests (CAS 2.0 only)."
+msgstr "Os atributos assinalados serão disponibilizados aquando de pedidos de validação com êxito (CAS 2.0 apenas)."
+
+#: includes/WPCASTicket.php:144
+msgid "Ticket is malformed."
+msgstr "O ticket está incorrecto."
+
+#: includes/WPCASTicket.php:150
+msgid "Ticket has expired."
+msgstr "O ticket expirou."
+
+#: includes/WPCASTicket.php:156
+msgid "Ticket does not match a valid user."
+msgstr "O ticket não diz respeito a um utilizador válido."
+
+#: includes/WPCASTicket.php:162
+msgid "Ticket is corrupted."
+msgstr "O ticket está corrompido."
+
+#: includes/WPCASTicket.php:166
+msgid "Ticket is unknown or has already been used."
+msgstr "Ticket desconhecido ou já utilizado."
+
+#: includes/WPCASTicket.php:204
+msgid "Ticket type cannot be validated."
+msgstr "O tipo de ticket não pode ser validado."
+
+msgid "Cassava: A WordPress CAS Server"
+msgstr "Cassava: Um servidor CAS para WordPress"
+
+msgid "https://goblindegook.github.io/wp-cas-server"
+msgstr "https://goblindegook.github.io/wp-cas-server"
+
+msgid "Provides authentication services based on the Jasig CAS protocol."
+msgstr "Presta serviços de autenticação baseados no protocolo Jasig CAS."
+
+msgid "Luís Rodrigues"
+msgstr "Luís Rodrigues"
+
+msgid "http://goblindegook.net/"
+msgstr "http://goblindegook.net/"
