@@ -10,7 +10,7 @@ if (!defined( 'ABSPATH' )) exit; // No monkey business.
 
 if (!class_exists( 'WPCASException' )) {
     /**
-     * Request exception.
+     * Base CAS server exception.
      * 
      * @version 1.1.0
      * @since   1.1.0
@@ -79,7 +79,7 @@ if (!class_exists( 'WPCASException' )) {
 
 if (!class_exists( 'WPCASRequestException' )) {
     /**
-     * Request exception.
+     * CAS request exception.
      * 
      * @since 1.1.0
      */
@@ -111,7 +111,7 @@ if (!class_exists( 'WPCASRequestException' )) {
 
 if (!class_exists( 'WPCASTicketException' )) {
     /**
-     * Ticket exception.
+     * CAS ticket exception.
      * 
      * @version 1.1.0
      * @since   1.1.0
