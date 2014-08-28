@@ -31,7 +31,7 @@ Domain Path: /languages
  * WP CAS Server main plugin file.
  *
  * @package \WPCASServerPlugin
- * @version 1.1.0
+ * @version 1.1.2
  */
 
 require_once( dirname( __FILE__ ) . '/includes/WPCASServer.php' );

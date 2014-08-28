@@ -8,7 +8,7 @@
  * @coversDefaultClass WPCASServerPluginAdmin
  */
 class WP_TestWPCASServerPluginAdmin extends WP_UnitTestCase {
-    
+
     private $plugin;
     private $admin;
 
@@ -16,7 +16,7 @@ class WP_TestWPCASServerPluginAdmin extends WP_UnitTestCase {
      * Setup a test method for the WP_TestWPCASServerPluginActions class.
      */
     function setUp () {
-        parent::setUp();
+        // parent::setUp();
         $this->plugin = $GLOBALS[WPCASServerPlugin::SLUG];
         $this->admin = new WPCASServerPluginAdmin;
     }
@@ -25,7 +25,7 @@ class WP_TestWPCASServerPluginAdmin extends WP_UnitTestCase {
      * Finish a test method for the WP_TestWPCASServerPluginActions class.
      */
     function tearDown () {
-        parent::tearDown();
+        // parent::tearDown();
         unset( $this->admin );
     }
 
@@ -117,7 +117,7 @@ class WP_TestWPCASServerPluginAdmin extends WP_UnitTestCase {
     function test_fieldPermalinksEndpointSlug () {
         $this->markTestIncomplete();
 
-        // TODO: Assert that 
+        // TODO: Assert that
     }
 
     /**
