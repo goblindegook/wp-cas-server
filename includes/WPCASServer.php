@@ -10,9 +10,10 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-require_once( dirname( __FILE__ ) . '/WPCASException.php' );
-require_once( dirname( __FILE__ ) . '/ICASServer.php');
-require_once( dirname( __FILE__ ) . '/WPCASTicket.php');
+require_once dirname( __FILE__ ) . '/ICASServer.php';
+require_once dirname( __FILE__ ) . '/WPCASException.php';
+require_once dirname( __FILE__ ) . '/WPCASRequestException.php';
+require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
 
 if ( ! class_exists( 'WPCASServer' ) ) {
