@@ -1,82 +1,84 @@
 <?php
 /**
  * Contains a CAS Server interface.
- * 
+ *
  * @package \WPCASServerPlugin\Server
  * @version 1.0.1
  */
 
-if (!defined( 'ABSPATH' )) exit; // No monkey business.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
 
 /**
  * CAS server class interface definition.
- * 
+ *
  * @since 1.0.0
  */
 interface ICASServer {
 
-    /**
-     * CAS XML Namespace URI
-     */
-    const CAS_NS                = 'http://www.yale.edu/tp/cas';
-    
-    /**
-     * RFC 1123 Date-Time Format
-     */
-    const RFC1123_DATE_FORMAT   = 'D, d M Y H:i:s T';
+	/**
+	 * CAS XML Namespace URI
+	 */
+	const CAS_NS = 'http://www.yale.edu/tp/cas';
 
-    /**
-     * Handle a CAS server request for a specific URI.
-     * 
-     * @param  string $path    CAS request URI.
-     * 
-     * @return string          Request response.
-     */
-    public function handleRequest ( $path );
+	/**
+	 * RFC 1123 Date-Time Format
+	 */
+	const RFC1123_DATE_FORMAT = 'D, d M Y H:i:s T';
 
-    /**
-     * Handles `/login` method requests [CAS 1.0 and 2.0].
-     * 
-     * @param  array $args Request arguments.
-     */
-    public function login ( $args );
+	/**
+	 * Handle a CAS server request for a specific URI.
+	 *
+	 * @param  string $path    CAS request URI.
+	 *
+	 * @return string          Request response.
+	 */
+	public function handleRequest( $path );
 
-    /**
-     * Handles `/logout` method requests [CAS 1.0 and 2.0].
-     * 
-     * @param  array $args Request arguments.
-     */
-    public function logout ( $args );
+	/**
+	 * Handles `/login` method requests [CAS 1.0 and 2.0].
+	 *
+	 * @param  array $args Request arguments.
+	 */
+	public function login( $args );
 
-    /**
-     * Handles `/proxy` method requests [CAS 2.0].
-     * 
-     * @param  array $args Request arguments.
-     */
-    public function proxy ( $args );
+	/**
+	 * Handles `/logout` method requests [CAS 1.0 and 2.0].
+	 *
+	 * @param  array $args Request arguments.
+	 */
+	public function logout( $args );
 
-    /**
-     * Handles `/proxyValidate` method requests [CAS 2.0].
-     * 
-     * @param  array $args Request arguments.
-     */
-    public function proxyValidate ( $args );
+	/**
+	 * Handles `/proxy` method requests [CAS 2.0].
+	 *
+	 * @param  array $args Request arguments.
+	 */
+	public function proxy( $args );
 
-    /**
-     * Handles `/serviceValidate` method requests [CAS 2.0].
-     * 
-     * @param  array $args Request arguments.
-     * 
-     * @return string      Validation response.
-     */
-    public function serviceValidate ( $args );
+	/**
+	 * Handles `/proxyValidate` method requests [CAS 2.0].
+	 *
+	 * @param  array $args Request arguments.
+	 */
+	public function proxyValidate( $args );
 
-    /**
-     * Handles `/validate` method requests [CAS 1.0].
-     * 
-     * @param  array $args Request arguments.
-     * 
-     * @return string      Validation response.
-     */
-    public function validate ( $args );
+	/**
+	 * Handles `/serviceValidate` method requests [CAS 2.0].
+	 *
+	 * @param  array $args Request arguments.
+	 *
+	 * @return string      Validation response.
+	 */
+	public function serviceValidate( $args );
+
+	/**
+	 * Handles `/validate` method requests [CAS 1.0].
+	 *
+	 * @param  array $args Request arguments.
+	 *
+	 * @return string      Validation response.
+	 */
+	public function validate( $args );
 }
