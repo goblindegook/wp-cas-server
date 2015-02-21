@@ -92,10 +92,12 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 		$routes = array(
 			'login',
 			'logout',
+			'validate',
 			'proxy',
 			'proxyValidate',
 			'serviceValidate',
-			'validate',
+			'p3/proxyValidate',
+			'p3/serviceValidate',
 			);
 
 		$server_routes = $this->server->routes();

@@ -193,9 +193,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				throw new WPCASException( __('The CAS server is disabled.', 'wp-cas-server') );
 			}
 
-			foreach ($this->routes() as $route => $callback) {
+			foreach ( $this->routes() as $route => $callback ) {
 
-				$match = preg_match( '@^' . $route . '/?$@', $path );
+				$match = preg_match( '@^' . preg_quote( $route ) . '/?$@', $path );
 
 				if ( ! $match ) {
 					continue;
