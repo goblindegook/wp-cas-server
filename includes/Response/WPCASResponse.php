@@ -46,12 +46,8 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		 * @param  [type] $inner   [description]
 		 * @return [type]          [description]
 		 */
-		public function createElement( $element, $inner = null ) {
-			if ( $inner === null ) {
-				return $this->document->createElementNS( static::CAS_NS, $element );
-			}
-
-			return $this->document->createElementNS( static::CAS_NS, $element, $inner );
+		public function createElement( $element, $value = null ) {
+			return $this->document->createElementNS( static::CAS_NS, "cas:$element", $value );
 		}
 
 		/**
@@ -66,7 +62,7 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		 * @uses get_bloginfo()
 		 */
 		public function prepare() {
-			$root = $this->createElement( 'cas:serviceResponse' );
+			$root = $this->createElement( 'serviceResponse' );
 			$root->appendChild( $this->response );
 
 			// Removing all child nodes from response document:
@@ -78,6 +74,35 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 			$this->document->appendChild( $root );
 
 			return $this->document->saveXML();
+		}
+
+		/**
+		 * Set error response.
+		 *
+		 * @param WP_Error $error Response error.
+		 * @param string   $tag   Response XML tag (defaults to `authenticationFailure`).
+		 */
+		public function setError( WP_Error $error, $tag = 'authenticationFailure' ) {
+			/**
+			 * Fires if the CAS server has to return an XML error.
+			 *
+			 * @param WP_Error $error WordPress error to return as XML.
+			 */
+			do_action( 'cas_server_error', $error );
+
+			$message   = __( 'Unknown error', 'wp-cas-server' );
+			$code      = WPCASException::ERROR_INTERNAL_ERROR;
+
+			if ( isset( $error ) ) {
+				$code        = $error->get_error_code();
+				$message     = $error->get_error_message( $code );
+			}
+
+			$response = $this->createElement( $tag, $message );
+
+			$response->setAttribute( 'code', $code );
+
+			$this->setResponse( $response );
 		}
 
 	}
