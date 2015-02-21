@@ -41,17 +41,6 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		}
 
 		/**
-		 * Sets an HTTP response header.
-		 *
-		 * @param string $key   Header key.
-		 * @param string $value Header value.
-		 */
-		protected function setResponseHeader( $key, $value ) {
-			if (headers_sent()) return;
-			header( sprintf( '%s: %s', $key, $value ) );
-		}
-
-		/**
 		 * Create response element.
 		 * @param  [type] $element [description]
 		 * @param  [type] $inner   [description]
@@ -77,8 +66,6 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		 * @uses get_bloginfo()
 		 */
 		public function prepare() {
-			$this->setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_bloginfo( 'charset' ) );
-
 			$root = $this->createElement( 'cas:serviceResponse' );
 			$root->appendChild( $this->response );
 

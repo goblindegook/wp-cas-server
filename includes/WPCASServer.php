@@ -15,9 +15,9 @@ require_once dirname( __FILE__ ) . '/WPCASException.php';
 require_once dirname( __FILE__ ) . '/WPCASRequestException.php';
 require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
-require_once dirname( __FILE__ ) . '/WPCASRequest.php';
-require_once dirname( __FILE__ ) . '/WPCASResponse.php';
-require_once dirname( __FILE__ ) . '/WPCASResponseError.php';
+require_once dirname( __FILE__ ) . '/Request/WPCASRequest.php';
+require_once dirname( __FILE__ ) . '/Response/WPCASResponse.php';
+require_once dirname( __FILE__ ) . '/Response/WPCASResponseError.php';
 
 
 if ( ! class_exists( 'WPCASServer' ) ) {
@@ -139,6 +139,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$output = $this->dispatch( $path );
 			}
 			catch (WPCASException $exception) {
+				$this->setXmlResponseContentType();
 				$response = new WPCASResponseError();
 				$response->setError( $exception->getErrorInstance() );
 				$output = $response->prepare();
@@ -261,6 +262,13 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		protected function setResponseHeader( $key, $value ) {
 			if (headers_sent()) return;
 			header( sprintf( '%s: %s', $key, $value ) );
+		}
+
+		/**
+		 * Set XML content type response header.
+		 */
+		protected function setXmlResponseContentType() {
+			$this->setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_bloginfo( 'charset' ) );
 		}
 
 		/**
@@ -679,6 +687,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$response->setError( $exception->getErrorInstance(), 'proxyFailure' );
 			}
 
+			$this->setXmlResponseContentType();
+
 			return $response->prepare();
 		}
 
@@ -721,6 +731,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$response = new WPCASResponseError();
 				$response->setError( $exception->getErrorInstance() );
 			}
+
+			$this->setXmlResponseContentType();
 
 			return $response->prepare();
 		}
@@ -767,6 +779,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$response = new WPCASResponseError();
 				$response->setError( $exception->getErrorInstance() );
 			}
+
+			$this->setXmlResponseContentType();
 
 			return $response->prepare();
 		}
@@ -827,7 +841,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			try {
 				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
 			}
-			catch (WPCASException $exception) {
+			catch ( WPCASException $exception ) {
 				return "no\n\n";
 			}
 
