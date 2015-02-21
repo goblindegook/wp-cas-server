@@ -49,12 +49,14 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		public function routes() {
 
 			$casRoutes = array(
-				'login'           => array( $this, 'login' ),
-				'logout'          => array( $this, 'logout' ),
-				'proxy'           => array( $this, 'proxy' ),
-				'proxyValidate'   => array( $this, 'proxyValidate' ),
-				'serviceValidate' => array( $this, 'serviceValidate' ),
-				'validate'        => array( $this, 'validate' ),
+				'login'              => array( $this, 'login' ),
+				'logout'             => array( $this, 'logout' ),
+				'proxy'              => array( $this, 'proxy' ),
+				'proxyValidate'      => array( $this, 'proxyValidate' ),
+				'p3/proxyValidate'   => array( $this, 'proxyValidate' ),
+				'serviceValidate'    => array( $this, 'serviceValidate' ),
+				'p3/serviceValidate' => array( $this, 'serviceValidate' ),
+				'validate'           => array( $this, 'validate' ),
 				);
 
 			/**
@@ -73,7 +75,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * If the 'allowed_services' contains at least one host, it will always perform a safe
 		 * redirect.
 		 *
-		 * Calling WPCASServer::_redirect() will _always_ terminate the request.
+		 * Calling WPCASServer::redirect() will _always_ terminate the request.
 		 *
 		 * @param  string  $location URI to redirect to.
 		 * @param  integer $status   HTTP status code (default 302).
@@ -82,10 +84,11 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses wp_safe_redirect()
 		 */
 		protected function redirect( $location, $status = 302 ) {
+			$location = esc_url_raw( $location );
 
 			$allowedServices = WPCASServerPlugin::getOption( 'allowed_services' );
 
-			if (is_array( $allowedServices ) && count( $allowedServices ) > 0) {
+			if ( is_array( $allowedServices ) && count( $allowedServices ) > 0 ) {
 				wp_safe_redirect( $location, $status );
 			}
 
@@ -118,9 +121,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 			if (!defined( 'CAS_REQUEST' )) define( 'CAS_REQUEST', true );
 
-			$this->setResponseHeader( 'Pragma'         , 'no-cache' );
-			$this->setResponseHeader( 'Cache-Control'  , 'no-store' );
-			$this->setResponseHeader( 'Expires'        , gmdate( ICASServer::RFC1123_DATE_FORMAT ) );
+			$this->setResponseHeader( 'Pragma'       , 'no-cache' );
+			$this->setResponseHeader( 'Cache-Control', 'no-store' );
+			$this->setResponseHeader( 'Expires'      , gmdate( ICASServer::RFC1123_DATE_FORMAT ) );
 
 			/**
 			 * Fires before the CAS request is processed.
@@ -138,7 +141,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$output = $this->dispatch( $path );
 			}
 			catch (WPCASException $exception) {
-				$this->setXmlResponseContentType();
+				$this->setCASResponseHeaders( ICASServer::CAS2_0 );
 				$response = new WPCASResponse();
 				$response->setError( $exception->getErrorInstance() );
 				$output = $response->prepare();
@@ -194,11 +197,11 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 				$match = preg_match( '@^' . $route . '/?$@', $path );
 
-				if (!$match) {
+				if ( ! $match ) {
 					continue;
 				}
 
-				if (!is_callable( $callback )) {
+				if ( ! is_callable( $callback ) ) {
 					throw new WPCASException( __('The handler for the route is invalid.', 'wp-cas-server') );
 				}
 
@@ -219,14 +222,15 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				 */
 				$args = apply_filters( 'cas_server_dispatch_args', $args, $callback, $path );
 
-				if (is_wp_error( $args )) {
+				if ( is_wp_error( $args ) ) {
 					throw WPCASException::fromError( $args );
 				}
 
 				return call_user_func( $callback, $args );
 			}
 
-			throw new WPCASRequestException( __( 'The server does not support the method requested.', 'wp-cas-server' ) );
+			throw new WPCASRequestException(
+				__( 'The server does not support the method requested.', 'wp-cas-server' ) );
 		}
 
 		/**
@@ -264,10 +268,13 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		}
 
 		/**
-		 * Set XML content type response header.
+		 * Set response headers for a CAS version response.
 		 */
-		protected function setXmlResponseContentType() {
-			$this->setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_bloginfo( 'charset' ) );
+		protected function setCASResponseHeaders( $version = 0 ) {
+			$contentType = ( $version === ICASServer::CAS1_0 ) ? 'text/plain' : 'text/xml';
+
+			$this->setResponseHeader( 'Content-Type',
+				$contentType . '; charset=' . get_bloginfo( 'charset' ) );
 		}
 
 		/**
@@ -283,7 +290,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses apply_filters()
 		 * @uses get_userdata()
 		 */
-		protected function xmlValidateSuccess( WPCASResponse $response, WPCASTicket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
+		protected function xmlValidateSuccess( WPCASResponse $response,
+			WPCASTicket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
 
 			$node = $response->createElement( 'authenticationSuccess' );
 
@@ -382,19 +390,19 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 */
 		protected function validateRequest( $ticket = '', $service = '', $validTicketTypes = array() ) {
 
-			if (empty( $ticket )) {
+			if ( empty( $ticket ) ) {
 				throw new WPCASRequestException( __( 'Ticket is required.', 'wp-cas-server' ) );
 			}
 
-			if (empty( $service )) {
+			if ( empty( $service ) ) {
 				throw new WPCASRequestException( __( 'Service is required.', 'wp-cas-server' ) );
 			}
 
+			$service = esc_url_raw( $service );
+
 			try {
 				WPCASTicket::validateAllowedTypes( $ticket, $validTicketTypes );
-
 				$ticket = WPCASTicket::fromString( $ticket );
-
 				$ticket->markUsed();
 
 			} catch (WPCASTicketException $exception) {
@@ -410,8 +418,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				throw $exception;
 			}
 
-			if ($ticket->service !== $service ) {
-				throw new WPCASRequestException( __( 'Ticket does not match the service provided.', 'wp-cas-server' ),
+			if ( $ticket->service !== $service ) {
+				throw new WPCASRequestException(
+					__( 'Ticket does not match the service provided.', 'wp-cas-server' ),
 					WPCASRequestException::ERROR_INVALID_SERVICE );
 			}
 
@@ -434,17 +443,14 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses apply_filters()
 		 * @uses home_url()
 		 */
-		protected function loginUser( $user, $service = "" ) {
-
+		protected function loginUser( $user, $service = '' ) {
+			$service    = esc_url_raw( $service );
 			$expiration = WPCASServerPlugin::getOption( 'expiration', 30 );
 
-			$ticket = new WPCASTicket( WPCASTicket::TYPE_ST, $user, $service, $expiration );
+			$ticket     = new WPCASTicket( WPCASTicket::TYPE_ST, $user, $service, $expiration );
 
-			if (empty( $service )) {
-				$service = home_url();
-			}
-
-			$service = add_query_arg( 'ticket', (string) $ticket, $service );
+			$service    = empty( $service ) ? home_url() : $service;
+			$service    = add_query_arg( 'ticket', (string) $ticket, $service );
 
 			/**
 			 * Filters the redirect URI for the service requesting user authentication.
@@ -475,7 +481,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			 */
 			$custom_login_url = apply_filters( 'cas_server_custom_auth_uri', false, $args );
 
-			if ($custom_login_url) {
+			if ( $custom_login_url ) {
 				$this->redirect( $custom_login_url );
 			}
 
@@ -552,19 +558,19 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			$username   = sanitize_user( $args['username'] );
 			$password   = $args['password'];
 			$lt         = preg_replace( '@^' . WPCASTicket::TYPE_LT . '-@', '', $args['lt'] );
-			$service    = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : null;
+			$service    = isset( $args['service'] ) ? $args['service'] : null;
 			// $warn       = isset( $args['warn'] ) && 'true' === $args['warn'];
 
-			if (!wp_verify_nonce( $lt, 'lt' )) {
+			if ( ! wp_verify_nonce( $lt, 'lt' ) ) {
 				$this->authRedirect( $args );
 			}
 
 			$user = wp_signon( array(
 				'user_login'    => $username,
 				'user_password' => $password,
-				) );
+			) );
 
-			if (!$user || is_wp_error( $user )) {
+			if ( ! $user || is_wp_error( $user ) ) {
 				$this->authRedirect( $args );
 			}
 
@@ -596,9 +602,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 			$renew   = isset( $args['renew'] )   && 'true' === $args['renew'];
 			$gateway = isset( $args['gateway'] ) && 'true' === $args['gateway'];
-			$service = isset( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
+			$service = isset( $args['service'] ) ? $args['service'] : '';
 
-			if ($renew) {
+			if ( $renew ) {
 				wp_logout();
 
 				$schema = is_ssl() ? 'https://' : 'http://';
@@ -608,8 +614,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$this->redirect( $url );
 			}
 
-			if (!is_user_logged_in()) {
-				if ($gateway && $service) {
+			if ( ! is_user_logged_in() ) {
+				if ( $gateway && $service ) {
 					$this->redirect( $service );
 				}
 
@@ -638,7 +644,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses wp_logout()
 		 */
 		public function logout( $args = array() ) {
-			$service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : home_url();
+			$service = ! empty( $args['service'] ) ? $args['service'] : home_url();
 			$this->sessionStart();
 			$this->sessionDestroy();
 			$this->redirect( $service );
@@ -665,8 +671,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 */
 		public function proxy( $args = array() ) {
 
-			$pgt            = !empty( $args['pgt'] )           ? $args['pgt']                          : '';
-			$targetService  = !empty( $args['targetService'] ) ? esc_url_raw( $args['targetService'] ) : '';
+			$pgt            = isset( $args['pgt'] )           ? $args['pgt']           : '';
+			$targetService  = isset( $args['targetService'] ) ? $args['targetService'] : '';
 
 			/**
 			 * `/proxy` checks the validity of the proxy-granting ticket passed.
@@ -678,15 +684,15 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			$response = new WPCASResponse();
 
 			try {
-				$ticket   = $this->validateRequest( $pgt, $targetService, $validTicketTypes );
-				$success  = $this->xmlProxySuccess( $response, $ticket->user, $targetService );
+				$ticket  = $this->validateRequest( $pgt, $targetService, $validTicketTypes );
+				$success = $this->xmlProxySuccess( $response, $ticket->user, $targetService );
 				$response->setResponse( $success );
 			}
 			catch (WPCASException $exception) {
 				$response->setError( $exception->getErrorInstance(), 'proxyFailure' );
 			}
 
-			$this->setXmlResponseContentType();
+			$this->setCASResponseHeaders( ICASServer::CAS2_0 );
 
 			return $response->prepare();
 		}
@@ -707,9 +713,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 */
 		public function proxyValidate( $args = array() ) {
 
-			$service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
-			$ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
-			// $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
+			$service = isset( $args['service'] ) ? $args['service'] : '';
+			$ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
+			// $pgtUrl  = !empty( $args['pgtUrl'] ) ? $args['pgtUrl'] : '';
 			// $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
 
 			/**
@@ -731,7 +737,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$response->setError( $exception->getErrorInstance() );
 			}
 
-			$this->setXmlResponseContentType();
+			$this->setCASResponseHeaders( ICASServer::CAS2_0 );
 
 			return $response->prepare();
 		}
@@ -754,9 +760,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 */
 		public function serviceValidate( $args = array() ) {
 
-			$service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
-			$ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
-			// $pgtUrl  = !empty( $args['pgtUrl'] )  ? esc_url_raw( $args['pgtUrl'] )  : '';
+			$service = isset( $args['service'] ) ? $args['service'] : '';
+			$ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
+			// $pgtUrl  = isset( $args['pgtUrl'] )  ? $args['pgtUrl'] : '';
 			// $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
 
 			/**
@@ -771,15 +777,15 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			$response = new WPCASResponse();
 
 			try {
-				$ticket   = $this->validateRequest( $ticket, $service, $validTicketTypes );
-				$success  = $this->xmlValidateSuccess( $response, $ticket );
+				$ticket  = $this->validateRequest( $ticket, $service, $validTicketTypes );
+				$success = $this->xmlValidateSuccess( $response, $ticket );
 				$response->setResponse( $success );
 			}
 			catch (WPCASException $exception) {
 				$response->setError( $exception->getErrorInstance() );
 			}
 
-			$this->setXmlResponseContentType();
+			$this->setCASResponseHeaders( ICASServer::CAS2_0 );
 
 			return $response->prepare();
 		}
@@ -822,11 +828,10 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses get_bloginfo()
 		 */
 		public function validate( $args = array() ) {
+			$this->setCASResponseHeaders( ICASServer::CAS1_0 );
 
-			$this->setResponseHeader( 'Content-Type', 'text/plain; charset=' . get_bloginfo( 'charset' ) );
-
-			$service = !empty( $args['service'] ) ? esc_url_raw( $args['service'] ) : '';
-			$ticket  = !empty( $args['ticket'] )  ? $args['ticket']                 : '';
+			$service = isset( $args['service'] ) ? $args['service'] : '';
+			$ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
 
 			/**
 			 * `/validate` checks the validity of a service ticket. `/validate` is part of the CAS 1.0

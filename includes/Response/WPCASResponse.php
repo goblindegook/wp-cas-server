@@ -42,9 +42,9 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 
 		/**
 		 * Create response element.
-		 * @param  [type] $element [description]
-		 * @param  [type] $inner   [description]
-		 * @return [type]          [description]
+		 * @param  string  $element Unqualified element tag name.
+		 * @param  string  $value   Optional element value.
+		 * @return DOMNode          XML element.
 		 */
 		public function createElement( $element, $value = null ) {
 			return $this->document->createElementNS( static::CAS_NS, "cas:$element", $value );

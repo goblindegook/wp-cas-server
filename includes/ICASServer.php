@@ -18,6 +18,13 @@ if ( ! defined( 'WPINC' ) ) {
 interface ICASServer {
 
 	/**
+	 * CAS versions.
+	 */
+	const CAS1_0 = 1;
+	const CAS2_0 = 2;
+	const CAS3_0 = 3;
+
+	/**
 	 * RFC 1123 Date-Time Format
 	 */
 	const RFC1123_DATE_FORMAT = 'D, d M Y H:i:s T';

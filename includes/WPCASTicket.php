@@ -97,7 +97,7 @@ if ( ! class_exists( 'WPCASTicket' ) ) {
 			/**
 			 * Freshly generated tickets have no expiration timestamp:
 			 */
-			if (!$expires) {
+			if ( ! $expires ) {
 				/**
 				 * This filter allows developers to override the default ticket expiration period.
 				 *
