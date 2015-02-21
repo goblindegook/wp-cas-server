@@ -2,7 +2,7 @@
 Contributors: goblindegook
 Tags: authentication, cas, central authentication service, single sign-on, jasig cas, sso
 Requires at least: 3.9
-Tested up to: 4.0
+Tested up to: 4.1.1
 Stable tag: 1.1.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -19,10 +19,12 @@ By default, CAS method URIs are provided under the `wp-cas` endpoint:
 
 * `/wp-cas/login`: Allows a remote service to request that a user authenticate on the CAS server. Will redirect back to the remote service along with a service ticket.
 * `/wp-cas/logout`: Terminates the single sign-on session. May optionally redirect the user back to the remote service.
+* `/wp-cas/validate` [CAS 1.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns a plaintext response.
 * `/wp-cas/proxy` [CAS 2.0]: Provides access to remote services with proxy tickets in exchange for proxy-granting tickets. Returns an XML response.
 * `/wp-cas/proxyValidate` [CAS 2.0]: Allows a remote service to validate a service or proxy ticket forwarded by the user on redirect. Returns an XML response.
 * `/wp-cas/serviceValidate` [CAS 2.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns an XML response.
-* `/wp-cas/validate` [CAS 1.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns a plaintext response.
+* `/wp-cas/p3/proxyValidate` [CAS 3.0]: Allows a remote service to validate a service or proxy ticket forwarded by the user on redirect. Returns an XML response.
+* `/wp-cas/p3/serviceValidate` [CAS 3.0]: Allows a remote service to validate a service ticket forwarded by the user on redirect. Returns an XML response.
 
 There are a few [client integration](http://www.jasig.org/cas/client-integration) libraries available for CAS, as well as a handy guide for [CASifying several existing applications](https://wiki.jasig.org/display/CASC/CASifying+Applications). Independent WordPress installations may integrate with Cassava using a client plugin such as [CAS Maestro](http://wordpress.org/plugins/cas-maestro/).
 
@@ -234,7 +236,10 @@ Parameters:
 = Unreleased (1.2.0) =
 
 * WordPress 4.1.1 compatibility.
-* Refactored request handling.
+* Added support for the CAS 3.0 `/p3/serviceValidate` and `/p3/proxyValidate` endpoints.
+* Fixed handling of service URLs containing pipe characters.
+* Cleaner, easier to maintain codebase.
+* Improved test coverage.
 
 = 1.1.2 =
 

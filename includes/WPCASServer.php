@@ -176,7 +176,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * list returned by `WPCASServer::routes()`.
 		 *
 		 * @param  string $path Requested URI path.
-		 *
 		 * @return mixed        Service response string or WordPress error.
 		 *
 		 * @throws WPCASException
