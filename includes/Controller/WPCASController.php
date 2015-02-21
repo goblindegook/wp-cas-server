@@ -15,7 +15,7 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * @since 1.2.0
  */
-abstract class CASController {
+abstract class WPCASController {
 
 	/**
 	 * CAS server intance.
@@ -34,9 +34,7 @@ abstract class CASController {
 	/**
 	 * Handle a CAS request.
 	 *
-	 * @param  string $path    CAS request URI.
-	 *
-	 * @return string          Request response.
+	 * @param array $request CAS request.
 	 */
-	abstract public function handleRequest( $args );
+	abstract public function handleRequest( $request );
 }

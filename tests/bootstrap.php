@@ -20,4 +20,4 @@ tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 $GLOBALS['wp_tests_options']['active_plugins'][] = 'wp-cas-server/wp-cas-server.php';
 
 require $_tests_dir . '/includes/bootstrap.php';
-
+require_once 'WPCAS_UnitTestCase.php';

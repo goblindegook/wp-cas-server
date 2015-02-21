@@ -6,11 +6,10 @@
 /**
  * @coversDefaultClass WPCASServer
  */
-class WP_TestWPCASServer extends WP_UnitTestCase {
+class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 
 	private $server;
 	private $routes;
-	private $redirect_location;
 
 	/**
 	 * Setup a test method for the WPCASServer class.
@@ -19,8 +18,6 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 		parent::setUp();
 		$this->server = new WPCASServer;
 		$this->routes = $this->server->routes();
-
-		add_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
 	}
 
 	/**
@@ -29,60 +26,55 @@ class WP_TestWPCASServer extends WP_UnitTestCase {
 	function tearDown () {
 		parent::tearDown();
 		unset( $this->server );
-		unset( $this->redirect_location );
-
-		remove_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
 	}
 
 	/**
-	 * Callback triggered on WordPress redirects.
-	 *
-	 * It saves the redirect location to a test case private attribute and throws a
-	 * `WPDieException` to prevent PHP from terminating immediately after the redirect.
-	 *
-	 * @param  string $location URI for WordPress to redirect to.
-	 *
-	 * @throws WPDieException Thrown to signal redirects and prevent tests from terminating.
+	 * @runInSeparateProcess
+	 * @covers ::redirect
 	 */
-	function wp_redirect_handler ( $location ) {
-		$this->redirect_location = $location;
-		throw new WPDieException( "Redirecting to $location" );
+	function test_redirect() {
+		$service = 'http://test/';
+
+		try {
+			$this->server->redirect( $service );
+		}
+		catch (WPDieException $message) {
+			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+		}
+
+		$this->assertStringStartsWith( $service, $this->redirect_location,
+			'Server redirects to a URL.' );
 	}
 
 	/**
-	 * Evaluate XPath expression.
-	 *
-	 * @param  string $xpath XPath query to evaluate.
-	 * @param  string $xml   XML content.
-	 *
-	 * @return mixed         XPath query result.
+	 * @runInSeparateProcess
+	 * @covers ::authRedirect
 	 */
-	protected function xpathEvaluate ( $xpath, $xml ) {
-		$dom = new DOMDocument();
-		$dom->loadXML( trim( $xml ) );
-		$xpathObj = new DOMXPath( $dom );
-		return $xpathObj->evaluate( $xpath );
-	}
+	function test_authRedirect() {
+		$service  = 'http://test/';
+		$loginUrl = function () { return 'http://custom-login/'; };
 
-	/**
-	 * Run an XPath query on an XML string.
-	 *
-	 * @param  mixed  $expected Expected XPath query output.
-	 * @param  string $xpath    XPath query.
-	 * @param  string $xml      XML content.
-	 * @param  string $message  Assert message to print.
-	 */
-	protected function assertXPathMatch ( $expected, $xpath, $xml, $message = null ) {
-		$this->assertEquals(
-			$expected,
-			$this->xpathEvaluate( $xpath, $xml ),
-			$message
-		);
-	}
+		try {
+			$this->server->authRedirect( array( 'service' => $service ) );
+		}
+		catch (WPDieException $message) {
+			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+		}
 
-	function test_interface () {
-		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
-			'WPCASServer implements the ICASServer interface.' );
+		$this->assertStringStartsWith( home_url(), $this->redirect_location,
+			'Server redirects to the authentication screen.' );
+
+		add_filter( 'cas_server_custom_auth_uri', $loginUrl );
+
+		try {
+			$this->server->authRedirect( array( 'service' => $service ) );
+		}
+		catch (WPDieException $message) {
+			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+		}
+
+		$this->assertStringStartsWith( $loginUrl(), $this->redirect_location,
+			'Server redirects to a custom login URL.' );
 	}
 
 	/**

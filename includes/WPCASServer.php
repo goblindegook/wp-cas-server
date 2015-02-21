@@ -15,6 +15,9 @@ require_once dirname( __FILE__ ) . '/WPCASException.php';
 require_once dirname( __FILE__ ) . '/WPCASRequestException.php';
 require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
+require_once dirname( __FILE__ ) . '/Controller/WPCASController.php';
+require_once dirname( __FILE__ ) . '/Controller/WPCASControllerLogout.php';
+
 require_once dirname( __FILE__ ) . '/Response/WPCASResponse.php';
 require_once dirname( __FILE__ ) . '/Response/WPCASResponseProxy.php';
 require_once dirname( __FILE__ ) . '/Response/WPCASResponseValidate.php';
@@ -48,8 +51,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses apply_filters()
 		 */
 		public function routes() {
-
-			$casRoutes = array(
+			$routes = array(
 				'login'              => array( $this, 'login' ),
 				'logout'             => array( $this, 'logout' ),
 				'validate'           => array( $this, 'validate' ),
@@ -67,7 +69,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			 *
 			 * @param array $cas_routes CAS endpoint to callback mapping.
 			 */
-			return apply_filters( 'cas_server_routes', $casRoutes );
+			return apply_filters( 'cas_server_routes', $routes );
 		}
 
 		/**
@@ -84,7 +86,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses wp_redirect()
 		 * @uses wp_safe_redirect()
 		 */
-		protected function redirect( $location, $status = 302 ) {
+		public function redirect( $location, $status = 302 ) {
 			$allowedServices = WPCASServerPlugin::getOption( 'allowed_services' );
 
 			if ( is_array( $allowedServices ) && count( $allowedServices ) > 0 ) {
@@ -192,7 +194,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				throw new WPCASException( __('The CAS server is disabled.', 'wp-cas-server') );
 			}
 
-			foreach ( $this->routes() as $route => $callback ) {
+			$routes = $this->routes();
+
+			foreach ( $routes as $route => $callback ) {
 
 				$match = preg_match( '@^' . preg_quote( $route ) . '/?$@', $path );
 
@@ -235,21 +239,26 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		/**
 		 * Wraps calls to session_start() to prevent 'headers already sent' errors.
 		 */
-		protected function sessionStart() {
-			$sessionExists = function_exists( 'session_status' ) && session_status() == PHP_SESSION_NONE;
-			if (headers_sent() || $sessionExists || strlen( session_id() )) return;
+		public function sessionStart() {
+			$sessionExists = function_exists( 'session_status' ) && session_status() === PHP_SESSION_NONE;
+			if ( headers_sent() || $sessionExists || strlen( session_id() ) ) {
+				return;
+			}
 			session_start();
 		}
 
 		/**
 		 * Wraps calls to session destruction functions.
 		 */
-		protected function sessionDestroy() {
+		public function sessionDestroy() {
 			wp_logout();
 			wp_set_current_user( false );
 
-			$sessionExists = function_exists( 'session_status' ) && session_status() == PHP_SESSION_NONE;
-			if (headers_sent() || !$sessionExists || !strlen( session_id() )) return;
+			$sessionExists = function_exists( 'session_status' ) && session_status() === PHP_SESSION_NONE;
+
+			if ( headers_sent() || ! $sessionExists || ! strlen( session_id() ) ) {
+				return;
+			}
 
 			session_unset();
 			session_destroy();
@@ -375,7 +384,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses apply_filters()
 		 * @uses auth_redirect()
 		 */
-		protected function authRedirect ( $args = array() ) {
+		public function authRedirect ( $args = array() ) {
 			/**
 			 * Allows developers to redirect the user to a custom login form.
 			 *
@@ -540,14 +549,11 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 *
 		 * @param array $args Request arguments.
 		 *
-		 * @uses home_url()
-		 * @uses wp_logout()
+		 * @todo Remove method and invoke controller handler directly.
 		 */
 		public function logout( $args = array() ) {
-			$service = ! empty( $args['service'] ) ? $args['service'] : home_url();
-			$this->sessionStart();
-			$this->sessionDestroy();
-			$this->redirect( $service );
+			$controller = new WPCASControllerLogout( $this );
+			return $controller->handleRequest( $args );
 		}
 
 		/**
