@@ -88,11 +88,10 @@ if ( ! class_exists( 'WPCASTicket' ) ) {
 		 *                            Freshly generated tickets should not provide this value.
 		 */
 		public function __construct( $type, $user, $service, $expiration = 0, $expires = 0 ) {
-
-			$this->type       = $type;
-			$this->user       = $user;
-			$this->service    = $service;
-			$this->expires    = $expires;
+			$this->type    = $type;
+			$this->user    = $user;
+			$this->service = esc_url_raw( $service );
+			$this->expires = $expires;
 
 			/**
 			 * Freshly generated tickets have no expiration timestamp:
@@ -119,8 +118,11 @@ if ( ! class_exists( 'WPCASTicket' ) ) {
 		 * @return string Ticket as string.
 		 */
 		public function __toString() {
-			return $this->type . '-' . base64_encode(
-				implode( '|', array( $this->user->user_login, $this->service, $this->expires, $this->generateSignature() ) ) );
+			return $this->type . '-' . base64_encode( implode( '|', array(
+				$this->user->user_login,
+				urlencode( $this->service ),
+				$this->expires,
+				$this->generateSignature() ) ) );
 		}
 
 		/**
@@ -151,7 +153,9 @@ if ( ! class_exists( 'WPCASTicket' ) ) {
 
 			list( $login, $service, $expires, $signature ) = $elements;
 
-			if ($expires < time()) {
+			$service = urldecode( $service );
+
+			if ( $expires < time() ) {
 				throw new WPCASTicketException( __( 'Ticket has expired.', 'wp-cas-server' ) );
 			}
 

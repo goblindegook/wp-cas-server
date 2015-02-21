@@ -30,7 +30,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 
 		$type       = WPCASTicket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
-		$service    = 'https://test/';
+		$service    = 'https://test/ÚÑ|Çº∂€/';
 		$expiration = 30;
 
 		$ticket = new WPCASTicket( $type, $user, $service, $expiration );
@@ -60,7 +60,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 	function test_toString () {
 		$type       = WPCASTicket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
-		$service    = 'https://test/';
+		$service    = 'https://test/ÚÑ|Çº∂€/';
 		$expiration = 30;
 
 		$ticket     = new WPCASTicket( $type, $user, $service, $expiration );
@@ -88,7 +88,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 
 		$type       = WPCASTicket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
-		$service    = 'https://test/';
+		$service    = 'https://test/ÚÑ|Çº∂€/';
 		$expiration = 30;
 
 		$ticket     = new WPCASTicket( $type, $user, $service, $expiration );

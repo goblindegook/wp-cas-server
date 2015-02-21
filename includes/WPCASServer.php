@@ -51,12 +51,12 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			$casRoutes = array(
 				'login'              => array( $this, 'login' ),
 				'logout'             => array( $this, 'logout' ),
+				'validate'           => array( $this, 'validate' ),
 				'proxy'              => array( $this, 'proxy' ),
 				'proxyValidate'      => array( $this, 'proxyValidate' ),
-				'p3/proxyValidate'   => array( $this, 'proxyValidate' ),
 				'serviceValidate'    => array( $this, 'serviceValidate' ),
+				'p3/proxyValidate'   => array( $this, 'proxyValidate' ),
 				'p3/serviceValidate' => array( $this, 'serviceValidate' ),
-				'validate'           => array( $this, 'validate' ),
 				);
 
 			/**
@@ -84,8 +84,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses wp_safe_redirect()
 		 */
 		protected function redirect( $location, $status = 302 ) {
-			$location = esc_url_raw( $location );
-
 			$allowedServices = WPCASServerPlugin::getOption( 'allowed_services' );
 
 			if ( is_array( $allowedServices ) && count( $allowedServices ) > 0 ) {
@@ -444,12 +442,11 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses home_url()
 		 */
 		protected function loginUser( $user, $service = '' ) {
-			$service    = esc_url_raw( $service );
 			$expiration = WPCASServerPlugin::getOption( 'expiration', 30 );
 
 			$ticket     = new WPCASTicket( WPCASTicket::TYPE_ST, $user, $service, $expiration );
 
-			$service    = empty( $service ) ? home_url() : $service;
+			$service    = empty( $service ) ? home_url() : esc_url_raw( $service );
 			$service    = add_query_arg( 'ticket', (string) $ticket, $service );
 
 			/**
@@ -547,7 +544,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @param array $args Request arguments.
 		 *
 		 * @uses sanitize_user()
-		 * @uses esc_url_raw()
 		 * @uses wp_signon()
 		 * @uses wp_verify_nonce()
 		 *
@@ -589,7 +585,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 *
 		 * @param array $args Request arguments.
 		 *
-		 * @uses esc_url_raw()
 		 * @uses is_ssl()
 		 * @uses is_user_logged_in()
 		 * @uses remove_query_arg()
@@ -639,7 +634,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 *
 		 * @param array $args Request arguments.
 		 *
-		 * @uses esc_url_raw()
 		 * @uses home_url()
 		 * @uses wp_logout()
 		 */
@@ -666,8 +660,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @param  array  $args Request arguments.
 		 *
 		 * @return string       Response XML string.
-		 *
-		 * @uses esc_url_raw()
 		 */
 		public function proxy( $args = array() ) {
 
@@ -705,8 +697,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @param  array  $args Request arguments.
 		 *
 		 * @return string       Response XML string.
-		 *
-		 * @uses esc_url_raw()
 		 *
 		 * @todo Accept proxy callback URL (pgtUrl) parameter.
 		 * @todo Accept renew parameter.
@@ -752,8 +742,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @param  array  $args Request arguments.
 		 *
 		 * @return string       Response XML string.
-		 *
-		 * @uses esc_url_raw()
 		 *
 		 * @todo Accept proxy callback URL (pgtUrl) parameter.
 		 * @todo Accept renew parameter.
@@ -824,7 +812,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 *
 		 * @return string       Validation response.
 		 *
-		 * @uses esc_url_raw()
 		 * @uses get_bloginfo()
 		 */
 		public function validate( $args = array() ) {
