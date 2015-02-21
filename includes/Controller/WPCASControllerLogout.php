@@ -6,10 +6,6 @@
  * @version 1.2.0
  */
 
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
-
 /**
  * Implements CAS logout.
  *

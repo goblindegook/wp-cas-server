@@ -1,11 +1,18 @@
 <?php
-
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
+/**
+ * CAS ticket validation response class.
+ *
+ * @package \WPCASServerPlugin\Server
+ * @version 1.2.0
+ */
 
 if ( ! class_exists( 'WPCASResponseValidate' ) ) {
 
+	/**
+	 * Implements the CAS response for validation requests.
+	 *
+	 * @version 1.2.0
+	 */
 	class WPCASResponseValidate extends WPCASResponse {
 
 		/**
@@ -20,11 +27,11 @@ if ( ! class_exists( 'WPCASResponseValidate' ) ) {
 		 */
 		public function setTicket( WPCASTicket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
 
-			$node = $this->createElement( 'authenticationSuccess' );
+			$this->response = $this->createElement( 'authenticationSuccess' );
 
 			// Include login name:
 
-			$node->appendChild( $this->createElement( 'user', $ticket->user->user_login ) );
+			$this->response->appendChild( $this->createElement( 'user', $ticket->user->user_login ) );
 
 			// CAS attributes:
 
@@ -54,13 +61,13 @@ if ( ! class_exists( 'WPCASResponseValidate' ) ) {
 					$xmlAttributes->appendChild( $xmlAttribute );
 				}
 
-				$node->appendChild( $xmlAttributes );
+				$this->response->appendChild( $xmlAttributes );
 			}
 
 			// Include Proxy-Granting Ticket in successful `/proxyValidate` responses:
 
 			if ( $proxyGrantingTicket ) {
-				$node->appendChild( $this->createElement(
+				$this->response->appendChild( $this->createElement(
 					'proxyGrantingTicket', $proxyGrantingTicket ) );
 			}
 
@@ -74,10 +81,8 @@ if ( ! class_exists( 'WPCASResponseValidate' ) ) {
 						'proxy', $proxy ) );
 				}
 
-				$node->appendChild( $xmlProxies );
+				$this->response->appendChild( $xmlProxies );
 			}
-
-			$this->setResponse( $node );
 		}
 
 	}

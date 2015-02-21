@@ -1,11 +1,18 @@
 <?php
-
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
+/**
+ * CAS response class.
+ *
+ * @package \WPCASServerPlugin\Server
+ * @version 1.2.0
+ */
 
 if ( ! class_exists( 'WPCASResponse' ) ) {
 
+	/**
+	 * Implements the CAS response.
+	 *
+	 * @version 1.2.0
+	 */
 	class WPCASResponse {
 
 		/**
@@ -30,24 +37,6 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		 */
 		public function __construct() {
 			$this->document = new DOMDocument( '1.0', get_bloginfo( 'charset' ) );
-		}
-
-		/**
-		 * Response mutator.
-		 * @param DOMNode $response Response DOM node.
-		 */
-		public function setResponse( DOMNode $response ) {
-			$this->response = $response;
-		}
-
-		/**
-		 * Create response element.
-		 * @param  string  $element Unqualified element tag name.
-		 * @param  string  $value   Optional element value.
-		 * @return DOMNode          XML element.
-		 */
-		public function createElement( $element, $value = null ) {
-			return $this->document->createElementNS( static::CAS_NS, "cas:$element", $value );
 		}
 
 		/**
@@ -90,19 +79,26 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 			 */
 			do_action( 'cas_server_error', $error );
 
-			$message   = __( 'Unknown error', 'wp-cas-server' );
-			$code      = WPCASException::ERROR_INTERNAL_ERROR;
+			$message = __( 'Unknown error', 'wp-cas-server' );
+			$code    = WPCASException::ERROR_INTERNAL_ERROR;
 
 			if ( isset( $error ) ) {
-				$code        = $error->get_error_code();
-				$message     = $error->get_error_message( $code );
+				$code    = $error->get_error_code();
+				$message = $error->get_error_message( $code );
 			}
 
-			$response = $this->createElement( $tag, $message );
+			$this->response = $this->createElement( $tag, $message );
+			$this->response->setAttribute( 'code', $code );
+		}
 
-			$response->setAttribute( 'code', $code );
-
-			$this->setResponse( $response );
+		/**
+		 * Create response element.
+		 * @param  string  $element Unqualified element tag name.
+		 * @param  string  $value   Optional element value.
+		 * @return DOMNode          XML element.
+		 */
+		protected function createElement( $element, $value = null ) {
+			return $this->document->createElementNS( static::CAS_NS, "cas:$element", $value );
 		}
 
 	}

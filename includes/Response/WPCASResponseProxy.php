@@ -1,11 +1,18 @@
 <?php
-
-if ( ! defined( 'WPINC' ) ) {
-	die;
-}
+/**
+ * CAS proxy response class.
+ *
+ * @package \WPCASServerPlugin\Server
+ * @version 1.2.0
+ */
 
 if ( ! class_exists( 'WPCASResponseProxy' ) ) {
 
+	/**
+	 * Implements the CAS response for proxy requests.
+	 *
+	 * @version 1.2.0
+	 */
 	class WPCASResponseProxy extends WPCASResponse {
 
 		/**
@@ -14,9 +21,8 @@ if ( ! class_exists( 'WPCASResponseProxy' ) ) {
 		 * @param  WPCASTicket $user    Validated proxy ticket.
 		 */
 		public function setTicket( WPCASTicket $proxyTicket ) {
-			$node = $this->createElement( 'proxySuccess' );
-			$node->appendChild( $this->createElement( 'proxyTicket', $proxyTicket ) );
-			$this->setResponse( $node );
+			$this->response = $this->createElement( 'proxySuccess' );
+			$this->response->appendChild( $this->createElement( 'proxyTicket', $proxyTicket ) );
 		}
 
 	}

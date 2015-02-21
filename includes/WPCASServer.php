@@ -17,6 +17,10 @@ require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
 require_once dirname( __FILE__ ) . '/Controller/WPCASController.php';
 require_once dirname( __FILE__ ) . '/Controller/WPCASControllerLogout.php';
+require_once dirname( __FILE__ ) . '/Controller/WPCASControllerValidate.php';
+require_once dirname( __FILE__ ) . '/Controller/WPCASControllerProxy.php';
+require_once dirname( __FILE__ ) . '/Controller/WPCASControllerProxyValidate.php';
+require_once dirname( __FILE__ ) . '/Controller/WPCASControllerServiceValidate.php';
 
 require_once dirname( __FILE__ ) . '/Response/WPCASResponse.php';
 require_once dirname( __FILE__ ) . '/Response/WPCASResponseProxy.php';
@@ -142,7 +146,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$output = $this->dispatch( $path );
 			}
 			catch (WPCASException $exception) {
-				$this->setCASResponseHeaders( ICASServer::CAS2_0 );
+				$this->setResponseContentType( 'text/xml' );
 				$response = new WPCASResponse();
 				$response->setError( $exception->getErrorInstance() );
 				$output = $response->prepare();
@@ -278,73 +282,8 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		/**
 		 * Set response headers for a CAS version response.
 		 */
-		protected function setCASResponseHeaders( $version = 0 ) {
-			$contentType = ( $version === ICASServer::CAS1_0 ) ? 'text/plain' : 'text/xml';
-
-			$this->setResponseHeader( 'Content-Type',
-				$contentType . '; charset=' . get_bloginfo( 'charset' ) );
-		}
-
-		/**
-		 * Validates a ticket, returning a ticket object, or throws an exception.
-		 *
-		 * Triggers the `cas_server_validation_success` action on ticket validation.
-		 *
-		 * @param  string      $ticket             Service or proxy ticket.
-		 * @param  string      $service            Service URI.
-		 * @param  array       $validTicketTypes   Ticket must be of the specified types.
-		 *
-		 * @return WPCASTicket                     Valid ticket object associated with request.
-		 *
-		 * @uses do_action()
-		 *
-		 * @throws WPCASRequestException
-		 * @throws WPCASTicketException
-		 */
-		protected function validateRequest( $ticket = '', $service = '', $validTicketTypes = array() ) {
-
-			if ( empty( $ticket ) ) {
-				throw new WPCASRequestException( __( 'Ticket is required.', 'wp-cas-server' ) );
-			}
-
-			if ( empty( $service ) ) {
-				throw new WPCASRequestException( __( 'Service is required.', 'wp-cas-server' ) );
-			}
-
-			$service = esc_url_raw( $service );
-
-			try {
-				WPCASTicket::validateAllowedTypes( $ticket, $validTicketTypes );
-				$ticket = WPCASTicket::fromString( $ticket );
-				$ticket->markUsed();
-
-			} catch (WPCASTicketException $exception) {
-				$isProxyRequest = in_array( WPCASTicket::TYPE_PGT, $validTicketTypes );
-
-				// FIXME: I don't like this.
-
-				if ( $isProxyRequest ) {
-					throw new WPCASTicketException( $exception->getMessage(),
-						WPCASTicketException::ERROR_BAD_PGT );
-				}
-
-				throw $exception;
-			}
-
-			if ( $ticket->service !== $service ) {
-				throw new WPCASRequestException(
-					__( 'Ticket does not match the service provided.', 'wp-cas-server' ),
-					WPCASRequestException::ERROR_INVALID_SERVICE );
-			}
-
-			/**
-			 * Fires on successful ticket validation.
-			 *
-			 * @param WPCASTicket $ticket Valid ticket object.
-			 */
-			do_action( 'cas_server_validation_success', $ticket );
-
-			return $ticket;
+		public function setResponseContentType( $type ) {
+			$this->setResponseHeader( 'Content-Type', $type . '; charset=' . get_bloginfo( 'charset' ) );
 		}
 
 		/**
@@ -536,20 +475,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		}
 
 		/**
-		 * `/logout` destroys a client's single sign-on CAS session.
-		 *
-		 * When called, this method will destroy the ticket-granting cookie and prevent subsequent
-		 * requests to `/login` from returning service tickets until the user re-authenticates using
-		 * their primary credentials.
-		 *
-		 * The following HTTP request parameter may be specified:
-		 *
-		 * - `url` (optional): If specified, the server will redirect the user to the page located at
-		 *   `url`, which should contain a description telling the user they've been logged out.
-		 *
-		 * @param array $args Request arguments.
-		 *
-		 * @todo Remove method and invoke controller handler directly.
+		 * @todo Remove.
 		 */
 		public function logout( $args = array() ) {
 			$controller = new WPCASControllerLogout( $this );
@@ -557,197 +483,35 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		}
 
 		/**
-		 * `/proxy` provides proxy tickets to services that have acquired proxy-granting tickets and
-		 * will be proxying authentication to back-end services.
-		 *
-		 * The following HTTP request parameters must be provided:
-		 *
-		 * - `pgt` (required): The proxy-granting ticket (PGT) acquired by the service during
-		 *   service ticket (ST) or proxy ticket (PT) validation.
-		 * - `targetService` (required): The service identifier of the back-end service. Note that not
-		 *   all back-end services are web services so this service identifier will not always be a URL.
-		 *   However, the service identifier specified here must match the "service" parameter specified
-		 *   to `/proxyValidate` upon validation of the proxy ticket.
-		 *
-		 * @param  array  $args Request arguments.
-		 *
-		 * @return string       Response XML string.
+		 * @todo Remove.
 		 */
 		public function proxy( $args = array() ) {
-
-			$pgt            = isset( $args['pgt'] )           ? $args['pgt']           : '';
-			$targetService  = isset( $args['targetService'] ) ? $args['targetService'] : '';
-
-			/**
-			 * `/proxy` checks the validity of the proxy-granting ticket passed.
-			 */
-			$validTicketTypes = array(
-				WPCASTicket::TYPE_PGT,
-			);
-
-			$response = new WPCASResponseProxy();
-
-			try {
-				$expiration  = WPCASServerPlugin::getOption( 'expiration', 30 );
-				$ticket      = $this->validateRequest( $pgt, $targetService, $validTicketTypes );
-				$proxyTicket = new WPCASTicket( WPCASTicket::TYPE_PT, $ticket->user, $targetService, $expiration );
-				$response->setTicket( $proxyTicket );
-			}
-			catch (WPCASException $exception) {
-				$response->setError( $exception->getErrorInstance(), 'proxyFailure' );
-			}
-
-			$this->setCASResponseHeaders( ICASServer::CAS2_0 );
-
-			return $response->prepare();
+			$controller = new WPCASControllerProxy( $this );
+			return $controller->handleRequest( $args );
 		}
 
 		/**
-		 * `/proxyValidate` must perform the same validation tasks as `/serviceValidate` and
-		 * additionally validate proxy tickets. `/proxyValidate` must be capable of validating both
-		 * service tickets and proxy tickets.
-		 *
-		 * @param  array  $args Request arguments.
-		 *
-		 * @return string       Response XML string.
-		 *
-		 * @todo Accept proxy callback URL (pgtUrl) parameter.
-		 * @todo Accept renew parameter.
+		 * @todo Remove.
 		 */
 		public function proxyValidate( $args = array() ) {
-
-			$service = isset( $args['service'] ) ? $args['service'] : '';
-			$ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
-			// $pgtUrl  = !empty( $args['pgtUrl'] ) ? $args['pgtUrl'] : '';
-			// $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
-
-			/**
-			 * `/proxyValidate` checks the validity of both service and proxy tickets.
-			 */
-			$validTicketTypes = array(
-				WPCASTicket::TYPE_ST,
-				WPCASTicket::TYPE_PT,
-			);
-
-			$response = new WPCASResponseValidate();
-
-			try {
-				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
-				$response->setTicket( $ticket );
-			}
-			catch (WPCASException $exception) {
-				$response->setError( $exception->getErrorInstance() );
-			}
-
-			$this->setCASResponseHeaders( ICASServer::CAS2_0 );
-
-			return $response->prepare();
+			$controller = new WPCASControllerProxyValidate( $this );
+			return $controller->handleRequest( $args );
 		}
 
 		/**
-		 * `/serviceValidate` is a CAS 2.0 protocol method that checks the validity of a service ticket
-		 * (ST) and returns an XML response.
-		 *
-		 * `/serviceValidate` will also generate and issue proxy-granting tickets (PGT) when requested.
-		 * The service will deny authenticating  user if it receives a proxy ticket.
-		 *
-		 * @param  array  $args Request arguments.
-		 *
-		 * @return string       Response XML string.
-		 *
-		 * @todo Accept proxy callback URL (pgtUrl) parameter.
-		 * @todo Accept renew parameter.
+		 * @todo Remove.
 		 */
 		public function serviceValidate( $args = array() ) {
-
-			$service = isset( $args['service'] ) ? $args['service'] : '';
-			$ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
-			// $pgtUrl  = isset( $args['pgtUrl'] )  ? $args['pgtUrl'] : '';
-			// $renew   = isset( $args['renew'] ) && 'true' === $args['renew'];
-
-			/**
-			 * `/serviceValidate` checks the validity of a service ticket and does not handle proxy
-			 * authentication. CAS MUST respond with a ticket validation failure response when a proxy
-			 * ticket is passed to `/serviceValidate`.
-			 */
-			$validTicketTypes = array(
-				WPCASTicket::TYPE_ST,
-			);
-
-			$response = new WPCASResponseValidate();
-
-			try {
-				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
-				$response->setTicket( $ticket );
-			}
-			catch (WPCASException $exception) {
-				$response->setError( $exception->getErrorInstance() );
-			}
-
-			$this->setCASResponseHeaders( ICASServer::CAS2_0 );
-
-			return $response->prepare();
+			$controller = new WPCASControllerServiceValidate( $this );
+			return $controller->handleRequest( $args );
 		}
 
 		/**
-		 * `/validate` is a CAS 1.0 protocol method that checks the validity of a service ticket.
-		 *
-		 * Being part of the CAS 1.0 protocol, `/validate` does not handle proxy authentication.
-		 *
-		 * The following HTTP request parameters may be specified:
-		 *
-		 * - `service` (required): The URL of the service for which the ticket was issued.
-		 * - `ticket` (required): The service ticket issued by `/login`.
-		 * - `renew` (optional): If this parameter is set, the server will force the user to reenter
-		 *   their primary credentials.
-		 *
-		 * `/validate` will return one of the following two responses:
-		 *
-		 * On successful validation:
-		 *
-		 * ```
-		 * yes\n
-		 * username\n
-		 * ```
-		 *
-		 * On validation failure:
-		 *
-		 * ```
-		 * no\n
-		 * \n
-		 * ```
-		 *
-		 * This method will attempt to set a `Content-Type: text/plain` HTTP header when called.
-		 *
-		 * @param  array  $args Request arguments.
-		 *
-		 * @return string       Validation response.
-		 *
-		 * @uses get_bloginfo()
+		 * @todo Remove.
 		 */
 		public function validate( $args = array() ) {
-			$this->setCASResponseHeaders( ICASServer::CAS1_0 );
-
-			$service = isset( $args['service'] ) ? $args['service'] : '';
-			$ticket  = isset( $args['ticket'] )  ? $args['ticket']  : '';
-
-			/**
-			 * `/validate` checks the validity of a service ticket. `/validate` is part of the CAS 1.0
-			 * protocol and thus does not handle proxy authentication. CAS MUST respond with a ticket
-			 * validation failure response when a proxy ticket is passed to `/validate`.
-			 */
-			$validTicketTypes = array(
-				WPCASTicket::TYPE_ST,
-			);
-
-			try {
-				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
-			}
-			catch ( WPCASException $exception ) {
-				return "no\n\n";
-			}
-
-			return "yes\n" . $ticket->user->user_login . "\n";
+			$controller = new WPCASControllerValidate( $this );
+			return $controller->handleRequest( $args );
 		}
 
 	}
