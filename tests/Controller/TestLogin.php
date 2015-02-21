@@ -8,27 +8,30 @@
  */
 class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 
-	private $server;
+	private $controller;
 
 	/**
-	 * Setup a test method for the WPCASServer class.
+	 * Setup a test method for the WPCASControllerLogin class.
 	 */
 	function setUp() {
 		parent::setUp();
-		$this->server = new WPCASServer;
+		$this->controller = new WPCASControllerLogin( new WPCASServer );
 	}
 
 	/**
-	 * Finish a test method for the CASServer class.
+	 * Finish a test method for the WPCASControllerLogin class.
 	 */
 	function tearDown() {
 		parent::tearDown();
-		unset( $this->server );
+		unset( $this->controller );
 	}
 
-	function test_interface () {
-		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
-			'WPCASServer implements the ICASServer interface.' );
+	/**
+	 * @covers ::__construct
+	 */
+	function test_construct () {
+		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
+			'WPCASControllerLogin implements the WPCASController interface.' );
 	}
 
 	/**
@@ -39,9 +42,6 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 	 */
 	function test_login_requestor () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'login' ) ),
-			"'login' method is callable." );
-
 		$service = 'http://test/';
 
 		/**
@@ -51,7 +51,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		wp_set_current_user( false );
 
 		try {
-			$this->server->login( array( 'service' => $service, 'gateway' => 'true' ) );
+			$this->controller->handleRequest( array( 'service' => $service, 'gateway' => 'true' ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -65,7 +65,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		 */
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -83,7 +83,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		wp_set_current_user( $user_id );
 
 		try {
-			$this->server->login( array() );
+			$this->controller->handleRequest( array() );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -97,7 +97,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		 */
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -117,7 +117,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		 */
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $another_query );
@@ -131,7 +131,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		 */
 
 		try {
-			$this->server->login( array( 'service' => $service, 'renew' => 'true' ) );
+			$this->controller->handleRequest( array( 'service' => $service, 'renew' => 'true' ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -179,7 +179,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 			);
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -207,7 +207,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 			);
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -232,7 +232,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 			);
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -257,7 +257,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 			);
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );

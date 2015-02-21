@@ -8,27 +8,30 @@
  */
 class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 
-	private $server;
+	private $controller;
 
 	/**
-	 * Setup a test method for the WPCASServer class.
+	 * Setup a test method for the WPCASControllerLogout class.
 	 */
 	function setUp() {
 		parent::setUp();
-		$this->server = new WPCASServer;
+		$this->controller = new WPCASControllerLogout( new WPCASServer );
 	}
 
 	/**
-	 * Finish a test method for the CASServer class.
+	 * Finish a test method for the WPCASControllerLogout class.
 	 */
 	function tearDown() {
 		parent::tearDown();
-		unset( $this->server );
+		unset( $this->controller );
 	}
 
-	function test_interface () {
-		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
-			'WPCASServer implements the ICASServer interface.' );
+	/**
+	 * @covers ::__construct
+	 */
+	function test_construct () {
+		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
+			'WPCASControllerLogout implements the WPCASController interface.' );
 	}
 
 	/**
@@ -36,9 +39,6 @@ class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 	 * @covers ::logout
 	 */
 	function test_logout () {
-
-		$this->assertTrue( is_callable( array( $this->server, 'logout' ) ),
-			"'logout' method is callable." );
 
 		/**
 		 * /logout?service=http://test/
@@ -52,7 +52,7 @@ class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 			'User is logged in.' );
 
 		try {
-			$this->server->logout( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -71,7 +71,7 @@ class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 		wp_set_current_user( $this->factory->user->create() );
 
 		try {
-			$this->server->logout( array( 'service' => $service ) );
+			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );

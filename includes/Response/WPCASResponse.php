@@ -4,6 +4,7 @@
  *
  * @package \WPCASServerPlugin\Server
  * @version 1.2.0
+ * @since 1.2.0
  */
 
 if ( ! class_exists( 'WPCASResponse' ) ) {

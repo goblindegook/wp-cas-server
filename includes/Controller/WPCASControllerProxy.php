@@ -4,6 +4,7 @@
  *
  * @package \WPCASServerPlugin\Server
  * @version 1.2.0
+ * @since 1.2.0
  */
 
 /**
@@ -71,7 +72,7 @@ class WPCASControllerProxy extends WPCASControllerValidate {
 	 * @throws WPCASRequestException
 	 * @throws WPCASTicketException
 	 */
-	protected function validateRequest( $ticket = '', $service = '' ) {
+	public function validateRequest( $ticket = '', $service = '' ) {
 		try {
 			return parent::validateRequest( $ticket, $service );
 

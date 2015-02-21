@@ -1,16 +1,15 @@
 <?php
 /**
- * Implements the ICASServer interface as required by the WP CAS Server plugin.
+ * Implements the CAS server class.
  *
  * @package \WPCASServerPlugin\Server
- * @version 1.1.0
+ * @version 1.2.0
+ * @since   1.0.0
  */
 
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
-
-require_once dirname( __FILE__ ) . '/ICASServer.php';
 
 require_once dirname( __FILE__ ) . '/Exception/WPCASException.php';
 require_once dirname( __FILE__ ) . '/Exception/WPCASRequestException.php';
@@ -38,7 +37,12 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 	 *
 	 * @since 1.0.0
 	 */
-	class WPCASServer implements ICASServer {
+	class WPCASServer {
+
+		/**
+		 * RFC 1123 Date-Time Format
+		 */
+		const RFC1123_DATE_FORMAT = 'D, d M Y H:i:s T';
 
 		//
 		// CAS Server Methods
@@ -132,7 +136,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 			$this->setResponseHeader( 'Pragma'       , 'no-cache' );
 			$this->setResponseHeader( 'Cache-Control', 'no-store' );
-			$this->setResponseHeader( 'Expires'      , gmdate( ICASServer::RFC1123_DATE_FORMAT ) );
+			$this->setResponseHeader( 'Expires'      , gmdate( static::RFC1123_DATE_FORMAT ) );
 
 			/**
 			 * Fires before the CAS request is processed.

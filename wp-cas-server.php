@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Cassava: A WordPress CAS Server
-Version: 1.1.2
+Version: 1.2.0
 Description: Provides authentication services based on the Jasig CAS protocol.
 Author: Luís Rodrigues
 Author URI: http://goblindegook.net/
@@ -31,7 +31,7 @@ Domain Path: /languages
  * WP CAS Server main plugin file.
  *
  * @package \WPCASServerPlugin
- * @version 1.1.2
+ * @version 1.2.0
  */
 
 if ( ! defined( 'WPINC' ) ) {
@@ -54,7 +54,7 @@ if ( ! class_exists( 'WPCASServerPlugin' ) ) {
 		/**
 		 * Plugin version.
 		 */
-		const VERSION = '1.1.2';
+		const VERSION = '1.2.0';
 
 		/**
 		 * Plugin slug.
@@ -133,23 +133,27 @@ if ( ! class_exists( 'WPCASServerPlugin' ) ) {
 		/**
 		 * WP CAS Server plugin constructor.
 		 *
-		 * @param ICASServer $server CAS server instance.
+		 * @param WPCASServer $server CAS server instance.
 		 *
 		 * @uses is_admin()
 		 * @uses register_activation_hook()
 		 * @uses register_deactivation_hook()
 		 * @uses add_action()
 		 */
-		public function __construct( ICASServer $server ) {
+		public function __construct( WPCASServer $server ) {
 			$this->server = $server;
 
 			if ( is_admin() ) {
 				$this->admin = new WPCASServerAdmin();
 			}
+		}
 
+		/**
+		 * Bootstrap plugin.
+		 */
+		public function ready() {
 			register_activation_hook( __FILE__, array( $this, 'activation' ) );
 			register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
-
 			add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
 		}
 
@@ -368,5 +372,6 @@ if ( ! class_exists( 'WPCASServerPlugin' ) ) {
 	}
 
 	$GLOBALS[ WPCASServerPlugin::SLUG ] = new WPCASServerPlugin( new WPCASServer );
+	$GLOBALS[ WPCASServerPlugin::SLUG ]->ready();
 
 } // ! class_exists( 'WPCASServerPlugin' )

@@ -9,26 +9,32 @@
 class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 
 	private $server;
+	private $controller;
 
 	/**
-	 * Setup a test method for the WPCASServer class.
+	 * Setup a test method for the WPCASControllerServiceValidate class.
 	 */
 	function setUp() {
 		parent::setUp();
-		$this->server = new WPCASServer;
+		$this->server     = new WPCASServer();
+		$this->controller = new WPCASControllerServiceValidate( $this->server );
 	}
 
 	/**
-	 * Finish a test method for the CASServer class.
+	 * Finish a test method for the WPCASControllerServiceValidate class.
 	 */
 	function tearDown() {
 		parent::tearDown();
 		unset( $this->server );
+		unset( $this->controller );
 	}
 
-	function test_interface () {
-		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
-			'WPCASServer implements the ICASServer interface.' );
+	/**
+	 * @covers ::__construct
+	 */
+	function test_construct () {
+		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
+			'WPCASControllerServiceValidate implements the WPCASController interface.' );
 	}
 
 	/**
@@ -40,9 +46,6 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 	 */
 	function test_serviceValidate () {
 
-		$this->assertTrue( is_callable( array( $this->server, 'serviceValidate' ) ),
-			"'serviceValidate' method is callable." );
-
 		$service = 'http://test/';
 
 		/**
@@ -53,7 +56,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 			'ticket'  => 'ticket',
 			);
 
-		$error = $this->server->serviceValidate( $args );
+		$error = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			'Error if service not provided.' );
@@ -69,7 +72,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 			'ticket'  => '',
 			);
 
-		$error = $this->server->serviceValidate( $args );
+		$error = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			'Error if ticket not provided.' );
@@ -85,7 +88,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 			'ticket'  => 'bad-ticket',
 			);
 
-		$error = $this->server->serviceValidate( $args );
+		$error = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			'Error on bad ticket.' );
@@ -101,7 +104,8 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 		wp_set_current_user( $user_id );
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$login = new WPCASControllerLogin( $this->server );
+			$login->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -114,7 +118,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 
 		$user = get_user_by( 'id', $user_id );
 
-		$xml = $this->server->serviceValidate( $args );
+		$xml = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
 			'Successful validation.' );
@@ -130,7 +134,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 		 */
 		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
-		$xml = $this->server->serviceValidate( $args );
+		$xml = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
 			'Settings allow ticket reuse.' );
@@ -148,7 +152,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 
 		WPCASServerPlugin::setOption( 'attributes', array( 'display_name', 'user_email' ) );
 
-		$xml = $this->server->serviceValidate( $args );
+		$xml = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( $user->get( 'display_name' ),
 			'string(//cas:authenticationSuccess/cas:attributes/cas:display_name)', $xml,
@@ -166,7 +170,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 			'ticket'  => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PT, $query['ticket'] ),
 			);
 
-		$error = $this->server->serviceValidate( $args );
+		$error = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			"'serviceValidate' may not validate proxy tickets." );
@@ -184,7 +188,7 @@ class TestWPCASControllerServiceValidate extends WPCAS_UnitTestCase {
 			'ticket'  => $query['ticket'],
 			);
 
-		$error = $this->server->serviceValidate( $args );
+		$error = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			"Settings do not allow ticket reuse." );

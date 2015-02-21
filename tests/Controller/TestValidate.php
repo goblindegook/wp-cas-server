@@ -9,26 +9,32 @@
 class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 
 	private $server;
+	private $controller;
 
 	/**
-	 * Setup a test method for the WPCASServer class.
+	 * Setup a test method for the WPCASControllerValidate class.
 	 */
 	function setUp() {
 		parent::setUp();
-		$this->server = new WPCASServer;
+		$this->server     = new WPCASServer();
+		$this->controller = new WPCASControllerValidate( $this->server );
 	}
 
 	/**
-	 * Finish a test method for the CASServer class.
+	 * Finish a test method for the WPCASControllerValidate class.
 	 */
 	function tearDown() {
 		parent::tearDown();
 		unset( $this->server );
+		unset( $this->controller );
 	}
 
-	function test_interface () {
-		$this->assertArrayHasKey( 'ICASServer', class_implements( $this->server ),
-			'WPCASServer implements the ICASServer interface.' );
+	/**
+	 * @covers ::__construct
+	 */
+	function test_construct () {
+		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
+			'WPCASControllerValidate implements the WPCASController interface.' );
 	}
 
 	/**
@@ -36,9 +42,6 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 	 * @covers ::validate
 	 */
 	function test_validate () {
-
-		$this->assertTrue( is_callable( array( $this->server, 'validate' ) ),
-			"'validate' method is callable." );
 
 		/**
 		 * No service.
@@ -48,7 +51,7 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 			'ticket'  => 'ticket',
 			);
 
-		$this->assertEquals( $this->server->validate( $args ), "no\n\n",
+		$this->assertEquals( $this->controller->handleRequest( $args ), "no\n\n",
 			"Error on empty service." );
 
 		/**
@@ -59,7 +62,7 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 			'ticket'  => '',
 			);
 
-		$this->assertEquals( $this->server->validate( $args ), "no\n\n",
+		$this->assertEquals( $this->controller->handleRequest( $args ), "no\n\n",
 			"Error on empty ticket." );
 
 		/**
@@ -70,7 +73,7 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 			'ticket'  => 'bad-ticket',
 			);
 
-		$this->assertEquals( $this->server->validate( $args ), "no\n\n",
+		$this->assertEquals( $this->controller->handleRequest( $args ), "no\n\n",
 			"Error on invalid ticket." );
 
 		/**
@@ -82,7 +85,8 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 		wp_set_current_user( $user_id );
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$login = new WPCASControllerLogin( $this->server );
+			$login->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
@@ -95,17 +99,17 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 
 		$user = get_user_by( 'id', $user_id );
 
-		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->server->validate( $args ),
+		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->controller->handleRequest( $args ),
 			"Valid ticket." );
 
 		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
 
-		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->server->validate( $args ),
+		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->controller->handleRequest( $args ),
 			"Tickets may reused." );
 
 		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
 
-		$this->assertEquals( "no\n\n", $this->server->validate( $args ),
+		$this->assertEquals( "no\n\n", $this->controller->handleRequest( $args ),
 			"Tickets may not be reused." );
 
 		$this->markTestIncomplete( "Test support for the optional 'pgtUrl' and 'renew' parameters." );
