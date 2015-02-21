@@ -18,11 +18,6 @@ if ( ! defined( 'WPINC' ) ) {
 interface ICASServer {
 
 	/**
-	 * CAS XML Namespace URI
-	 */
-	const CAS_NS = 'http://www.yale.edu/tp/cas';
-
-	/**
 	 * RFC 1123 Date-Time Format
 	 */
 	const RFC1123_DATE_FORMAT = 'D, d M Y H:i:s T';

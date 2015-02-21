@@ -17,6 +17,7 @@ require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
 require_once dirname( __FILE__ ) . '/WPCASRequest.php';
 require_once dirname( __FILE__ ) . '/WPCASResponse.php';
+require_once dirname( __FILE__ ) . '/WPCASResponseError.php';
 
 
 if ( ! class_exists( 'WPCASServer' ) ) {
@@ -27,21 +28,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 	 * @since 1.0.0
 	 */
 	class WPCASServer implements ICASServer {
-
-		/**
-		 * XML response.
-		 * @var DOMDocument
-		 */
-		protected $response;
-
-		/**
-		 * WP CAS Server constructor.
-		 *
-		 * @uses get_bloginfo()
-		 */
-		public function __construct() {
-			$this->response = new WPCASResponse();
-		}
 
 		//
 		// CAS Server Methods
@@ -153,7 +139,9 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$output = $this->dispatch( $path );
 			}
 			catch (WPCASException $exception) {
-				$output = $this->response->xmlError( $exception->getErrorInstance() );
+				$response = new WPCASResponseError();
+				$response->setError( $exception->getErrorInstance() );
+				$output = $response->prepare();
 			}
 
 			/**
@@ -278,22 +266,23 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		/**
 		 * XML success response to a CAS 2.0 validation request.
 		 *
-		 * @param  WPCASTicket $ticket               Validated ticket.
-		 * @param  string      $proxyGrantingTicket  Generated Proxy-Granting Ticket (PGT) to return.
-		 * @param  array       $proxies              List of proxy URIs.
+		 * @param  WPCASResponse $response             Response object.
+		 * @param  WPCASTicket   $ticket               Validated ticket.
+		 * @param  string        $proxyGrantingTicket  Generated Proxy-Granting Ticket (PGT) to return.
+		 * @param  array         $proxies              List of proxy URIs.
 		 *
-		 * @return DOMElement                        CAS success response XML fragment.
+		 * @return DOMElement                          CAS success response XML fragment.
 		 *
 		 * @uses apply_filters()
 		 * @uses get_userdata()
 		 */
-		protected function xmlValidateSuccess( WPCASTicket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
+		protected function xmlValidateSuccess( WPCASResponse $response, WPCASTicket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
 
-			$response = $this->response->createElement( "cas:authenticationSuccess" );
+			$node = $response->createElement( "cas:authenticationSuccess" );
 
 			// Include login name:
 
-			$response->appendChild( $this->response->createElement( "cas:user", $ticket->user->user_login ) );
+			$node->appendChild( $response->createElement( "cas:user", $ticket->user->user_login ) );
 
 			// CAS attributes:
 
@@ -316,60 +305,56 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				 */
 				$attributes = apply_filters( 'cas_server_validation_user_attributes', $attributes, $ticket->user );
 
-				$xmlAttributes = $this->response->createElement( 'cas:attributes' );
+				$xmlAttributes = $response->createElement( 'cas:attributes' );
 
 				foreach ($attributes as $key => $value) {
-					$xmlAttribute = $this->response->createElement( "cas:$key", $value );
+					$xmlAttribute = $response->createElement( "cas:$key", $value );
 					$xmlAttributes->appendChild( $xmlAttribute );
 				}
 
-				$response->appendChild( $xmlAttributes );
+				$node->appendChild( $xmlAttributes );
 			}
 
 			// Include Proxy-Granting Ticket in successful `/proxyValidate` responses:
 
 			if ( $proxyGrantingTicket ) {
-				$response->appendChild( $this->response->createElement(
+				$node->appendChild( $response->createElement(
 					'cas:proxyGrantingTicket', $proxyGrantingTicket ) );
 			}
 
 			// Include proxies in successful `/proxyValidate` responses:
 
 			if (count( $proxies ) > 0) {
-				$xmlProxies = $this->response->createElement( 'cas:proxies' );
+				$xmlProxies = $response->createElement( 'cas:proxies' );
 
 				foreach ($proxies as $proxy) {
-					$xmlProxies->appendChild( $this->response->createElement(
+					$xmlProxies->appendChild( $response->createElement(
 						'cas:proxy', $proxy ) );
 				}
 
-				$response->appendChild( $xmlProxies );
+				$node->appendChild( $xmlProxies );
 			}
 
-			return $response;
+			return $node;
 		}
 
 		/**
 		 * XML success response to a CAS 2.0 proxy request.
 		 *
-		 * @param  WP_User    $user    Authenticated WordPress user.
-		 * @param  string     $service Service URI.
+		 * @param  WPCASResponse $response Response object.
+		 * @param  WP_User       $user     Authenticated WordPress user.
+		 * @param  string        $service  Service URI.
 		 *
-		 * @return DOMElement          CAS success response XML fragment.
+		 * @return DOMElement              CAS success response XML fragment.
 		 */
-		protected function xmlProxySuccess( WP_User $user, $service = '' ) {
-
-			$expiration = WPCASServerPlugin::getOption( 'expiration', 30 );
-
+		protected function xmlProxySuccess( WPCASResponse $response, WP_User $user, $service = '' ) {
+			$expiration  = WPCASServerPlugin::getOption( 'expiration', 30 );
 			$proxyTicket = new WPCASTicket( WPCASTicket::TYPE_PT, $user, $service, $expiration );
+			$node        = $response->createElement( 'cas:proxySuccess' );
 
-			$response = $this->response->createElement(
-				"cas:proxySuccess" );
+			$node->appendChild( $response->createElement( 'cas:proxyTicket', $proxyTicket ) );
 
-			$response->appendChild( $this->response->createElement(
-				"cas:proxyTicket", $proxyTicket ) );
-
-			return $response;
+			return $node;
 		}
 
 		/**
@@ -410,7 +395,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 				// FIXME: I don't like this.
 
-				if ($isProxyRequest) {
+				if ( $isProxyRequest ) {
 					throw new WPCASTicketException( $exception->getMessage(),
 						WPCASTicketException::ERROR_BAD_PGT );
 				}
@@ -684,13 +669,17 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			);
 
 			try {
-				$ticket = $this->validateRequest( $pgt, $targetService, $validTicketTypes );
+				$ticket   = $this->validateRequest( $pgt, $targetService, $validTicketTypes );
+				$response = new WPCASResponse();
+				$success  = $this->xmlProxySuccess( $response, $ticket->user, $targetService );
+				$response->setResponse( $success );
 			}
 			catch (WPCASException $exception) {
-				return $this->response->xmlError( $exception->getErrorInstance(), 'proxyFailure' );
+				$response = new WPCASResponseError();
+				$response->setError( $exception->getErrorInstance(), 'proxyFailure' );
 			}
 
-			return $this->response->prepareXml( $this->xmlProxySuccess( $ticket->user, $targetService ) );
+			return $response->prepare();
 		}
 
 		/**
@@ -723,13 +712,17 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			);
 
 			try {
-				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
+				$ticket   = $this->validateRequest( $ticket, $service, $validTicketTypes );
+				$response = new WPCASResponse();
+				$success  = $this->xmlValidateSuccess( $response, $ticket );
+				$response->setResponse( $success );
 			}
 			catch (WPCASException $exception) {
-				return $this->response->xmlError( $exception->getErrorInstance() );
+				$response = new WPCASResponseError();
+				$response->setError( $exception->getErrorInstance() );
 			}
 
-			return $this->response->prepareXml( $this->xmlValidateSuccess( $ticket ) );
+			return $response->prepare();
 		}
 
 		/**
@@ -765,13 +758,17 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 			);
 
 			try {
-				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
+				$ticket   = $this->validateRequest( $ticket, $service, $validTicketTypes );
+				$response = new WPCASResponse();
+				$success  = $this->xmlValidateSuccess( $response, $ticket );
+				$response->setResponse( $success );
 			}
 			catch (WPCASException $exception) {
-				return $this->response->xmlError( $exception->getErrorInstance() );
+				$response = new WPCASResponseError();
+				$response->setError( $exception->getErrorInstance() );
 			}
 
-			return $this->response->prepareXml( $this->xmlValidateSuccess( $ticket ) );
+			return $response->prepare();
 		}
 
 		/**

@@ -14,16 +14,30 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		const CAS_NS = 'http://www.yale.edu/tp/cas';
 
 		/**
-		 * XML response.
+		 * XML response document.
 		 * @var DOMDocument
 		 */
-		protected $xmlResponse;
+		protected $document;
+
+		/**
+		 * XML response node.
+		 * @var DOMNode
+		 */
+		protected $response;
 
 		/**
 		 * Response constructor.
 		 */
 		public function __construct() {
-			$this->xmlResponse = new DOMDocument( '1.0', get_bloginfo( 'charset' ) );
+			$this->document = new DOMDocument( '1.0', get_bloginfo( 'charset' ) );
+		}
+
+		/**
+		 * Response mutator.
+		 * @param DOMNode $response Response DOM node.
+		 */
+		public function setResponse( DOMNode $response ) {
+			$this->response = $response;
 		}
 
 		/**
@@ -45,10 +59,10 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		 */
 		public function createElement( $element, $inner = null ) {
 			if ( $inner === null ) {
-				return $this->xmlResponse->createElementNS( static::CAS_NS, $element );
+				return $this->document->createElementNS( static::CAS_NS, $element );
 			}
 
-			return $this->xmlResponse->createElementNS( static::CAS_NS, $element, $inner );
+			return $this->document->createElementNS( static::CAS_NS, $element, $inner );
 		}
 
 		/**
@@ -62,56 +76,21 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		 *
 		 * @uses get_bloginfo()
 		 */
-		public function prepareXml( DOMNode $response ) {
+		public function prepare() {
 			$this->setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_bloginfo( 'charset' ) );
 
 			$root = $this->createElement( 'cas:serviceResponse' );
-			$root->appendChild( $response );
+			$root->appendChild( $this->response );
 
 			// Removing all child nodes from response document:
 
-			while ($this->xmlResponse->firstChild) {
-				$this->xmlResponse->removeChild( $this->xmlResponse->firstChild );
+			while ($this->document->firstChild) {
+				$this->document->removeChild( $this->document->firstChild );
 			}
 
-			$this->xmlResponse->appendChild( $root );
+			$this->document->appendChild( $root );
 
-			return $this->xmlResponse->saveXML();
-		}
-
-		/**
-		 * XML error response to a CAS 2.0 request.
-		 *
-		 * @param  WP_Error   $error Error object.
-		 * @param  string     $tag   XML tag for the error (default: "authenticationFailure").
-		 *
-		 * @return DOMElement        CAS error response XML fragment.
-		 *
-		 * @uses do_action()
-		 * @uses is_wp_error()
-		 */
-		public function xmlError( WP_Error $error = null, $tag = 'authenticationFailure' ) {
-
-			/**
-			 * Fires if the CAS server has to return an XML error.
-			 *
-			 * @param WP_Error $error WordPress error to return as XML.
-			 */
-			do_action( 'cas_server_error', $error );
-
-			$message = __( 'Unknown error', 'wp-cas-server' );
-			$code    = WPCASException::ERROR_INTERNAL_ERROR;
-
-			if ($error) {
-				$code    = $error->get_error_code();
-				$message = $error->get_error_message( $code );
-			}
-
-			$response = $this->createElement( "cas:$tag", $message );
-
-			$response->setAttribute( 'code', $code );
-
-			return $this->prepareXml( $response );
+			return $this->document->saveXML();
 		}
 
 	}
