@@ -28,6 +28,10 @@ There are a few [client integration](http://www.jasig.org/cas/client-integration
 
 Please follow and contribute to Cassava's development on [Github](https://github.com/goblindegook/wp-cas-server).
 
+== Screenshots ==
+
+TODO
+
 == Installation ==
 
 = Using the WordPress Dashboard =
@@ -86,7 +90,7 @@ Only version 2.0 of the protocol can disclose user attributes, these options wil
 
 = How can I change other settings? =
 
-At the moment, the only way to change the plugin's behaviour is through the [Hooks API](http://codex.wordpress.org/Plugin_API/Hooks). Please refer to the [Other Notes](/plugins/wp-cas-server/other-notes/) page for a list of actions and filters supported by the plugin.
+At the moment, the only way to change the plugin's behaviour is through the [Hooks API](http://codex.wordpress.org/Plugin_API/Hooks). Please refer to the [Other Notes](/plugins/wp-cas-server/other_notes/) page for a list of actions and filters supported by the plugin.
 
 = Where can I read about the CAS protocol specification? =
 
@@ -226,6 +230,11 @@ Parameters:
 == Upgrade Notice ==
 
 == Changelog ==
+
+= Unreleased (1.2.0) =
+
+* WordPress 4.1.1 compatibility.
+* Refactored request handling.
 
 = 1.1.2 =
 

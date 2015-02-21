@@ -15,6 +15,9 @@ require_once dirname( __FILE__ ) . '/WPCASException.php';
 require_once dirname( __FILE__ ) . '/WPCASRequestException.php';
 require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
+require_once dirname( __FILE__ ) . '/WPCASRequest.php';
+require_once dirname( __FILE__ ) . '/WPCASResponse.php';
+
 
 if ( ! class_exists( 'WPCASServer' ) ) {
 
@@ -29,7 +32,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * XML response.
 		 * @var DOMDocument
 		 */
-		protected $xmlResponse;
+		protected $response;
 
 		/**
 		 * WP CAS Server constructor.
@@ -37,7 +40,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 * @uses get_bloginfo()
 		 */
 		public function __construct() {
-			$this->xmlResponse = new DOMDocument( '1.0', get_bloginfo( 'charset' ) );
+			$this->response = new WPCASResponse();
 		}
 
 		//
@@ -150,7 +153,7 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$output = $this->dispatch( $path );
 			}
 			catch (WPCASException $exception) {
-				$output = $this->xmlError( $exception->getErrorInstance() );
+				$output = $this->response->xmlError( $exception->getErrorInstance() );
 			}
 
 			/**
@@ -273,34 +276,6 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		}
 
 		/**
-		 * Wrap a CAS 2.0 XML response and output it as a string.
-		 *
-		 * This method attempts to set a `Content-Type: text/xml` HTTP response header.
-		 *
-		 * @param  DOMNode $response XML response contents for a CAS 2.0 request.
-		 *
-		 * @return string            CAS 2.0 server response as an XML string.
-		 *
-		 * @uses get_bloginfo()
-		 */
-		protected function xmlResponse( DOMNode $response ) {
-			$this->setResponseHeader( 'Content-Type', 'text/xml; charset=' . get_bloginfo( 'charset' ) );
-
-			$root = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, 'cas:serviceResponse' );
-			$root->appendChild( $response );
-
-			// Removing all child nodes from response document:
-
-			while ($this->xmlResponse->firstChild) {
-				$this->xmlResponse->removeChild( $this->xmlResponse->firstChild );
-			}
-
-			$this->xmlResponse->appendChild( $root );
-
-			return $this->xmlResponse->saveXML();
-		}
-
-		/**
 		 * XML success response to a CAS 2.0 validation request.
 		 *
 		 * @param  WPCASTicket $ticket               Validated ticket.
@@ -314,13 +289,11 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 		 */
 		protected function xmlValidateSuccess( WPCASTicket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
 
-			$response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-				"cas:authenticationSuccess" );
+			$response = $this->response->createElement( "cas:authenticationSuccess" );
 
 			// Include login name:
 
-			$response->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-				"cas:user", $ticket->user->user_login ) );
+			$response->appendChild( $this->response->createElement( "cas:user", $ticket->user->user_login ) );
 
 			// CAS attributes:
 
@@ -343,10 +316,10 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				 */
 				$attributes = apply_filters( 'cas_server_validation_user_attributes', $attributes, $ticket->user );
 
-				$xmlAttributes = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:attributes" );
+				$xmlAttributes = $this->response->createElement( 'cas:attributes' );
 
 				foreach ($attributes as $key => $value) {
-					$xmlAttribute = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:$key", $value );
+					$xmlAttribute = $this->response->createElement( "cas:$key", $value );
 					$xmlAttributes->appendChild( $xmlAttribute );
 				}
 
@@ -355,19 +328,19 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 			// Include Proxy-Granting Ticket in successful `/proxyValidate` responses:
 
-			if ($proxyGrantingTicket) {
-				$response->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-					"cas:proxyGrantingTicket", $proxyGrantingTicket ) );
+			if ( $proxyGrantingTicket ) {
+				$response->appendChild( $this->response->createElement(
+					'cas:proxyGrantingTicket', $proxyGrantingTicket ) );
 			}
 
 			// Include proxies in successful `/proxyValidate` responses:
 
 			if (count( $proxies ) > 0) {
-				$xmlProxies = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:proxies" );
+				$xmlProxies = $this->response->createElement( 'cas:proxies' );
 
 				foreach ($proxies as $proxy) {
-					$xmlProxies->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
-						"cas:proxy", $proxy ) );
+					$xmlProxies->appendChild( $this->response->createElement(
+						'cas:proxy', $proxy ) );
 				}
 
 				$response->appendChild( $xmlProxies );
@@ -390,48 +363,13 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 
 			$proxyTicket = new WPCASTicket( WPCASTicket::TYPE_PT, $user, $service, $expiration );
 
-			$response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
+			$response = $this->response->createElement(
 				"cas:proxySuccess" );
 
-			$response->appendChild( $this->xmlResponse->createElementNS( ICASServer::CAS_NS,
+			$response->appendChild( $this->response->createElement(
 				"cas:proxyTicket", $proxyTicket ) );
 
 			return $response;
-		}
-
-		/**
-		 * XML error response to a CAS 2.0 request.
-		 *
-		 * @param  WP_Error   $error Error object.
-		 * @param  string     $tag   XML tag for the error (default: "authenticationFailure").
-		 *
-		 * @return DOMElement        CAS error response XML fragment.
-		 *
-		 * @uses do_action()
-		 * @uses is_wp_error()
-		 */
-		protected function xmlError( WP_Error $error = NULL, $tag = 'authenticationFailure' ) {
-
-			/**
-			 * Fires if the CAS server has to return an XML error.
-			 *
-			 * @param WP_Error $error WordPress error to return as XML.
-			 */
-			do_action( 'cas_server_error', $error );
-
-			$message = __( 'Unknown error', 'wp-cas-server' );
-			$code    = WPCASException::ERROR_INTERNAL_ERROR;
-
-			if ($error) {
-				$code    = $error->get_error_code();
-				$message = $error->get_error_message( $code );
-			}
-
-			$response = $this->xmlResponse->createElementNS( ICASServer::CAS_NS, "cas:$tag", $message );
-
-			$response->setAttribute( "code", $code );
-
-			return $this->xmlResponse( $response );
 		}
 
 		/**
@@ -749,10 +687,10 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$ticket = $this->validateRequest( $pgt, $targetService, $validTicketTypes );
 			}
 			catch (WPCASException $exception) {
-				return $this->xmlError( $exception->getErrorInstance(), 'proxyFailure' );
+				return $this->response->xmlError( $exception->getErrorInstance(), 'proxyFailure' );
 			}
 
-			return $this->xmlResponse( $this->xmlProxySuccess( $ticket->user, $targetService ) );
+			return $this->response->prepareXml( $this->xmlProxySuccess( $ticket->user, $targetService ) );
 		}
 
 		/**
@@ -788,10 +726,10 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
 			}
 			catch (WPCASException $exception) {
-				return $this->xmlError( $exception->getErrorInstance() );
+				return $this->response->xmlError( $exception->getErrorInstance() );
 			}
 
-			return $this->xmlResponse( $this->xmlValidateSuccess( $ticket ) );
+			return $this->response->prepareXml( $this->xmlValidateSuccess( $ticket ) );
 		}
 
 		/**
@@ -830,10 +768,10 @@ if ( ! class_exists( 'WPCASServer' ) ) {
 				$ticket = $this->validateRequest( $ticket, $service, $validTicketTypes );
 			}
 			catch (WPCASException $exception) {
-				return $this->xmlError( $exception->getErrorInstance() );
+				return $this->response->xmlError( $exception->getErrorInstance() );
 			}
 
-			return $this->xmlResponse( $this->xmlValidateSuccess( $ticket ) );
+			return $this->response->prepareXml( $this->xmlValidateSuccess( $ticket ) );
 		}
 
 		/**
