@@ -11,8 +11,6 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-require_once dirname( __FILE__ ) . '/WPCASTicketException.php';
-
 if ( ! class_exists( 'WPCASTicket' ) ) {
 
 	/**

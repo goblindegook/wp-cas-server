@@ -11,8 +11,11 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 require_once dirname( __FILE__ ) . '/ICASServer.php';
-require_once dirname( __FILE__ ) . '/WPCASException.php';
-require_once dirname( __FILE__ ) . '/WPCASRequestException.php';
+
+require_once dirname( __FILE__ ) . '/Exception/WPCASException.php';
+require_once dirname( __FILE__ ) . '/Exception/WPCASRequestException.php';
+require_once dirname( __FILE__ ) . '/Exception/WPCASTicketException.php';
+
 require_once dirname( __FILE__ ) . '/WPCASTicket.php';
 
 require_once dirname( __FILE__ ) . '/Controller/WPCASController.php';
