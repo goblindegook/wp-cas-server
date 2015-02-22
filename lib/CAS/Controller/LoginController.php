@@ -161,12 +161,10 @@ class LoginController extends BaseController {
 	 * @uses \home_url()
 	 */
 	protected function loginUser( $user, $service = '' ) {
-		$expiration = Plugin::getOption( 'expiration', 30 );
+		$ticket = new CAS\Ticket( CAS\Ticket::TYPE_ST, $user, $service );
 
-		$ticket     = new CAS\Ticket( CAS\Ticket::TYPE_ST, $user, $service, $expiration );
-
-		$service    = empty( $service ) ? \home_url() : \esc_url_raw( $service );
-		$service    = \add_query_arg( 'ticket', (string) $ticket, $service );
+		$service = empty( $service ) ? \home_url() : \esc_url_raw( $service );
+		$service = \add_query_arg( 'ticket', (string) $ticket, $service );
 
 		/**
 		 * Filters the redirect URI for the service requesting user authentication.

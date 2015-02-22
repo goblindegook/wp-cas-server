@@ -14,13 +14,12 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 	 * @covers ::__constructor
 	 */
 	function test_constructor () {
-
 		$type       = CAS\Ticket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
 		$service    = 'https://test/ÚÑ|Çº∂€/';
-		$expiration = 30;
+		$expiration = Cassava\Plugin::getOption( 'expiration', 30 );
 
-		$ticket = new CAS\Ticket( $type, $user, $service, $expiration );
+		$ticket = new CAS\Ticket( $type, $user, $service );
 
 		$this->assertEquals( $type, $ticket->type,
 			'User correctly set.' );
@@ -45,12 +44,11 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 	 * @covers ::generateSignature()
 	 */
 	function test_toString () {
-		$type       = CAS\Ticket::TYPE_ST;
-		$user       = get_user_by( 'id', $this->factory->user->create() );
-		$service    = 'https://test/ÚÑ|Çº∂€/';
-		$expiration = 30;
+		$type    = CAS\Ticket::TYPE_ST;
+		$user    = get_user_by( 'id', $this->factory->user->create() );
+		$service = 'https://test/ÚÑ|Çº∂€/';
 
-		$ticket     = new CAS\Ticket( $type, $user, $service, $expiration );
+		$ticket = new CAS\Ticket( $type, $user, $service );
 
 		$duplicateTicket = CAS\Ticket::fromString( (string) $ticket );
 
@@ -72,13 +70,11 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 	 * @covers ::markUsed
 	 */
 	function test_reuse () {
+		$type    = CAS\Ticket::TYPE_ST;
+		$user    = get_user_by( 'id', $this->factory->user->create() );
+		$service = 'https://test/ÚÑ|Çº∂€/';
 
-		$type       = CAS\Ticket::TYPE_ST;
-		$user       = get_user_by( 'id', $this->factory->user->create() );
-		$service    = 'https://test/ÚÑ|Çº∂€/';
-		$expiration = 30;
-
-		$ticket     = new CAS\Ticket( $type, $user, $service, $expiration );
+		$ticket = new CAS\Ticket( $type, $user, $service );
 
 		$this->assertFalse( $ticket->isUsed(),
 			'Newly generated ticket is fresh.' );

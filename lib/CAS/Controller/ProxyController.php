@@ -59,9 +59,8 @@ class ProxyController extends ValidateController {
 		$response = new CAS\Response\ProxyResponse;
 
 		try {
-			$expiration  = Plugin::getOption( 'expiration', 30 );
 			$ticket      = $this->validateRequest( $pgt, $targetService );
-			$proxyTicket = new CAS\Ticket( CAS\Ticket::TYPE_PT, $ticket->user, $targetService, $expiration );
+			$proxyTicket = new CAS\Ticket( CAS\Ticket::TYPE_PT, $ticket->user, $targetService );
 			$response->setTicket( $proxyTicket );
 		}
 		catch ( GeneralException $exception ) {

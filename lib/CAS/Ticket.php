@@ -79,11 +79,12 @@ class Ticket {
 	 * @param string  $type       Ticket type.
 	 * @param WP_User $user       Authenticated WordPress user who owns the ticket.
 	 * @param string  $service    URL for the service that requested authentication.
-	 * @param integer $expiration Time until ticket expires, in seconds.
 	 * @param double  $expires    Expiration timestamp, in seconds.
 	 *                            Freshly generated tickets should not provide this value.
+	 *
+	 * @todo "Remember-Me" tickets should have an expiration date of up to 3 months.
 	 */
-	public function __construct( $type, $user, $service, $expiration = 0, $expires = 0.0 ) {
+	public function __construct( $type, $user, $service, $expires = 0.0 ) {
 		$this->type    = $type;
 		$this->user    = $user;
 		$this->service = esc_url_raw( $service );
@@ -93,6 +94,8 @@ class Ticket {
 		 * Freshly generated tickets have no expiration timestamp:
 		 */
 		if ( ! $expires ) {
+			$expiration  = Plugin::getOption( 'expiration', 30 );
+
 			/**
 			 * This filter allows developers to override the default ticket expiration period.
 			 *
@@ -160,7 +163,7 @@ class Ticket {
 			throw new TicketException( __( 'Ticket does not match a valid user.', 'wp-cas-server' ) );
 		}
 
-		$ticket = new static( $type, $user, $service, null, $expires );
+		$ticket = new static( $type, $user, $service, $expires );
 
 		if ( $ticket->generateSignature() !== $signature ) {
 			throw new TicketException( __( 'Ticket is corrupted.', 'wp-cas-server' ) );
@@ -181,7 +184,12 @@ class Ticket {
 	 * @uses \wp_hash()
 	 */
 	protected function generateKey() {
-		return \wp_hash( $this->user->user_login . '|' . substr($this->user->user_pass, 8, 4) . '|' . $this->expires );
+		$keyComponents = array(
+			$this->user->user_login,
+			substr( $this->user->user_pass, 8, 4 ),
+			$this->expires,
+		);
+		return \wp_hash( implode( '|', $keyComponents ) );
 	}
 
 	/**
@@ -190,7 +198,12 @@ class Ticket {
 	 * @return string      Generated signature hash.
 	 */
 	public function generateSignature() {
-		return hash_hmac( 'sha1', implode( '|', array( $this->user->login, $this->service, $this->expires ) ), $this->generateKey() );
+		$signatureComponents = array(
+			$this->user->login,
+			$this->service,
+			$this->expires,
+		);
+		return hash_hmac( 'sha1', implode( '|', $signatureComponents ), $this->generateKey() );
 	}
 
 	/**
@@ -204,7 +217,7 @@ class Ticket {
 	public static function validateAllowedTypes( $ticket, $types = array() ) {
 		list( $type ) = explode( '-', $ticket, 2 );
 
-		if (!in_array( $type, $types )) {
+		if ( ! in_array( $type, $types ) ) {
 			throw new TicketException( __( 'Ticket type cannot be validated.', 'wp-cas-server' ) );
 		}
 	}
@@ -223,6 +236,8 @@ class Ticket {
 	 * Remember a ticket as having been used using WordPress's Transients API.
 	 *
 	 * @uses \delete_transient()
+	 *
+	 * @todo "Remember-Me" tickets should not be invalidated.
 	 */
 	public function markUsed() {
 		$key = $this->generateKey();
@@ -232,7 +247,7 @@ class Ticket {
 	/**
 	 * Checks whether a ticket has been used using WordPress's Transients API.
 	 *
-	 * @return boolean      Whether the ticket has been used.
+	 * @return boolean Whether the ticket has been used.
 	 *
 	 * @uses \get_transient()
 	 */
