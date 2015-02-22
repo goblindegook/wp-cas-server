@@ -1,0 +1,4 @@
+source:
+	- includes
+
+destination: docs/apigen

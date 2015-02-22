@@ -10,8 +10,10 @@
     ],
     "autoload": {
         "psr-4": {
-            "Cassava\\": "includes/"
+            "Cassava\\": "lib/"
         }
     },
-    "require": {}
+    "require": {},
+    "require-dev": {
+    }
 }

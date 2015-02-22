@@ -24,9 +24,6 @@ class ValidateResponse extends BaseResponse {
 	 * @param  \Cassava\CAS\Ticket $ticket              Validated ticket.
 	 * @param  string              $proxyGrantingTicket Generated Proxy-Granting Ticket (PGT) to return.
 	 * @param  array               $proxies             List of proxy URIs.
-	 *
-	 * @uses apply_filters()
-	 * @uses get_userdata()
 	 */
 	public function setTicket( CAS\Ticket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
 
@@ -36,36 +33,9 @@ class ValidateResponse extends BaseResponse {
 
 		$this->response->appendChild( $this->createElement( 'user', $ticket->user->user_login ) );
 
-		// CAS attributes:
+		// Include user attributes:
 
-		$attributeKeys = Plugin::getOption( 'attributes' );
-
-		if (is_array( $attributeKeys ) && count( $attributeKeys ) > 0) {
-
-			$attributes = array();
-
-			foreach ($attributeKeys as $key) {
-				$attributes[$key] = implode( ',', (array) $ticket->user->get( $key ) );
-			}
-
-			/**
-			 * Allows developers to change the list of (key, value) pairs before they're included
-			 * in a `/serviceValidate` response.
-			 *
-			 * @param  array   $attributes List of attributes to output.
-			 * @param  WP_User $user       Authenticated user.
-			 */
-			$attributes = apply_filters( 'cas_server_validation_user_attributes', $attributes, $ticket->user );
-
-			$xmlAttributes = $this->createElement( 'attributes' );
-
-			foreach ($attributes as $key => $value) {
-				$xmlAttribute = $this->createElement( $key, $value );
-				$xmlAttributes->appendChild( $xmlAttribute );
-			}
-
-			$this->response->appendChild( $xmlAttributes );
-		}
+		$this->setUserAttributes( $ticket );
 
 		// Include Proxy-Granting Ticket in successful `/proxyValidate` responses:
 
@@ -76,7 +46,7 @@ class ValidateResponse extends BaseResponse {
 
 		// Include proxies in successful `/proxyValidate` responses:
 
-		if (count( $proxies ) > 0) {
+		if ( ! empty( $proxies ) ) {
 			$xmlProxies = $this->createElement( 'proxies' );
 
 			foreach ($proxies as $proxy) {
@@ -86,5 +56,44 @@ class ValidateResponse extends BaseResponse {
 
 			$this->response->appendChild( $xmlProxies );
 		}
+	}
+
+	/**
+	 * Add user attributes to the response.
+	 *
+	 * @param CAS\Ticket $ticket Validated ticket.
+	 *
+	 * @uses \apply_filters()
+	 */
+	protected function setUserAttributes( CAS\Ticket $ticket ) {
+		$attributeKeys = Plugin::getOption( 'attributes' );
+
+		if ( ! is_array( $attributeKeys ) || empty( $attributeKeys ) ) {
+			return;
+		}
+
+		$attributes = array();
+
+		foreach ( $attributeKeys as $key ) {
+			$attributes[ $key ] = implode( ',', (array) $ticket->user->get( $key ) );
+		}
+
+		/**
+		 * Allows developers to change the list of (key, value) pairs before they're included
+		 * in a `/serviceValidate` response.
+		 *
+		 * @param  array   $attributes List of attributes to output.
+		 * @param  WP_User $user       Authenticated user.
+		 */
+		$attributes = \apply_filters( 'cas_server_validation_user_attributes', $attributes, $ticket->user );
+
+		$xmlAttributes = $this->createElement( 'attributes' );
+
+		foreach ($attributes as $key => $value) {
+			$xmlAttribute = $this->createElement( $key, $value );
+			$xmlAttributes->appendChild( $xmlAttribute );
+		}
+
+		$this->response->appendChild( $xmlAttributes );
 	}
 }

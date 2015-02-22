@@ -6,5 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Cassava\\' => array($baseDir . '/includes'),
+    'Cassava\\' => array($baseDir . '/lib'),
 );

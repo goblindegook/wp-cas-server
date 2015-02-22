@@ -5,13 +5,11 @@
     <target>docs</target>
   </parser>
   <transformer>
-    <target>docs</target>
+    <target>docs/phpdoc</target>
   </transformer>
   <files>
-    <directory>.</directory>
+    <directory>lib</directory>
     <ignore>index.php</ignore>
-    <ignore>bin/*</ignore>
-    <ignore>tests/*</ignore>
   </files>
   <transformation>
     <template name="checkstyle"/>
