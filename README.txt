@@ -233,11 +233,11 @@ Parameters:
 
 == Changelog ==
 
-= Unreleased (1.2.0) =
+= 1.2.0 (Unreleased) =
 
-* WordPress 4.1.1 compatibility.
 * Added support for the CAS 3.0 `/p3/serviceValidate` and `/p3/proxyValidate` endpoints.
 * Fixed handling of service URLs containing pipe characters.
+* WordPress 4.1.1 compatibility.
 * Cleaner, easier to maintain codebase.
 * Improved test coverage.
 

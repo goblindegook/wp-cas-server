@@ -1,0 +1,7 @@
+filter:
+    excluded_paths:
+        - assets/*
+        - bin/*
+        - languages/*
+        - tests/*
+        - vendor/*
