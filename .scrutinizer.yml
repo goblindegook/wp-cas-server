@@ -66,4 +66,4 @@ checks:
         uppercase_constants: true
 
 tools:
-    external_code_coverage: true
+    external_code_coverage: false
