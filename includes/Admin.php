@@ -93,9 +93,11 @@ class Admin {
 	 * @uses sanitize_text_field()
 	 */
 	protected function savePermalinks() {
-		if (!is_admin()) return;
+		if ( ! is_admin() ) {
+			return;
+		}
 
-		if (false
+		if ( false
 			|| isset( $_POST['permalink_structure'] )
 			|| isset( $_POST['category_base'] )
 			|| isset( $_POST['cas_server_endpoint_slug'] )

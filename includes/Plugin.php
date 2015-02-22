@@ -52,13 +52,13 @@ class Plugin {
 
 	/**
 	 * CAS server instance.
-	 * @var ICASServer
+	 * @var \Cassava\CAS\Server
 	 */
 	protected $server;
 
 	/**
 	 * CAS server plugin admin instance.
-	 * @var Cassava\Admin
+	 * @var \Cassava\Admin
 	 */
 	protected $admin;
 

@@ -77,17 +77,17 @@ class Server {
 	 * @param  string  $location URI to redirect to.
 	 * @param  integer $status   HTTP status code (default 302).
 	 *
-	 * @uses wp_redirect()
-	 * @uses wp_safe_redirect()
+	 * @uses \wp_redirect()
+	 * @uses \wp_safe_redirect()
 	 */
 	public function redirect( $location, $status = 302 ) {
 		$allowedServices = Plugin::getOption( 'allowed_services' );
 
 		if ( is_array( $allowedServices ) && count( $allowedServices ) > 0 ) {
-			wp_safe_redirect( $location, $status );
+			\wp_safe_redirect( $location, $status );
 		}
 
-		wp_redirect( $location, $status );
+		\wp_redirect( $location, $status );
 		exit;
 	}
 
