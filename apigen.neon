@@ -1,4 +1,9 @@
 source:
-	- includes
-
+	- lib
 destination: docs/apigen
+deprecated: true
+sourceCode: true
+templateTheme: bootstrap
+title: "Cassava: A WordPress CAS Server"
+tree: true
+todo: true
