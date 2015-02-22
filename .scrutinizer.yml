@@ -5,3 +5,65 @@ filter:
         - languages/*
         - tests/*
         - vendor/*
+
+checks:
+    php:
+        code_rating: true
+        duplication: true
+        variable_existence: true
+        useless_calls: true
+        use_statement_alias_conflict: true
+        unused_variables: true
+        unused_properties: true
+        unused_parameters: true
+        unused_methods: true
+        unreachable_code: true
+        sql_injection_vulnerabilities: true
+        security_vulnerabilities: true
+        precedence_mistakes: true
+        precedence_in_conditions: true
+        parameter_non_unique: true
+        no_property_on_interface: true
+        no_non_implemented_abstract_methods: true
+        deprecated_code_usage: true
+        closure_use_not_conflicting: true
+        closure_use_modifiable: true
+        avoid_useless_overridden_methods: true
+        avoid_conflicting_incrementers: true
+        assignment_of_null_return: true
+        argument_type_checks: true
+        avoid_aliased_php_functions: true
+        avoid_perl_style_comments: true
+        avoid_usage_of_logical_operators: true
+        blank_line_after_namespace_declaration: true
+        function_body_start_on_same_line: true
+        lowercase_basic_constants: true
+        lowercase_php_keywords: true
+        no_error_suppression: true
+        no_eval: true
+        no_goto: true
+        no_short_open_tag: true
+        no_space_around_object_operator: true
+        no_space_inside_cast_operator: true
+        no_unnecessary_final_modifier: true
+        no_unnecessary_if: true
+        one_class_per_file: true
+        overriding_private_members: true
+        parameter_doc_comments: true
+        param_doc_comment_if_not_inferrable: true
+        php5_style_constructor: true
+        prefer_unix_line_ending: true
+        require_braces_around_control_structures: true
+        require_scope_for_methods: true
+        require_scope_for_properties: true
+        return_doc_comment_if_not_inferrable: true
+        return_doc_comments: true
+        single_namespace_per_use: true
+        spacing_around_conditional_operators: true
+        spacing_around_non_conditional_operators: true
+        space_after_cast: true
+        switch_fallthrough_commented: true
+        uppercase_constants: true
+
+tools:
+    external_code_coverage: true
