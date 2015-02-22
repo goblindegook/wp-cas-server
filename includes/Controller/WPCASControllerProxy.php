@@ -8,7 +8,19 @@
  */
 
 /**
- * Implements CAS request-validation proxying.
+ * Implements CAS proxy ticket generation.
+ *
+ * `/proxy` provides proxy tickets to services that have acquired proxy-granting tickets and
+ * will be proxying authentication to back-end services.
+ *
+ * The following HTTP request parameters must be provided:
+ *
+ * - `pgt` (required): The proxy-granting ticket (PGT) acquired by the service during
+ *   service ticket (ST) or proxy ticket (PT) validation.
+ * - `targetService` (required): The service identifier of the back-end service. Note that not
+ *   all back-end services are web services so this service identifier will not always be a URL.
+ *   However, the service identifier specified here must match the "service" parameter specified
+ *   to `/proxyValidate` upon validation of the proxy ticket.
  *
  * @since 1.2.0
  */
@@ -26,17 +38,9 @@ class WPCASControllerProxy extends WPCASControllerValidate {
 	);
 
 	/**
-	 * `/proxy` provides proxy tickets to services that have acquired proxy-granting tickets and
-	 * will be proxying authentication to back-end services.
+	 * Handles proxy ticket generation requests.
 	 *
-	 * The following HTTP request parameters must be provided:
-	 *
-	 * - `pgt` (required): The proxy-granting ticket (PGT) acquired by the service during
-	 *   service ticket (ST) or proxy ticket (PT) validation.
-	 * - `targetService` (required): The service identifier of the back-end service. Note that not
-	 *   all back-end services are web services so this service identifier will not always be a URL.
-	 *   However, the service identifier specified here must match the "service" parameter specified
-	 *   to `/proxyValidate` upon validation of the proxy ticket.
+	 * This method attempts to set a `Content-Type: text/xml` HTTP response header.
 	 *
 	 * @param  array  $request Request arguments.
 	 * @return string          Response XML string.

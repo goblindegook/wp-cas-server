@@ -46,10 +46,9 @@ if ( ! class_exists( 'WPCASException' ) ) {
 		 * Generate a new exception instance from a WordPress error.
 		 *
 		 * @param  WP_Error       $error WordPress error.
-		 *
 		 * @return WPCASException        WordPress error as an exception.
 		 */
-		public static function fromError ( WP_Error $error ) {
+		public static function fromError( WP_Error $error ) {
 			$code    = $error->get_error_code();
 			$message = $error->get_error_message( $code );
 			return new static ($message, $code);
@@ -67,11 +66,9 @@ if ( ! class_exists( 'WPCASException' ) ) {
 		/**
 		 * Returns a WordPress error object based on the exception.
 		 *
-		 * @param  string   $slug Error slug, either `authenticationError` or `proxyError`.
-		 *
-		 * @return WP_Error       WordPress error.
+		 * @return WP_Error WordPress error.
 		 */
-		public function getErrorInstance () {
+		public function getErrorInstance() {
 			return new WP_Error( $this->casCode, $this->message );
 		}
 

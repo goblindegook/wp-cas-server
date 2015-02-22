@@ -21,9 +21,9 @@ require_once dirname( __FILE__ ) . '/Controller/WPCASController.php';
 require_once dirname( __FILE__ ) . '/Controller/WPCASControllerLogin.php';
 require_once dirname( __FILE__ ) . '/Controller/WPCASControllerLogout.php';
 require_once dirname( __FILE__ ) . '/Controller/WPCASControllerValidate.php';
+require_once dirname( __FILE__ ) . '/Controller/WPCASControllerServiceValidate.php';
 require_once dirname( __FILE__ ) . '/Controller/WPCASControllerProxy.php';
 require_once dirname( __FILE__ ) . '/Controller/WPCASControllerProxyValidate.php';
-require_once dirname( __FILE__ ) . '/Controller/WPCASControllerServiceValidate.php';
 
 require_once dirname( __FILE__ ) . '/Response/WPCASResponse.php';
 require_once dirname( __FILE__ ) . '/Response/WPCASResponseProxy.php';

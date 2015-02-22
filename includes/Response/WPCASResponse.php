@@ -43,11 +43,7 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 		/**
 		 * Wrap a CAS 2.0 XML response and output it as a string.
 		 *
-		 * This method attempts to set a `Content-Type: text/xml` HTTP response header.
-		 *
-		 * @param  DOMNode $response XML response contents for a CAS 2.0 request.
-		 *
-		 * @return string            CAS 2.0 server response as an XML string.
+		 * @return string CAS 2.0+ server response as an XML string.
 		 *
 		 * @uses get_bloginfo()
 		 */
@@ -94,6 +90,7 @@ if ( ! class_exists( 'WPCASResponse' ) ) {
 
 		/**
 		 * Create response element.
+		 *
 		 * @param  string  $element Unqualified element tag name.
 		 * @param  string  $value   Optional element value.
 		 * @return DOMNode          XML element.

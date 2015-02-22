@@ -82,10 +82,10 @@ if ( ! class_exists( 'WPCASTicket' ) ) {
 		 * @param WP_User $user       Authenticated WordPress user who owns the ticket.
 		 * @param string  $service    URL for the service that requested authentication.
 		 * @param integer $expiration Time until ticket expires, in seconds.
-		 * @param float   $expires    Expiration timestamp, in seconds.
+		 * @param double  $expires    Expiration timestamp, in seconds.
 		 *                            Freshly generated tickets should not provide this value.
 		 */
-		public function __construct( $type, $user, $service, $expiration = 0, $expires = 0 ) {
+		public function __construct( $type, $user, $service, $expiration = 0, $expires = 0.0 ) {
 			$this->type    = $type;
 			$this->user    = $user;
 			$this->service = esc_url_raw( $service );

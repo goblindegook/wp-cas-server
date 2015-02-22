@@ -8,7 +8,34 @@
  */
 
 /**
- * Implements CAS logout.
+ * Implements CAS 1.0 ticket validation.
+ *
+ * `/validate` is a CAS 1.0 protocol method that checks the validity of a service ticket.
+ *
+ * Being part of the CAS 1.0 protocol, `/validate` does not handle proxy authentication.
+ *
+ * The following HTTP request parameters may be specified:
+ *
+ * - `service` (required): The URL of the service for which the ticket was issued.
+ * - `ticket` (required): The service ticket issued by `/login`.
+ * - `renew` (optional): If this parameter is set, the server will force the user to reenter
+ *   their primary credentials.
+ *
+ * `/validate` will return one of the following two responses:
+ *
+ * On successful validation:
+ *
+ * ```
+ * yes\n
+ * username\n
+ * ```
+ *
+ * On validation failure:
+ *
+ * ```
+ * no\n
+ * \n
+ * ```
  *
  * @since 1.2.0
  */
@@ -28,32 +55,7 @@ class WPCASControllerValidate extends WPCASController {
 	);
 
 	/**
-	 * `/validate` is a CAS 1.0 protocol method that checks the validity of a service ticket.
-	 *
-	 * Being part of the CAS 1.0 protocol, `/validate` does not handle proxy authentication.
-	 *
-	 * The following HTTP request parameters may be specified:
-	 *
-	 * - `service` (required): The URL of the service for which the ticket was issued.
-	 * - `ticket` (required): The service ticket issued by `/login`.
-	 * - `renew` (optional): If this parameter is set, the server will force the user to reenter
-	 *   their primary credentials.
-	 *
-	 * `/validate` will return one of the following two responses:
-	 *
-	 * On successful validation:
-	 *
-	 * ```
-	 * yes\n
-	 * username\n
-	 * ```
-	 *
-	 * On validation failure:
-	 *
-	 * ```
-	 * no\n
-	 * \n
-	 * ```
+	 * Handles ticket validation requests.
 	 *
 	 * This method will attempt to set a `Content-Type: text/plain` HTTP header when called.
 	 *

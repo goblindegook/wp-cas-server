@@ -10,16 +10,16 @@
 /**
  * Implements CAS service validation.
  *
+ * `/serviceValidate` checks the validity of a service ticket and does not handle proxy
+ * authentication. CAS MUST respond with a ticket validation failure response when a proxy
+ * ticket is passed to `/serviceValidate`.
+ *
  * @since 1.2.0
  */
 class WPCASControllerServiceValidate extends WPCASControllerValidate {
 
 	/**
 	 * Valid ticket types.
-	 *
-	 * `/serviceValidate` checks the validity of a service ticket and does not handle proxy
-	 * authentication. CAS MUST respond with a ticket validation failure response when a proxy
-	 * ticket is passed to `/serviceValidate`.
 	 *
 	 * @var array
 	 */
@@ -28,9 +28,9 @@ class WPCASControllerServiceValidate extends WPCASControllerValidate {
 	);
 
 	/**
-	 * `/proxyValidate` must perform the same validation tasks as `/serviceValidate` and
-	 * additionally validate proxy tickets. `/proxyValidate` must be capable of validating both
-	 * service tickets and proxy tickets.
+	 * Handles ticket validation requests.
+	 *
+	 * This method attempts to set a `Content-Type: text/xml` HTTP response header.
 	 *
 	 * @param  array  $request Request arguments.
 	 * @return string          Response XML string.
@@ -41,8 +41,8 @@ class WPCASControllerServiceValidate extends WPCASControllerValidate {
 	public function handleRequest( $request ) {
 		$service = isset( $request['service'] ) ? $request['service'] : '';
 		$ticket  = isset( $request['ticket'] )  ? $request['ticket']  : '';
-		// $pgtUrl  = isset( $request['pgtUrl'] )  ? $request['pgtUrl'] : '';
-		// $renew   = isset( $request['renew'] ) && 'true' === $request['renew'];
+		// $pgtUrl = isset( $request['pgtUrl'] ) ? $request['pgtUrl'] : '';
+		// $renew  = isset( $request['renew'] ) && 'true' === $request['renew'];
 
 		$response = new WPCASResponseValidate();
 

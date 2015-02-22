@@ -19,7 +19,7 @@ if ( ! class_exists( 'WPCASResponseProxy' ) ) {
 		/**
 		 * Set XML success response to a CAS 2.0 proxy request.
 		 *
-		 * @param  WPCASTicket $user    Validated proxy ticket.
+		 * @param  WPCASTicket $proxyTicket Validated proxy ticket.
 		 */
 		public function setTicket( WPCASTicket $proxyTicket ) {
 			$this->response = $this->createElement( 'proxySuccess' );

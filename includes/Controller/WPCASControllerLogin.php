@@ -10,13 +10,15 @@
 /**
  * Implements CAS login.
  *
+ * Implements the `/login` URI and determines whether to interpret the request as a credential
+ * requestor or a credential acceptor.
+ *
  * @since 1.2.0
  */
 class WPCASControllerLogin extends WPCASController {
 
 	/**
-	 * Implements the `/login` URI and determines whether to interpret the request as a credential
-	 * requestor or a credential acceptor.
+	 * Handles login requests.
 	 *
 	 * @param  array $request Request arguments.
 	 *
@@ -142,7 +144,8 @@ class WPCASControllerLogin extends WPCASController {
 	}
 
 	/**
-	 * Login User
+	 * Logs the user in.
+	 *
 	 * @param  WP_User $user    WordPress user to authenticate.
 	 * @param  string  $service URI for the service requesting user authentication.
 	 *
