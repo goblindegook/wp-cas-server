@@ -100,7 +100,7 @@ class Ticket {
 			 * @param  string  $type       Type of ticket to set.
 			 * @param  WP_User $user       Authenticated user associated with the ticket.
 			 */
-			$expiration = apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
+			$expiration = \apply_filters( 'cas_server_ticket_expiration', $expiration, $type, $user );
 
 			$this->expires = microtime( true ) + $expiration;
 
