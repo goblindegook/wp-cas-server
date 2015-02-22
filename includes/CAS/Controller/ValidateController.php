@@ -2,10 +2,16 @@
 /**
  * Validate controller class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
+
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
+use Cassava\Exception\GeneralException;
+use Cassava\Exception\RequestException;
+use Cassava\Exception\TicketException;
 
 /**
  * Implements CAS 1.0 ticket validation.
@@ -39,7 +45,7 @@
  *
  * @since 1.2.0
  */
-class WPCASControllerValidate extends WPCASController {
+class ValidateController extends BaseController {
 
 	/**
 	 * Valid ticket types.
@@ -51,7 +57,7 @@ class WPCASControllerValidate extends WPCASController {
 	 * @var array
 	 */
 	protected $validTicketTypes = array(
-		WPCASTicket::TYPE_ST,
+		CAS\Ticket::TYPE_ST,
 	);
 
 	/**
@@ -71,7 +77,7 @@ class WPCASControllerValidate extends WPCASController {
 		try {
 			$ticket = $this->validateRequest( $ticket, $service );
 		}
-		catch ( WPCASException $exception ) {
+		catch ( GeneralException $exception ) {
 			return "no\n\n";
 		}
 
@@ -85,41 +91,42 @@ class WPCASControllerValidate extends WPCASController {
 	 *
 	 * @param  string      $ticket  Service or proxy ticket.
 	 * @param  string      $service Service URI.
-	 * @return WPCASTicket          Valid ticket object associated with request.
+	 * @return CAS\Ticket          Valid ticket object associated with request.
 	 *
-	 * @uses do_action()
+	 * @uses \do_action()
+	 * @uses \esc_url_raw()
 	 *
-	 * @throws WPCASRequestException
-	 * @throws WPCASTicketException
+	 * @throws \Cassava\Exception\RequestException
+	 * @throws \Cassava\Exception\TicketException
 	 */
 	protected function validateRequest( $ticket = '', $service = '' ) {
 
 		if ( empty( $ticket ) ) {
-			throw new WPCASRequestException( __( 'Ticket is required.', 'wp-cas-server' ) );
+			throw new RequestException( __( 'Ticket is required.', 'wp-cas-server' ) );
 		}
 
 		if ( empty( $service ) ) {
-			throw new WPCASRequestException( __( 'Service is required.', 'wp-cas-server' ) );
+			throw new RequestException( __( 'Service is required.', 'wp-cas-server' ) );
 		}
 
 		$service = esc_url_raw( $service );
 
-		WPCASTicket::validateAllowedTypes( $ticket, $this->validTicketTypes );
-		$ticket = WPCASTicket::fromString( $ticket );
+		CAS\Ticket::validateAllowedTypes( $ticket, $this->validTicketTypes );
+		$ticket = CAS\Ticket::fromString( $ticket );
 		$ticket->markUsed();
 
 		if ( $ticket->service !== $service ) {
-			throw new WPCASRequestException(
+			throw new RequestException(
 				__( 'Ticket does not match the service provided.', 'wp-cas-server' ),
-				WPCASRequestException::ERROR_INVALID_SERVICE );
+				RequestException::ERROR_INVALID_SERVICE );
 		}
 
 		/**
 		 * Fires on successful ticket validation.
 		 *
-		 * @param WPCASTicket $ticket Valid ticket object.
+		 * @param \Cassava\CAS\Ticket $ticket Valid ticket object.
 		 */
-		do_action( 'cas_server_validation_success', $ticket );
+		\do_action( 'cas_server_validation_success', $ticket );
 
 		return $ticket;
 	}

@@ -1,26 +1,19 @@
 <?php
-/**
- * @package \WPCASServerPlugin\Tests
- */
+
+use Cassava\CAS;
 
 /**
- * @coversDefaultClass WPCASControllerLogin
+ * @coversDefaultClass \Cassava\CAS\Controller\LoginController
  */
 class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 
 	private $controller;
 
-	/**
-	 * Setup a test method for the WPCASControllerLogin class.
-	 */
 	function setUp() {
 		parent::setUp();
-		$this->controller = new WPCASControllerLogin( new WPCASServer );
+		$this->controller = new CAS\Controller\LoginController( new CAS\Server );
 	}
 
-	/**
-	 * Finish a test method for the WPCASControllerLogin class.
-	 */
 	function tearDown() {
 		parent::tearDown();
 		unset( $this->controller );
@@ -30,8 +23,8 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 	 * @covers ::__construct
 	 */
 	function test_construct () {
-		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
-			'WPCASControllerLogin implements the WPCASController interface.' );
+		$this->assertTrue( is_a( $this->controller, '\Cassava\CAS\Controller\BaseController' ),
+			'LoginController extends BaseController.' );
 	}
 
 	/**
@@ -53,7 +46,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service, 'gateway' => 'true' ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -67,7 +60,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -85,7 +78,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array() );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -99,14 +92,14 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
 		$this->assertNotEmpty( $query['ticket'],
 			"'login' generates ticket." );
 
-		$this->assertStringStartsWith( WPCASTicket::TYPE_ST, $query['ticket'],
+		$this->assertStringStartsWith( CAS\Ticket::TYPE_ST, $query['ticket'],
 			"'login' generates a service ticket." );
 
 		$this->assertStringStartsWith( $service, $this->redirect_location,
@@ -119,7 +112,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $another_query );
 		}
 
@@ -133,7 +126,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service, 'renew' => 'true' ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -155,8 +148,6 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 	 * @todo Test support for the optional 'warn' parameter.
 	 */
 	function test_login_acceptor () {
-
-		$this->markTestIncomplete();
 
 		$user = get_user_by( 'id', $this->factory->user->create() );
 
@@ -181,14 +172,14 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
 		$this->assertNotEmpty( $query['ticket'],
 			"'login' generates ticket." );
 
-		$this->assertStringStartsWith( WPCASTicket::TYPE_ST, $query['ticket'],
+		$this->assertStringStartsWith( CAS\Ticket::TYPE_ST, $query['ticket'],
 			"'login' generates a service ticket." );
 
 		$this->assertStringStartsWith( $service, $this->redirect_location,
@@ -209,7 +200,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -234,7 +225,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -254,12 +245,12 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 			'username' => $username,
 			'password' => wp_generate_password( 6 ),
 			'lt'       => wp_create_nonce( 'bad-lt' ),
-			);
+		);
 
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 

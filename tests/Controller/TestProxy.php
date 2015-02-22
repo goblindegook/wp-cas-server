@@ -1,28 +1,23 @@
 <?php
-/**
- * @package \WPCASServerPlugin\Tests
- */
+
+use Cassava\CAS;
+use Cassava\Exception\RequestException;
+use Cassava\Exception\TicketException;
 
 /**
- * @coversDefaultClass WPCASControllerValidate
+ * @coversDefaultClass \Cassava\CAS\Controller\ProxyController
  */
 class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 
 	private $server;
 	private $controller;
 
-	/**
-	 * Setup a test method for the WPCASControllerProxy class.
-	 */
 	function setUp() {
 		parent::setUp();
-		$this->server     = new WPCASServer();
-		$this->controller = new WPCASControllerProxy( $this->server );
+		$this->server     = new CAS\Server();
+		$this->controller = new CAS\Controller\ProxyController( $this->server );
 	}
 
-	/**
-	 * Finish a test method for the WPCASControllerProxy class.
-	 */
 	function tearDown() {
 		parent::tearDown();
 		unset( $this->server );
@@ -33,8 +28,8 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 	 * @covers ::__construct
 	 */
 	function test_construct () {
-		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
-			'WPCASControllerProxy implements the WPCASController interface.' );
+		$this->assertTrue( is_a( $this->controller, '\Cassava\CAS\Controller\BaseController' ),
+			'ProxyController extends BaseController.' );
 	}
 
 	/**
@@ -58,7 +53,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
 			'Error if proxy-granting ticket not provided.' );
 
-		$this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:proxyFailure[1]/@code)', $error,
+		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST, 'string(//cas:proxyFailure[1]/@code)', $error,
 			'INVALID_REQUEST error code if proxy-granting ticket not provided.' );
 
 		/**
@@ -74,7 +69,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
 			'Error if target service not provided.' );
 
-		$this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:proxyFailure[1]/@code)', $error,
+		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST, 'string(//cas:proxyFailure[1]/@code)', $error,
 			'INVALID_REQUEST error code if target service not provided.' );
 
 		/**
@@ -90,7 +85,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
 			'Error on bad proxy-granting ticket.' );
 
-		$this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $error,
+		$this->assertXPathMatch( TicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $error,
 			'BAD_PGT error code on bad proxy-granting ticket.' );
 
 		/**
@@ -101,7 +96,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		wp_set_current_user( $user_id );
 
 		try {
-			$login = new WPCASControllerLogin( $this->server );
+			$login = new CAS\Controller\LoginController( $this->server );
 			$login->handleRequest( array( 'service' => $targetService ) );
 		}
 		catch (WPDieException $message) {
@@ -118,7 +113,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $xml,
 			"'proxy' should not validate service tickets." );
 
-		$this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $xml,
+		$this->assertXPathMatch( TicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $xml,
 			'BAD_PGT error code on proxy ticket.' );
 
 		/**
@@ -127,7 +122,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 
 		$args = array(
 			'targetService' => $targetService,
-			'pgt'           => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PT, $query['ticket'] ),
+			'pgt'           => preg_replace( '@^' . CAS\Ticket::TYPE_ST . '@', CAS\Ticket::TYPE_PT, $query['ticket'] ),
 			);
 
 		$xml = $this->controller->handleRequest( $args );
@@ -135,18 +130,18 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $xml,
 			"'proxy' should not validate proxy tickets." );
 
-		$this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $xml,
+		$this->assertXPathMatch( TicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $xml,
 			'BAD_PGT error code on service ticket.' );
 
 		/**
 		 * /proxy validates a Proxy-Granting Ticket successfully.
 		 */
 
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
 
 		$args = array(
 			'targetService' => $targetService,
-			'pgt'           => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PGT, $query['ticket'] ),
+			'pgt'           => preg_replace( '@^' . CAS\Ticket::TYPE_ST . '@', CAS\Ticket::TYPE_PGT, $query['ticket'] ),
 			);
 
 		$xml = $this->controller->handleRequest( $args );
@@ -164,7 +159,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 			'ticket'  => $proxyTicket,
 			);
 
-		$proxyValidate = new WPCASControllerProxyValidate( $this->server );
+		$proxyValidate = new CAS\Controller\ProxyValidateController( $this->server );
 		$xml = $proxyValidate->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationSuccess)', $xml,
@@ -176,7 +171,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 
 		$args = array(
 			'targetService' => $targetService,
-			'pgt'           => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PGT, $query['ticket'] ),
+			'pgt'           => preg_replace( '@^' . CAS\Ticket::TYPE_ST . '@', CAS\Ticket::TYPE_PGT, $query['ticket'] ),
 			);
 
 		$xml = $this->controller->handleRequest( $args );
@@ -188,14 +183,14 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		 * Enforce single-use tickets.
 		 */
 
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 0 );
 
 		$error = $this->controller->handleRequest( $args );
 
 		$this->assertXPathMatch( 1, 'count(//cas:proxyFailure)', $error,
 			"Settings do not allow ticket reuse." );
 
-		$this->assertXPathMatch( WPCASTicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $error,
+		$this->assertXPathMatch( TicketException::ERROR_BAD_PGT, 'string(//cas:proxyFailure[1]/@code)', $error,
 			'BAD_PGT error code on ticket reuse.' );
 	}
 

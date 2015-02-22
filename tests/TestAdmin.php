@@ -1,29 +1,19 @@
 <?php
-/**
- * @package WPCASServerPlugin
- * @subpackage Tests
- */
 
 /**
- * @coversDefaultClass WPCASServerAdmin
+ * @coversDefaultClass \Cassava\Admin
  */
 class WP_TestWPCASServerAdmin extends WP_UnitTestCase {
 
 	private $plugin;
 	private $admin;
 
-	/**
-	 * Setup a test method for the WP_TestWPCASServerPluginActions class.
-	 */
 	function setUp () {
 		// parent::setUp();
-		$this->plugin = $GLOBALS[WPCASServerPlugin::SLUG];
-		$this->admin  = new WPCASServerAdmin;
+		$this->plugin = $GLOBALS[ Cassava\Plugin::SLUG ];
+		$this->admin  = new Cassava\Admin;
 	}
 
-	/**
-	 * Finish a test method for the WP_TestWPCASServerPluginActions class.
-	 */
 	function tearDown () {
 		// parent::tearDown();
 		unset( $this->admin );

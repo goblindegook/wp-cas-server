@@ -2,10 +2,13 @@
 /**
  * proxyValidate controller class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
+
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
 
 /**
  * Implements CAS proxy validation.
@@ -16,7 +19,7 @@
  *
  * @since 1.2.0
  */
-class WPCASControllerProxyValidate extends WPCASControllerServiceValidate {
+class ProxyValidateController extends ServiceValidateController {
 
 	/**
 	 * Valid ticket types.
@@ -26,7 +29,7 @@ class WPCASControllerProxyValidate extends WPCASControllerServiceValidate {
 	 * @var array
 	 */
 	protected $validTicketTypes = array(
-		WPCASTicket::TYPE_ST,
-		WPCASTicket::TYPE_PT,
+		CAS\Ticket::TYPE_ST,
+		CAS\Ticket::TYPE_PT,
 	);
 }

@@ -1,10 +1,11 @@
 <?php
-/**
- * @package \WPCASServerPlugin\Tests
- */
+
+use Cassava\CAS;
+use Cassava\Exception\RequestException;
+use Cassava\Exception\TicketException;
 
 /**
- * @coversDefaultClass WPCASControllerValidate
+ * @coversDefaultClass \Cassava\CAS\Controller\ValidateController
  */
 class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 
@@ -16,8 +17,8 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 	 */
 	function setUp() {
 		parent::setUp();
-		$this->server     = new WPCASServer();
-		$this->controller = new WPCASControllerValidate( $this->server );
+		$this->server     = new CAS\Server();
+		$this->controller = new CAS\Controller\ValidateController( $this->server );
 	}
 
 	/**
@@ -33,8 +34,8 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 	 * @covers ::__construct
 	 */
 	function test_construct () {
-		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
-			'WPCASControllerValidate implements the WPCASController interface.' );
+		$this->assertTrue( is_a( $this->controller, '\Cassava\CAS\Controller\BaseController' ),
+			'ValidateController extends BaseController.' );
 	}
 
 	/**
@@ -85,7 +86,7 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 		wp_set_current_user( $user_id );
 
 		try {
-			$login = new WPCASControllerLogin( $this->server );
+			$login = new CAS\Controller\LoginController( $this->server );
 			$login->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
@@ -102,12 +103,12 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->controller->handleRequest( $args ),
 			"Valid ticket." );
 
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
 
 		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->controller->handleRequest( $args ),
 			"Tickets may reused." );
 
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 0 );
 
 		$this->assertEquals( "no\n\n", $this->controller->handleRequest( $args ),
 			"Tickets may not be reused." );

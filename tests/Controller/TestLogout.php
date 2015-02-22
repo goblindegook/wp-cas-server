@@ -1,26 +1,19 @@
 <?php
-/**
- * @package \WPCASServerPlugin\Tests
- */
+
+use Cassava\CAS;
 
 /**
- * @coversDefaultClass WPCASControllerLogout
+ * @coversDefaultClass \Cassava\CAS\Controller\LogoutController
  */
 class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 
 	private $controller;
 
-	/**
-	 * Setup a test method for the WPCASControllerLogout class.
-	 */
 	function setUp() {
 		parent::setUp();
-		$this->controller = new WPCASControllerLogout( new WPCASServer );
+		$this->controller = new CAS\Controller\LogoutController( new CAS\Server );
 	}
 
-	/**
-	 * Finish a test method for the WPCASControllerLogout class.
-	 */
 	function tearDown() {
 		parent::tearDown();
 		unset( $this->controller );
@@ -30,8 +23,8 @@ class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 	 * @covers ::__construct
 	 */
 	function test_construct () {
-		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
-			'WPCASControllerLogout implements the WPCASController interface.' );
+		$this->assertTrue( is_a( $this->controller, '\Cassava\CAS\Controller\BaseController' ),
+			'LogoutController extends BaseController.' );
 	}
 
 	/**

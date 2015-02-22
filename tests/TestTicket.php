@@ -3,37 +3,24 @@
  * @package \WPCASServerPlugin\Tests
  */
 
+use Cassava\CAS;
+
 /**
- * @coversDefaultClass WPCASTicket
+ * @coversDefaultClass \Cassava\CAS\Ticket
  */
 class WP_TestWPCASTicket extends WP_UnitTestCase {
-
-	/**
-	 * Setup a test method for the WPCASTicket class.
-	 */
-	function setUp () {
-		parent::setUp();
-	}
-
-	/**
-	 * Finish a test method for the WPCASTicket class.
-	 */
-	function tearDown () {
-		parent::tearDown();
-	}
-
 
 	/**
 	 * @covers ::__constructor
 	 */
 	function test_constructor () {
 
-		$type       = WPCASTicket::TYPE_ST;
+		$type       = CAS\Ticket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
 		$service    = 'https://test/ÚÑ|Çº∂€/';
 		$expiration = 30;
 
-		$ticket = new WPCASTicket( $type, $user, $service, $expiration );
+		$ticket = new CAS\Ticket( $type, $user, $service, $expiration );
 
 		$this->assertEquals( $type, $ticket->type,
 			'User correctly set.' );
@@ -58,14 +45,14 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 	 * @covers ::generateSignature()
 	 */
 	function test_toString () {
-		$type       = WPCASTicket::TYPE_ST;
+		$type       = CAS\Ticket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
 		$service    = 'https://test/ÚÑ|Çº∂€/';
 		$expiration = 30;
 
-		$ticket     = new WPCASTicket( $type, $user, $service, $expiration );
+		$ticket     = new CAS\Ticket( $type, $user, $service, $expiration );
 
-		$duplicateTicket = WPCASTicket::fromString( (string) $ticket );
+		$duplicateTicket = CAS\Ticket::fromString( (string) $ticket );
 
 		$this->assertEquals( $ticket->generateSignature(), $duplicateTicket->generateSignature(),
 			"Ticket generated from string has the same signature as original." );
@@ -86,12 +73,12 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 	 */
 	function test_reuse () {
 
-		$type       = WPCASTicket::TYPE_ST;
+		$type       = CAS\Ticket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
 		$service    = 'https://test/ÚÑ|Çº∂€/';
 		$expiration = 30;
 
-		$ticket     = new WPCASTicket( $type, $user, $service, $expiration );
+		$ticket     = new CAS\Ticket( $type, $user, $service, $expiration );
 
 		$this->assertFalse( $ticket->isUsed(),
 			'Newly generated ticket is fresh.' );
@@ -101,7 +88,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 		$this->assertTrue( $ticket->isUsed(),
 			'Ticket correctly marked as used.' );
 
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
 
 		$this->assertFalse( $ticket->isUsed(),
 			'Settings allow ticket reuse.' );

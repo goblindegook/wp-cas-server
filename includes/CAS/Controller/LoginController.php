@@ -2,10 +2,14 @@
 /**
  * Login controller class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
+
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
+use Cassava\Plugin;
 
 /**
  * Implements CAS login.
@@ -15,14 +19,16 @@
  *
  * @since 1.2.0
  */
-class WPCASControllerLogin extends WPCASController {
+class LoginController extends BaseController {
 
 	/**
 	 * Handles login requests.
 	 *
-	 * @param  array $request Request arguments.
+	 * @param array $request Request arguments.
 	 *
 	 * @global $_POST
+	 *
+	 * @uses \apply_filters()
 	 */
 	public function handleRequest( $request ) {
 		$request = array_merge( $_POST, (array) $request );
@@ -32,9 +38,9 @@ class WPCASControllerLogin extends WPCASController {
 		 *
 		 * @param array $request HTTP request (GET, POST) parameters.
 		 */
-		$request = apply_filters( 'cas_server_login_args', $request );
+		$request = \apply_filters( 'cas_server_login_args', $request );
 
-		if (isset( $request['username'] ) && isset( $request['password'] ) && isset( $request['lt'] )) {
+		if ( isset( $request['username'] ) && isset( $request['password'] ) && isset( $request['lt'] ) ) {
 			$this->loginAcceptor( $request );
 			return;
 		}
@@ -66,30 +72,30 @@ class WPCASControllerLogin extends WPCASController {
 	 *
 	 * @param array $request Request arguments.
 	 *
-	 * @uses sanitize_user()
-	 * @uses wp_signon()
-	 * @uses wp_verify_nonce()
+	 * @uses \is_wp_error()
+	 * @uses \sanitize_user()
+	 * @uses \wp_signon()
+	 * @uses \wp_verify_nonce()
 	 *
 	 * @todo Support for the optional warn parameter.
 	 */
 	protected function loginAcceptor( $request = array() ) {
 
-		$username   = sanitize_user( $request['username'] );
+		$username   = \sanitize_user( $request['username'] );
 		$password   = $request['password'];
-		$lt         = preg_replace( '@^' . WPCASTicket::TYPE_LT . '-@', '', $request['lt'] );
+		$lt         = preg_replace( '@^' . CAS\Ticket::TYPE_LT . '-@', '', $request['lt'] );
 		$service    = isset( $request['service'] ) ? $request['service'] : null;
-		// $warn       = isset( $request['warn'] ) && 'true' === $request['warn'];
 
-		if ( ! wp_verify_nonce( $lt, 'lt' ) ) {
+		if ( ! \wp_verify_nonce( $lt, 'lt' ) ) {
 			$this->server->authRedirect( $request );
 		}
 
-		$user = wp_signon( array(
+		$user = \wp_signon( array(
 			'user_login'    => $username,
 			'user_password' => $password,
 		) );
 
-		if ( ! $user || is_wp_error( $user ) ) {
+		if ( ! $user || \is_wp_error( $user ) ) {
 			$this->server->authRedirect( $request );
 		}
 
@@ -108,11 +114,11 @@ class WPCASControllerLogin extends WPCASController {
 	 *
 	 * @param array $request Request arguments.
 	 *
-	 * @uses is_ssl()
-	 * @uses is_user_logged_in()
-	 * @uses remove_query_arg()
-	 * @uses wp_get_current_user()
-	 * @uses wp_logout()
+	 * @uses \is_ssl()
+	 * @uses \is_user_logged_in()
+	 * @uses \remove_query_arg()
+	 * @uses \wp_get_current_user()
+	 * @uses \wp_logout()
 	 */
 	protected function loginRequestor( $request = array() ) {
 
@@ -123,16 +129,16 @@ class WPCASControllerLogin extends WPCASController {
 		$service = isset( $request['service'] ) ? $request['service'] : '';
 
 		if ( $renew ) {
-			wp_logout();
+			\wp_logout();
 
-			$schema = is_ssl() ? 'https://' : 'http://';
+			$schema = \is_ssl() ? 'https://' : 'http://';
 			$url    = $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-			$url    = remove_query_arg( 'renew', $url );
+			$url    = \remove_query_arg( 'renew', $url );
 
 			$this->server->redirect( $url );
 		}
 
-		if ( ! is_user_logged_in() ) {
+		if ( ! \is_user_logged_in() ) {
 			if ( $gateway && $service ) {
 				$this->server->redirect( $service );
 			}
@@ -140,26 +146,27 @@ class WPCASControllerLogin extends WPCASController {
 			$this->server->authRedirect( $request );
 		}
 
-		$this->loginUser( wp_get_current_user(), $service );
+		$this->loginUser( \wp_get_current_user(), $service );
 	}
 
 	/**
 	 * Logs the user in.
 	 *
-	 * @param  WP_User $user    WordPress user to authenticate.
-	 * @param  string  $service URI for the service requesting user authentication.
+	 * @param \WP_User $user    WordPress user to authenticate.
+	 * @param string   $service URI for the service requesting user authentication.
 	 *
-	 * @uses add_query_arg()
-	 * @uses apply_filters()
-	 * @uses home_url()
+	 * @uses \add_query_arg()
+	 * @uses \apply_filters()
+	 * @uses \esc_url_raw()
+	 * @uses \home_url()
 	 */
 	protected function loginUser( $user, $service = '' ) {
-		$expiration = WPCASServerPlugin::getOption( 'expiration', 30 );
+		$expiration = Plugin::getOption( 'expiration', 30 );
 
-		$ticket     = new WPCASTicket( WPCASTicket::TYPE_ST, $user, $service, $expiration );
+		$ticket     = new CAS\Ticket( CAS\Ticket::TYPE_ST, $user, $service, $expiration );
 
-		$service    = empty( $service ) ? home_url() : esc_url_raw( $service );
-		$service    = add_query_arg( 'ticket', (string) $ticket, $service );
+		$service    = empty( $service ) ? \home_url() : \esc_url_raw( $service );
+		$service    = \add_query_arg( 'ticket', (string) $ticket, $service );
 
 		/**
 		 * Filters the redirect URI for the service requesting user authentication.
@@ -167,7 +174,7 @@ class WPCASControllerLogin extends WPCASController {
 		 * @param  string  $service Service URI requesting user authentication.
 		 * @param  WP_User $user    Logged in WordPress user.
 		 */
-		$service = apply_filters( 'cas_server_redirect_service', $service, $user );
+		$service = \apply_filters( 'cas_server_redirect_service', $service, $user );
 
 		$this->server->redirect( $service );
 	}

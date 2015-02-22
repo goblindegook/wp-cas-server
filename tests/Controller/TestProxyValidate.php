@@ -1,28 +1,23 @@
 <?php
-/**
- * @package \WPCASServerPlugin\Tests
- */
+
+use Cassava\CAS;
+use Cassava\Exception\RequestException;
+use Cassava\Exception\TicketException;
 
 /**
- * @coversDefaultClass WPCASControllerProxyValidate
+ * @coversDefaultClass \Cassava\CAS\Controller\ProxyValidateController
  */
 class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 
 	private $server;
 	private $controller;
 
-	/**
-	 * Setup a test method for the WPCASControllerProxyValidate class.
-	 */
 	function setUp() {
 		parent::setUp();
-		$this->server     = new WPCASServer();
-		$this->controller = new WPCASControllerProxyValidate( $this->server );
+		$this->server     = new CAS\Server();
+		$this->controller = new CAS\Controller\ProxyValidateController( $this->server );
 	}
 
-	/**
-	 * Finish a test method for the WPCASControllerProxyValidate class.
-	 */
 	function tearDown() {
 		parent::tearDown();
 		unset( $this->server );
@@ -33,8 +28,8 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 	 * @covers ::__construct
 	 */
 	function test_construct () {
-		$this->assertTrue( is_a( $this->controller, 'WPCASController' ),
-			'WPCASControllerProxyValidate implements the WPCASController interface.' );
+		$this->assertTrue( is_a( $this->controller, '\Cassava\CAS\Controller\BaseController' ),
+			'ProxyValidateController extends BaseController.' );
 	}
 
 	/**
@@ -61,7 +56,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			'Error if service not provided.' );
 
-		$this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
+		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
 			'INVALID_REQUEST error code if service not provided.' );
 
 		/**
@@ -77,7 +72,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			'Error if ticket not provided.' );
 
-		$this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
+		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
 			'INVALID_REQUEST error code if ticket not provided.' );
 
 		/**
@@ -93,7 +88,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			'Error on bad ticket.' );
 
-		$this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
+		$this->assertXPathMatch( TicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
 			'INVALID_TICKET error code on bad ticket.' );
 
 		/**
@@ -104,7 +99,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		wp_set_current_user( $user_id );
 
 		try {
-			$login = new WPCASControllerLogin( $this->server );
+			$login = new CAS\Controller\LoginController( $this->server );
 			$login->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
@@ -133,7 +128,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		 * Do not enforce single-use tickets.
 		 */
 
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
 
 		$xml = $this->controller->handleRequest( $args );
 
@@ -145,7 +140,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		 */
 		$args = array(
 			'service' => $service,
-			'ticket'  => preg_replace( '@^' . WPCASTicket::TYPE_ST . '@', WPCASTicket::TYPE_PT, $query['ticket'] ),
+			'ticket'  => preg_replace( '@^' . CAS\Ticket::TYPE_ST . '@', CAS\Ticket::TYPE_PT, $query['ticket'] ),
 			);
 
 		$xml = $this->controller->handleRequest( $args );
@@ -156,7 +151,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		/**
 		 * Enforce single-use tickets.
 		 */
-		WPCASServerPlugin::setOption( 'allow_ticket_reuse', 0 );
+		Cassava\Plugin::setOption( 'allow_ticket_reuse', 0 );
 
 		$args = array(
 			'service' => $service,
@@ -168,7 +163,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			"Settings do not allow ticket reuse." );
 
-		$this->assertXPathMatch( WPCASTicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
+		$this->assertXPathMatch( TicketException::ERROR_INVALID_TICKET, 'string(//cas:authenticationFailure[1]/@code)', $error,
 			'INVALID_TICKET error code on ticket reuse.' );
 	}
 

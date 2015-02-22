@@ -2,10 +2,13 @@
 /**
  * Logout controller class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
+
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
 
 /**
  * Implements CAS logout.
@@ -23,17 +26,17 @@
  *
  * @since 1.2.0
  */
-class WPCASControllerLogout extends WPCASController {
+class LogoutController extends BaseController {
 
 	/**
 	 * Handles logout requests.
 	 *
 	 * @param array $request CAS request arguments.
 	 *
-	 * @uses home_url()
+	 * @uses \home_url()
 	 */
 	public function handleRequest( $request ) {
-		$service = ! empty( $request['service'] ) ? $request['service'] : home_url();
+		$service = ! empty( $request['service'] ) ? $request['service'] : \home_url();
 		$this->server->sessionStart();
 		$this->server->sessionDestroy();
 		$this->server->redirect( $service );

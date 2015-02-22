@@ -2,29 +2,33 @@
 /**
  * CAS Controller abstract class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
 
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
+
 /**
- * CAS controller abstract class definition.
+ * Base CAS controller class definition.
  *
  * @since 1.2.0
  */
-abstract class WPCASController {
+abstract class BaseController {
 
 	/**
 	 * CAS server intance.
-	 * @var WPCASServer
+	 * @var \Cassava\CAS\Server
 	 */
 	protected $server;
 
 	/**
 	 * Constructor.
-	 * @param WPCASServer $server CAS server instance.
+	 *
+	 * @param \Cassava\CAS\Server $server CAS server instance.
 	 */
-	public function __construct( WPCASServer $server ) {
+	public function __construct( CAS\Server $server ) {
 		$this->server = $server;
 	}
 

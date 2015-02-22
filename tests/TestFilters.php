@@ -1,8 +1,4 @@
 <?php
-/**
- * @package WPCASServerPlugin
- * @subpackage Tests
- */
 
 class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 
@@ -15,8 +11,8 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 	 */
 	function setUp () {
 		parent::setUp();
-		$this->plugin = $GLOBALS[WPCASServerPlugin::SLUG];
-		$this->server = new WPCASServer;
+		$this->plugin = $GLOBALS[ Cassava\Plugin::SLUG ];
+		$this->server = new Cassava\CAS\Server;
 		add_filter( 'wp_redirect', array( $this, 'wp_redirect_handler' ) );
 	}
 
@@ -231,7 +227,7 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
-		WPCASServerPlugin::setOption( 'attributes', array( 'user_email' ) );
+		Cassava\Plugin::setOption( 'attributes', array( 'user_email' ) );
 
 		$args = array(
 			'service' => $service,

@@ -1,11 +1,6 @@
 <?php
 /**
- * @package WPCASServerPlugin
- * @subpackage Tests
- */
-
-/**
- * @coversDefaultClass WPCASServerPlugin
+ * @coversDefaultClass \Cassava\Plugin
  */
 class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
@@ -16,7 +11,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	 */
 	function setUp () {
 		parent::setUp();
-		$this->plugin = $GLOBALS[WPCASServerPlugin::SLUG];
+		$this->plugin = $GLOBALS[ \Cassava\Plugin::SLUG ];
 	}
 
 	/**
@@ -32,36 +27,36 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	 */
 	function test_plugin_constants () {
 		$slug = 'wp-cas-server';
-		$this->assertEquals( $slug, WPCASServerPlugin::SLUG, "Plugin slug is $slug." );
+		$this->assertEquals( $slug, \Cassava\Plugin::SLUG, "Plugin slug is $slug." );
 
 		$file = 'wp-cas-server/wp-cas-server.php';
-		$this->assertEquals( $file, WPCASServerPlugin::FILE, "Plugin file is $file." );
+		$this->assertEquals( $file, \Cassava\Plugin::FILE, "Plugin file is $file." );
 	}
 
 	/**
 	 * The plugin should be installed and activated.
-	 * @covers WPCASServerPlugin::plugin_activated
+	 * @covers \Cassava\Plugin::plugin_activated
 	 */
 	function test_plugin_activated () {
-		$this->assertNotNull( $GLOBALS[WPCASServerPlugin::SLUG],
+		$this->assertNotNull( $GLOBALS[ \Cassava\Plugin::SLUG ],
 			'Plugin is instantiated.' );
 
-		$this->assertTrue( is_plugin_active( WPCASServerPlugin::FILE ),
+		$this->assertTrue( is_plugin_active( \Cassava\Plugin::FILE ),
 			'Plugin is activated.' );
 	}
 
 	/**
 	 * Test plugin options.
-	 * @covers WPCASServerPlugin::init
+	 * @covers \Cassava\Plugin::init
 	 */
 	function test_init () {
 		global $wp;
 
-		delete_option( WPCASServerPlugin::OPTIONS_KEY );
+		delete_option( \Cassava\Plugin::OPTIONS_KEY );
 
 		$this->plugin->init();
 
-		$this->assertNotEmpty( get_option( WPCASServerPlugin::OPTIONS_KEY ), 'Plugin sets default options on init.' );
+		$this->assertNotEmpty( get_option( \Cassava\Plugin::OPTIONS_KEY ), 'Plugin sets default options on init.' );
 
 		$this->assertTrue( in_array( 'cas_route', $wp->public_query_vars ), 'Plugin sets the cas_route endpoint.' );
 	}
@@ -116,54 +111,54 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
 	/**
 	 * Test plugin settings getter.
-	 * @covers WPCASServerPlugin::getOption
+	 * @covers \Cassava\Plugin::getOption
 	 */
 	function testGetOption () {
-		$path = WPCASServerPlugin::getOption( 'endpoint_slug' );
-		$this->assertEquals( WPCASServerPlugin::ENDPOINT_SLUG, $path, 'Obtain the path setting.' );
+		$path = \Cassava\Plugin::getOption( 'endpoint_slug' );
+		$this->assertEquals( \Cassava\Plugin::ENDPOINT_SLUG, $path, 'Obtain the path setting.' );
 
-		$path = WPCASServerPlugin::getOption( 'endpoint_slug', 'default' );
-		$this->assertEquals( WPCASServerPlugin::ENDPOINT_SLUG, $path, 'Ignores default when obtaining an existing setting.' );
+		$path = \Cassava\Plugin::getOption( 'endpoint_slug', 'default' );
+		$this->assertEquals( \Cassava\Plugin::ENDPOINT_SLUG, $path, 'Ignores default when obtaining an existing setting.' );
 
-		$unset = WPCASServerPlugin::getOption( 'unset', 'nothing' );
+		$unset = \Cassava\Plugin::getOption( 'unset', 'nothing' );
 		$this->assertEquals( 'nothing', $unset, 'Obtain the default for a non-existing setting.' );
 	}
 
 	/**
 	 * Test plugin settings setter.
 	 *
-	 * @covers WPCASServerPlugin::getOption
-	 * @covers WPCASServerPlugin::setOption
+	 * @covers \Cassava\Plugin::getOption
+	 * @covers \Cassava\Plugin::setOption
 	 */
 	function testSetOption () {
-		WPCASServerPlugin::setOption( 'zero', 0 );
-		$this->assertSame( 0, WPCASServerPlugin::getOption( 'zero' ), 'Set 0 integer.' );
+		\Cassava\Plugin::setOption( 'zero', 0 );
+		$this->assertSame( 0, \Cassava\Plugin::getOption( 'zero' ), 'Set 0 integer.' );
 
-		WPCASServerPlugin::setOption( 'integer', 99 );
-		$this->assertSame( 99, WPCASServerPlugin::getOption( 'integer' ), 'Set non-zero integer.' );
+		\Cassava\Plugin::setOption( 'integer', 99 );
+		$this->assertSame( 99, \Cassava\Plugin::getOption( 'integer' ), 'Set non-zero integer.' );
 
-		WPCASServerPlugin::setOption( 'float', 99.99 );
-		$this->assertSame( 99.99, WPCASServerPlugin::getOption( 'float' ), 'Set float.' );
+		\Cassava\Plugin::setOption( 'float', 99.99 );
+		$this->assertSame( 99.99, \Cassava\Plugin::getOption( 'float' ), 'Set float.' );
 
-		WPCASServerPlugin::setOption( 'string', 'test' );
-		$this->assertSame( 'test', WPCASServerPlugin::getOption( 'string' ), 'Set string.' );
+		\Cassava\Plugin::setOption( 'string', 'test' );
+		$this->assertSame( 'test', \Cassava\Plugin::getOption( 'string' ), 'Set string.' );
 
-		WPCASServerPlugin::setOption( 'array', array( 1, 2, 3 ) );
-		$this->assertSame( array( 1, 2, 3 ), WPCASServerPlugin::getOption( 'array' ), 'Set array.' );
+		\Cassava\Plugin::setOption( 'array', array( 1, 2, 3 ) );
+		$this->assertSame( array( 1, 2, 3 ), \Cassava\Plugin::getOption( 'array' ), 'Set array.' );
 
-		WPCASServerPlugin::setOption( 'object', (object) array( 1, 2, 3 ) );
-		$this->assertEquals( (object) array( 1, 2, 3 ), WPCASServerPlugin::getOption( 'object' ), 'Set object.' );
+		\Cassava\Plugin::setOption( 'object', (object) array( 1, 2, 3 ) );
+		$this->assertEquals( (object) array( 1, 2, 3 ), \Cassava\Plugin::getOption( 'object' ), 'Set object.' );
 	}
 
 	/**
 	 * Test allowed_redirect_hosts filter callback.
-	 * @covers WPCASServerPlugin::allowed_redirect_hosts
+	 * @covers \Cassava\Plugin::allowed_redirect_hosts
 	 */
 	function testAllowedRedirectHosts () {
 
 		$noSchemaAllowed = version_compare( phpversion(), '5.4.7', '>=' );
 
-		WPCASServerPlugin::setOption( 'allowed_services', array(
+		\Cassava\Plugin::setOption( 'allowed_services', array(
 			'http://test1/',
 			'http://test2:8080/',
 			'https://test3/',
@@ -202,7 +197,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 		$this->assertCount( $expected_count, $hosts,
 			'Allowed hosts are added to an existing list.');
 
-		WPCASServerPlugin::setOption( 'allowed_services', false );
+		\Cassava\Plugin::setOption( 'allowed_services', false );
 
 		$hosts = $this->plugin->allowed_redirect_hosts( array( 'test.local' ));
 
@@ -215,7 +210,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 		$this->assertCount( 1, $hosts,
 			'Invalid hosts are not added to an existing list.');
 
-		WPCASServerPlugin::setOption( 'allowed_services', 'http://test-string/' );
+		\Cassava\Plugin::setOption( 'allowed_services', 'http://test-string/' );
 
 		$hosts = $this->plugin->allowed_redirect_hosts();
 
@@ -234,7 +229,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	 */
 	function test_rewrite_rules () {
 
-		$path = WPCASServerPlugin::getOption( 'endpoint_slug' );
+		$path = \Cassava\Plugin::getOption( 'endpoint_slug' );
 
 		$this->assertNotEmpty( $path, 'Plugin sets default URI path root.');
 
@@ -248,7 +243,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
 		// Plugin forces default endpoint slug
 
-		WPCASServerPlugin::setOption( 'endpoint_slug', '' );
+		\Cassava\Plugin::setOption( 'endpoint_slug', '' );
 
 		$this->markTestIncomplete();
 	}

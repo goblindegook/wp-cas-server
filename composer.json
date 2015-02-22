@@ -1,0 +1,17 @@
+{
+    "name": "goblindegook/wp-cas-server",
+    "description": "Cassava is a Central Authentication Service provider as a WordPress plugin.",
+    "license": "GPL 2.0+",
+    "authors": [
+        {
+            "name": "Luis Rodrigues",
+            "email": "hello@goblindegook.net"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Cassava\\": "includes/"
+        }
+    },
+    "require": {}
+}

@@ -1,12 +1,8 @@
 <?php
 /**
- * @package \WPCASServerPlugin\Tests
+ * @coversDefaultClass \Cassava\Exception\GeneralException
  */
-
-/**
- * @coversDefaultClass WPCASException
- */
-class WP_TestWPCASException extends WP_UnitTestCase {
+class WP_TestGeneralException extends WP_UnitTestCase {
 
 	/**
 	 * Setup a test method for the WPCASServer class.
@@ -28,24 +24,24 @@ class WP_TestWPCASException extends WP_UnitTestCase {
 	 */
 	function test_construct () {
 
-		$exception = new WPCASException();
+		$exception = new \Cassava\Exception\GeneralException();
 
 		$this->assertInstanceOf( 'Exception', $exception,
 			'Exception is an instance of Exception.' );
 
-		$this->assertInstanceOf( 'WPCASException', $exception,
-			'Exception is an instance of WPCASException.' );
+		$this->assertInstanceOf( '\Cassava\Exception\GeneralException', $exception,
+			'Exception is an instance of \Cassava\Exception\GeneralException.' );
 
 		$this->assertEquals( '', $exception->getMessage(),
 			'Exception has empty message.' );
 
-		$this->assertEquals( WPCASException::ERROR_INTERNAL_ERROR, $exception->getCASCode(),
+		$this->assertEquals( \Cassava\Exception\GeneralException::ERROR_INTERNAL_ERROR, $exception->getCASCode(),
 			'Exception has default INTERNAL_ERROR code.' );
 
 		$message = 'Test message.';
 		$code    = 'TEST_CODE';
 
-		$exception = new WPCASException( $message, $code );
+		$exception = new \Cassava\Exception\GeneralException( $message, $code );
 
 		$this->assertEquals( $message, $exception->getMessage(),
 			"Exception has '$message' message." );
@@ -62,7 +58,7 @@ class WP_TestWPCASException extends WP_UnitTestCase {
 
 		$error = new WP_Error();
 
-		$exception = WPCASException::fromError( $error );
+		$exception = \Cassava\Exception\GeneralException::fromError( $error );
 
 		$this->assertEquals( $error->get_error_message(), $exception->getMessage(),
 			"Exception generated from WP_Error has the same default message." );
@@ -75,7 +71,7 @@ class WP_TestWPCASException extends WP_UnitTestCase {
 
 		$error = new WP_Error( $code, $message);
 
-		$exception = WPCASException::fromError( $error );
+		$exception = \Cassava\Exception\GeneralException::fromError( $error );
 
 		$this->assertEquals( $error->get_error_message(), $exception->getMessage(),
 			"Exception generated from WP_Error has the same '$message' message." );
@@ -89,7 +85,7 @@ class WP_TestWPCASException extends WP_UnitTestCase {
 	 * @covers ::getErrorInstance
 	 */
 	function test_getErrorInstance () {
-		$exception = new WPCASException();
+		$exception = new \Cassava\Exception\GeneralException();
 
 		$error = $exception->getErrorInstance();
 
@@ -105,7 +101,7 @@ class WP_TestWPCASException extends WP_UnitTestCase {
 		$message = 'Test message.';
 		$code    = 'TEST_CODE';
 
-		$exception = new WPCASException( $message, $code );
+		$exception = new \Cassava\Exception\GeneralException( $message, $code );
 
 		$error = $exception->getErrorInstance();
 

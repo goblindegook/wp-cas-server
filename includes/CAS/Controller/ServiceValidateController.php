@@ -2,10 +2,14 @@
 /**
  * serviceValidate controller class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
+
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
+use Cassava\Exception\GeneralException;
 
 /**
  * Implements CAS service validation.
@@ -16,7 +20,7 @@
  *
  * @since 1.2.0
  */
-class WPCASControllerServiceValidate extends WPCASControllerValidate {
+class ServiceValidateController extends ValidateController {
 
 	/**
 	 * Valid ticket types.
@@ -24,7 +28,7 @@ class WPCASControllerServiceValidate extends WPCASControllerValidate {
 	 * @var array
 	 */
 	protected $validTicketTypes = array(
-		WPCASTicket::TYPE_ST,
+		CAS\Ticket::TYPE_ST,
 	);
 
 	/**
@@ -41,16 +45,14 @@ class WPCASControllerServiceValidate extends WPCASControllerValidate {
 	public function handleRequest( $request ) {
 		$service = isset( $request['service'] ) ? $request['service'] : '';
 		$ticket  = isset( $request['ticket'] )  ? $request['ticket']  : '';
-		// $pgtUrl = isset( $request['pgtUrl'] ) ? $request['pgtUrl'] : '';
-		// $renew  = isset( $request['renew'] ) && 'true' === $request['renew'];
 
-		$response = new WPCASResponseValidate();
+		$response = new CAS\Response\ValidateResponse;
 
 		try {
 			$ticket = $this->validateRequest( $ticket, $service );
 			$response->setTicket( $ticket );
 		}
-		catch (WPCASException $exception) {
+		catch ( GeneralException $exception ) {
 			$response->setError( $exception->getErrorInstance() );
 		}
 

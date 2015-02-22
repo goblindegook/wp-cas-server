@@ -1,28 +1,21 @@
 <?php
-/**
- * @package \WPCASServerPlugin\Tests
- */
+
+use Cassava\Exception\RequestException;
 
 /**
- * @coversDefaultClass WPCASServer
+ * @coversDefaultClass \Cassava\CAS\Server
  */
 class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 
 	private $server;
 	private $routes;
 
-	/**
-	 * Setup a test method for the WPCASServer class.
-	 */
 	function setUp () {
 		parent::setUp();
-		$this->server = new WPCASServer;
+		$this->server = new \Cassava\CAS\Server;
 		$this->routes = $this->server->routes();
 	}
 
-	/**
-	 * Finish a test method for the CASServer class.
-	 */
 	function tearDown () {
 		parent::tearDown();
 		unset( $this->server );
@@ -120,7 +113,7 @@ class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			"Handling invalid endpoint returns an error." );
 
-		$this->assertXPathMatch( WPCASRequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
+		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
 			'Handling invalid endpoint returns an invalid request error.' );
 
 		$this->markTestIncomplete();

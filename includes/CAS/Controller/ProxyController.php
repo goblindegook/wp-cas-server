@@ -2,10 +2,17 @@
 /**
  * Proxy controller class.
  *
- * @package \WPCASServerPlugin\Server
  * @version 1.2.0
  * @since 1.2.0
  */
+
+namespace Cassava\CAS\Controller;
+
+use Cassava\CAS;
+use Cassava\Exception\GeneralException;
+use Cassava\Exception\RequestException;
+use Cassava\Exception\TicketException;
+use Cassava\Plugin;
 
 /**
  * Implements CAS proxy ticket generation.
@@ -24,7 +31,7 @@
  *
  * @since 1.2.0
  */
-class WPCASControllerProxy extends WPCASControllerValidate {
+class ProxyController extends ValidateController {
 
 	/**
 	 * Valid ticket types.
@@ -34,7 +41,7 @@ class WPCASControllerProxy extends WPCASControllerValidate {
 	 * @var array
 	 */
 	protected $validTicketTypes = array(
-		WPCASTicket::TYPE_PGT,
+		CAS\Ticket::TYPE_PGT,
 	);
 
 	/**
@@ -46,18 +53,18 @@ class WPCASControllerProxy extends WPCASControllerValidate {
 	 * @return string          Response XML string.
 	 */
 	public function handleRequest( $request ) {
-		$pgt            = isset( $request['pgt'] )           ? $request['pgt']           : '';
-		$targetService  = isset( $request['targetService'] ) ? $request['targetService'] : '';
+		$pgt           = isset( $request['pgt'] )           ? $request['pgt']           : '';
+		$targetService = isset( $request['targetService'] ) ? $request['targetService'] : '';
 
-		$response = new WPCASResponseProxy();
+		$response = new CAS\Response\ProxyResponse;
 
 		try {
-			$expiration  = WPCASServerPlugin::getOption( 'expiration', 30 );
+			$expiration  = Plugin::getOption( 'expiration', 30 );
 			$ticket      = $this->validateRequest( $pgt, $targetService );
-			$proxyTicket = new WPCASTicket( WPCASTicket::TYPE_PT, $ticket->user, $targetService, $expiration );
+			$proxyTicket = new CAS\Ticket( CAS\Ticket::TYPE_PT, $ticket->user, $targetService, $expiration );
 			$response->setTicket( $proxyTicket );
 		}
-		catch (WPCASException $exception) {
+		catch ( GeneralException $exception ) {
 			$response->setError( $exception->getErrorInstance(), 'proxyFailure' );
 		}
 
@@ -69,20 +76,20 @@ class WPCASControllerProxy extends WPCASControllerValidate {
 	/**
 	 * Validates a proxy ticket, returning a ticket object, or throws an exception.
 	 *
-	 * @param  string      $ticket  Service or proxy ticket.
-	 * @param  string      $service Service URI.
-	 * @return WPCASTicket          Valid ticket object associated with request.
+	 * @param  string              $ticket  Service or proxy ticket.
+	 * @param  string              $service Service URI.
+	 * @return \Cassava\CAS\Ticket          Valid ticket object associated with request.
 	 *
-	 * @throws WPCASRequestException
-	 * @throws WPCASTicketException
+	 * @throws \Cassava\Exception\RequestException
+	 * @throws \Cassava\Exception\TicketException
 	 */
 	public function validateRequest( $ticket = '', $service = '' ) {
 		try {
 			return parent::validateRequest( $ticket, $service );
 
-		} catch (WPCASTicketException $exception) {
-			throw new WPCASTicketException( $exception->getMessage(),
-				WPCASTicketException::ERROR_BAD_PGT );
+		} catch ( TicketException $exception ) {
+			throw new TicketException( $exception->getMessage(),
+				TicketException::ERROR_BAD_PGT );
 		}
 	}
 
