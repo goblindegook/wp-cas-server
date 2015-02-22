@@ -90,8 +90,8 @@ class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 		foreach ($routes as $route) {
 			$this->assertArrayHasKey( $route, $server_routes,
 				"Route '$route' has a callback." );
-			$this->assertTrue( is_callable( $server_routes[$route] ),
-				"Method for route '$route' is callable." );
+			$this->assertTrue( class_exists( $server_routes[$route] ),
+				"Controller for route '$route' exists." );
 		}
 	}
 

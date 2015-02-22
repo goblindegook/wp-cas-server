@@ -40,28 +40,30 @@ class Server {
 	 *
 	 * @return array Array containing supported routes as keys and their callbacks as values.
 	 *
-	 * @uses apply_filters()
+	 * @uses \apply_filters()
 	 */
 	public function routes() {
+		$namespace = '\\Cassava\\CAS\\Controller\\';
+
 		$routes = array(
-			'login'              => array( $this, 'login' ),
-			'logout'             => array( $this, 'logout' ),
-			'validate'           => array( $this, 'validate' ),
-			'proxy'              => array( $this, 'proxy' ),
-			'proxyValidate'      => array( $this, 'proxyValidate' ),
-			'serviceValidate'    => array( $this, 'serviceValidate' ),
-			'p3/proxyValidate'   => array( $this, 'proxyValidate' ),
-			'p3/serviceValidate' => array( $this, 'serviceValidate' ),
+			'login'              => $namespace . 'LoginController',
+			'logout'             => $namespace . 'LogoutController',
+			'validate'           => $namespace . 'ValidateController',
+			'proxy'              => $namespace . 'ProxyController',
+			'proxyValidate'      => $namespace . 'ProxyValidateController',
+			'serviceValidate'    => $namespace . 'ServiceValidateController',
+			'p3/proxyValidate'   => $namespace . 'ProxyValidateController',
+			'p3/serviceValidate' => $namespace . 'ServiceValidateController',
 			);
 
 		/**
-		 * Allows developers to override the default callback
+		 * Allows developers to override the default controller
 		 * mapping, define additional endpoints and provide
 		 * alternative implementations to the provided methods.
 		 *
-		 * @param array $cas_routes CAS endpoint to callback mapping.
+		 * @param array $cas_routes CAS endpoint to controller mapping.
 		 */
-		return apply_filters( 'cas_server_routes', $routes );
+		return \apply_filters( 'cas_server_routes', $routes );
 	}
 
 	/**
@@ -189,7 +191,7 @@ class Server {
 
 		$routes = $this->routes();
 
-		foreach ( $routes as $route => $callback ) {
+		foreach ( $routes as $route => $controller ) {
 
 			$match = preg_match( '@^' . preg_quote( $route ) . '/?$@', $path );
 
@@ -197,32 +199,35 @@ class Server {
 				continue;
 			}
 
-			if ( ! is_callable( $callback ) ) {
-				throw new GeneralException( __('The handler for the route is invalid.', 'wp-cas-server') );
+			if ( ! class_exists( $controller ) ) {
+				throw new GeneralException( __('The controller for the route is invalid.', 'wp-cas-server') );
 			}
 
 			$args = $_GET;
 
 			/**
-			 * Filters the callback arguments to be dispatched for the request.
+			 * Filters the controller arguments to be dispatched for the request.
 			 *
-			 * Plugin developers may return a WP_Error object via the `cas_server_dispatch_args`
-			 * filter to abort the request. Avoid throwing a `\Cassava\Exception\GeneralException` exception here
-			 * because that would interrupt the filter callback chain.
+			 * Plugin developers may return a WP_Error object via the
+			 * `cas_server_dispatch_args` filter to abort the request. Avoid throwing
+			 * a `\Cassava\Exception\GeneralException` exception here because that
+			 * would interrupt the filter controller chain.
 			 *
-			 * @param  array  $args     Arguments to pass the callback.
-			 * @param  mixed  $callback Callback function or method.
-			 * @param  string $path     Requested URI path.
+			 * @param  array  $args       Arguments to pass the controller.
+			 * @param  mixed  $controller Controller class.
+			 * @param  string $path       Requested URI path.
 			 *
-			 * @return mixed            Arguments to pass the callback, or `WP_Error`.
+			 * @return mixed              Arguments to pass the controller, or `WP_Error`.
 			 */
-			$args = \apply_filters( 'cas_server_dispatch_args', $args, $callback, $path );
+			$args = \apply_filters( 'cas_server_dispatch_args', $args, $controller, $path );
 
 			if ( \is_wp_error( $args ) ) {
 				throw GeneralException::fromError( $args );
 			}
 
-			return call_user_func( $callback, $args );
+			$controllerInstance = new $controller( $this );
+
+			return $controllerInstance->handleRequest( $args );
 		}
 
 		throw new RequestException(
@@ -299,58 +304,6 @@ class Server {
 
 		auth_redirect();
 		exit;
-	}
-
-	//
-	// CAS Server Protocol Methods
-	//
-
-	/**
-	 * @todo Remove.
-	 */
-	public function login ( $args = array() ) {
-		$controller = new Controller\LoginController( $this );
-		return $controller->handleRequest( $args );
-	}
-
-	/**
-	 * @todo Remove.
-	 */
-	public function logout( $args = array() ) {
-		$controller = new Controller\LogoutController( $this );
-		return $controller->handleRequest( $args );
-	}
-
-	/**
-	 * @todo Remove.
-	 */
-	public function proxy( $args = array() ) {
-		$controller = new Controller\ProxyController( $this );
-		return $controller->handleRequest( $args );
-	}
-
-	/**
-	 * @todo Remove.
-	 */
-	public function proxyValidate( $args = array() ) {
-		$controller = new Controller\ProxyValidateController( $this );
-		return $controller->handleRequest( $args );
-	}
-
-	/**
-	 * @todo Remove.
-	 */
-	public function serviceValidate( $args = array() ) {
-		$controller = new Controller\ServiceValidateController( $this );
-		return $controller->handleRequest( $args );
-	}
-
-	/**
-	 * @todo Remove.
-	 */
-	public function validate( $args = array() ) {
-		$controller = new Controller\ValidateController( $this );
-		return $controller->handleRequest( $args );
 	}
 
 }

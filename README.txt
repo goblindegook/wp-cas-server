@@ -147,11 +147,13 @@ Parameters:
 
 = Filter: cas_server_routes =
 
-Allows developers to override the default callback mapping, define additional endpoints and provide alternative implementations to the provided methods.
+Allows developers to override the default controller mapping, define additional endpoints and provide alternative implementations to the provided controllers.
+
+Controllers provided in this fashion should extend the `\Cassava\CAS\Controller\BaseController` class.
 
 Parameters:
 
-* _array_ `$cas_routes`: CAS endpoint to callback mapping.
+* _array_ `$cas_routes`: CAS endpoint to controller mapping.
 
 = Filter: cas_server_response =
 
@@ -237,6 +239,7 @@ Parameters:
 
 * Added support for the CAS 3.0 `/p3/serviceValidate` and `/p3/proxyValidate` endpoints.
 * Fixed handling of service URLs containing pipe characters.
+* Developers: The `cas_server_routes` filter no longer deals with callbacks, controller classes are handled instead. Controller classes must extend `\Cassava\CAS\Controller\BaseController`.
 * WordPress 4.1.1 compatibility.
 * Cleaner, easier to maintain codebase.
 * Improved test coverage.

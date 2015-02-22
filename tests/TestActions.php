@@ -62,7 +62,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
 		try {
 			call_user_func_array( $function, $args );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			ob_end_clean();
 			remove_filter( $label, array( $mock, 'action' ) );
 			return;
@@ -110,15 +110,17 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
 	 * @group action
 	 */
 	function test_cas_server_validation_success () {
-		$action   = 'cas_server_validation_success';
-		$function = array( $this->server, 'serviceValidate' );
+		$action     = 'cas_server_validation_success';
+		$controller = new Cassava\CAS\Controller\ServiceValidateController( $this->server );
+		$function   = array( $controller, 'handleRequest' );
 
 		$service = 'http://test/';
 
 		wp_set_current_user( $this->factory->user->create() );
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$loginController = new Cassava\CAS\Controller\LoginController( $this->server );
+			$loginController->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );

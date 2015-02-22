@@ -151,9 +151,10 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 	 * @group filter
 	 */
 	function test_cas_server_login_args () {
-		$filter   = 'cas_server_login_args';
-		$function = array( $this->server, 'login' );
-		$args     = array( array() );
+		$filter     = 'cas_server_login_args';
+		$controller = new Cassava\CAS\Controller\LoginController( $this->server );
+		$function   = array( $controller, 'handleRequest' );
+		$args       = array( array() );
 
 		$_POST = array(
 			'username' => 'username',
@@ -168,9 +169,10 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 	 * @group filter
 	 */
 	function test_cas_server_redirect_service () {
-		$filter   = 'cas_server_redirect_service';
-		$function = array( $this->server, 'login' );
-		$args     = array(
+		$filter     = 'cas_server_redirect_service';
+		$controller = new Cassava\CAS\Controller\LoginController( $this->server );
+		$function   = array( $controller, 'handleRequest' );
+		$args       = array(
 			'service' => 'http://test/',
 			);
 
@@ -183,20 +185,22 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 	 * @group filter
 	 */
 	function test_cas_server_custom_auth_uri () {
-		$filter   = 'cas_server_custom_auth_uri';
-		$function = array( $this->server, 'login' );
+		$filter     = 'cas_server_custom_auth_uri';
+		$controller = new Cassava\CAS\Controller\LoginController( $this->server );
+		$function   = array( $controller, 'handleRequest' );
 
 		wp_set_current_user( false );
 
-		$this->_assertFilterIsCalled( $filter, $function, array() );
+		$this->_assertFilterIsCalled( $filter, $function, array( array() ) );
 	}
 
 	/**
 	 * @group filter
 	 */
 	function test_cas_server_ticket_expiration () {
-		$filter   = 'cas_server_ticket_expiration';
-		$function = array( $this->server, 'login' );
+		$filter     = 'cas_server_ticket_expiration';
+		$controller = new Cassava\CAS\Controller\LoginController( $this->server );
+		$function   = array( $controller, 'handleRequest' );
 
 		$service = 'http://test/';
 
@@ -213,15 +217,17 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 	 * @group filter
 	 */
 	function test_cas_server_validation_user_attributes () {
-		$filter   = 'cas_server_validation_user_attributes';
-		$function = array( $this->server, 'serviceValidate' );
+		$filter     = 'cas_server_validation_user_attributes';
+		$controller = new Cassava\CAS\Controller\ServiceValidateController( $this->server );
+		$function   = array( $controller, 'handleRequest' );
 
 		$service = 'http://test/';
 
 		wp_set_current_user( $this->factory->user->create() );
 
 		try {
-			$this->server->login( array( 'service' => $service ) );
+			$loginController = new Cassava\CAS\Controller\LoginController( $this->server );
+			$loginController->handleRequest( array( 'service' => $service ) );
 		}
 		catch (WPDieException $message) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
