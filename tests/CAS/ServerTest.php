@@ -50,7 +50,7 @@ class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 		try {
 			$this->server->authRedirect( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -62,7 +62,7 @@ class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 		try {
 			$this->server->authRedirect( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
@@ -113,7 +113,8 @@ class WP_TestWPCASServer extends WPCAS_UnitTestCase {
 		$this->assertXPathMatch( 1, 'count(//cas:authenticationFailure)', $error,
 			"Handling invalid endpoint returns an error." );
 
-		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST, 'string(//cas:authenticationFailure[1]/@code)', $error,
+		$this->assertXPathMatch( RequestException::ERROR_INVALID_REQUEST,
+			'string(//cas:authenticationFailure[1]/@code)', $error,
 			'Handling invalid endpoint returns an invalid request error.' );
 
 		$this->markTestIncomplete();

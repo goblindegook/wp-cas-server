@@ -5,7 +5,7 @@ use Cassava\CAS;
 /**
  * @coversDefaultClass \Cassava\CAS\Controller\LoginController
  */
-class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
+class TestWPCASControllerLoginAcceptor extends WPCAS_UnitTestCase {
 
 	private $controller;
 
@@ -25,116 +25,6 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 	function test_construct () {
 		$this->assertTrue( is_a( $this->controller, '\Cassava\CAS\Controller\BaseController' ),
 			'LoginController extends BaseController.' );
-	}
-
-	/**
-	 * Tests /login requestor behaviour.
-	 *
-	 * @runInSeparateProcess
-	 * @covers ::login
-	 */
-	function test_login_requestor () {
-
-		$service = 'http://test/';
-
-		/**
-		 * /login?gateway=true&service=http://test/ (user logged out)
-		 */
-
-		wp_set_current_user( false );
-
-		try {
-			$this->controller->handleRequest( array( 'service' => $service, 'gateway' => 'true' ) );
-		}
-		catch ( WPDieException $message ) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
-		}
-
-		$this->assertStringStartsWith( $service, $this->redirect_location,
-			"'login' redirects to service when acting as a gateway and no user is authenticated." );
-
-		/**
-		 * /login?service=http://test/ (user logged out)
-		 */
-
-		try {
-			$this->controller->handleRequest( array( 'service' => $service ) );
-		}
-		catch ( WPDieException $message ) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
-		}
-
-		$this->assertStringStartsWith( home_url(), $this->redirect_location,
-			"'login' redirects to authentication screen when no user is authenticated." );
-
-		/**
-		 * /login (user logged in)
-		 */
-
-		$user_id = $this->factory->user->create();
-
-		wp_set_current_user( $user_id );
-
-		try {
-			$this->controller->handleRequest( array() );
-		}
-		catch ( WPDieException $message ) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
-		}
-
-		$this->assertStringStartsWith( home_url(), $this->redirect_location,
-			"'login' redirects to home when no service is provided." );
-
-		/**
-		 * /login?service=http://test/ (user logged in)
-		 */
-
-		try {
-			$this->controller->handleRequest( array( 'service' => $service ) );
-		}
-		catch ( WPDieException $message ) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
-		}
-
-		$this->assertNotEmpty( $query['ticket'],
-			"'login' generates ticket." );
-
-		$this->assertStringStartsWith( CAS\Ticket::TYPE_ST, $query['ticket'],
-			"'login' generates a service ticket." );
-
-		$this->assertStringStartsWith( $service, $this->redirect_location,
-			"'login' redirects to provided service." );
-
-		/**
-		 * /login?service=http://test/ (repeat request, user logged in)
-		 */
-
-		try {
-			$this->controller->handleRequest( array( 'service' => $service ) );
-		}
-		catch ( WPDieException $message ) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $another_query );
-		}
-
-		$this->assertNotEquals( $query['ticket'], $another_query['ticket'],
-			"'login' generates different tickets." );
-
-		/**
-		 * /login?renew=true&service=http://test/ (user logged in)
-		 */
-
-		try {
-			$this->controller->handleRequest( array( 'service' => $service, 'renew' => 'true' ) );
-		}
-		catch ( WPDieException $message ) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
-		}
-
-		$this->assertStringStartsWith( home_url(), $this->redirect_location,
-			"'login' redirects to login screen when user is forced to renew credentials." );
-
-		$this->assertFalse( isset( $query['ticket'] ),
-			"'login' generates no ticket before renewing credentials." );
 	}
 
 	/**
@@ -167,7 +57,7 @@ class TestWPCASControllerLogin extends WPCAS_UnitTestCase {
 			'username' => $username,
 			'password' => $password,
 			'lt'       => wp_create_nonce( 'lt' ),
-			);
+		);
 
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );

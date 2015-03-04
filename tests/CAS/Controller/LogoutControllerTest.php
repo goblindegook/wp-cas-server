@@ -28,50 +28,36 @@ class TestWPCASControllerLogout extends WPCAS_UnitTestCase {
 	}
 
 	/**
+	 * Tests /logout
 	 * @runInSeparateProcess
+	 * @dataProvider data_logout
 	 * @covers ::logout
 	 */
-	function test_logout () {
-
-		/**
-		 * /logout?service=http://test/
-		 */
-
-		$service = 'http://test/';
-
+	function test_logout( $service, $expected ) {
 		wp_set_current_user( $this->factory->user->create() );
-
-		$this->assertTrue( is_user_logged_in(),
-			'User is logged in.' );
 
 		try {
 			$this->controller->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
+		catch ( WPDieException $message ) {
+			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ) );
 		}
 
 		$this->assertFalse( is_user_logged_in(),
 			'User is logged out.' );
 
-		$this->assertStringStartsWith( $service, $this->redirect_location,
-			"'logout' redirects to service." );
+		$this->assertStringStartsWith( $expected, $this->redirect_location,
+			"'logout' performs a redirect." );
+	}
 
-		/**
-		 * /logout
-		 */
-
-		wp_set_current_user( $this->factory->user->create() );
-
-		try {
-			$this->controller->handleRequest( array( 'service' => $service ) );
-		}
-		catch (WPDieException $message) {
-			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
-		}
-
-		$this->assertStringStartsWith( $service, $this->redirect_location,
-			"'logout' redirects to home if no service is provided." );
+	/**
+	 * @return array Test data for logout tests.
+	 */
+	function data_logout() {
+		return array(
+			array( 'http://test/', 'http://test/' ),
+			array( null, home_url() ),
+		);
 	}
 
 }
