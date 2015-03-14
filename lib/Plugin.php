@@ -174,7 +174,7 @@ class Plugin {
 		\load_textdomain( $domain, \trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
 		\load_plugin_textdomain( $domain, FALSE, basename( \plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
 
-		if ( ! \get_option( Options::KEY ) ) {
+		if ( empty( Options::getAll() ) ) {
 			Options::setDefaults();
 		}
 

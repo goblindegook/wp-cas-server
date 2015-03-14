@@ -57,7 +57,7 @@ class Options {
 	 *
 	 * @return array All plugin options.
 	 */
-	public static function all() {
+	public static function getAll() {
 		return \get_option( static::KEY );
 	}
 

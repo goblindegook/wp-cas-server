@@ -56,9 +56,11 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
 		$this->plugin->init();
 
-		$this->assertNotEmpty( get_option( \Cassava\Options::KEY ), 'Plugin sets default options on init.' );
+		$this->assertNotEmpty( \Cassava\Options::getAll(),
+			'Plugin sets default options on init.' );
 
-		$this->assertTrue( in_array( 'cas_route', $wp->public_query_vars ), 'Plugin sets the cas_route endpoint.' );
+		$this->assertTrue( in_array( 'cas_route', $wp->public_query_vars ),
+			'Plugin sets the cas_route endpoint.' );
 	}
 
 	/**

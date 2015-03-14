@@ -23,16 +23,16 @@ class WP_TestWPCASServerOptions extends WP_UnitTestCase {
 	}
 
 	/**
+	 * @covers \Cassava\Options::getAll
 	 * @covers \Cassava\Options::setDefaults
-	 * @covers \Cassava\Options::all
 	 */
 	function test_setDefaults () {
 		\delete_option( \Cassava\Options::KEY );
-		$this->assertEmpty( \Cassava\Options::all(),
+		$this->assertEmpty( \Cassava\Options::getAll(),
 			'Plugin has no options set.' );
 
 		\Cassava\Options::setDefaults();
-		$this->assertNotEmpty( \Cassava\Options::all(),
+		$this->assertNotEmpty( \Cassava\Options::getAll(),
 			'Plugin sets default options on init.' );
 	}
 

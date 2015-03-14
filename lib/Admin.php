@@ -156,7 +156,7 @@ class Admin {
 	 * @since 1.1.0
 	 */
 	public function validateSettings( $input ) {
-		$options = get_option( Options::KEY );
+		$options = Options::getAll();
 
 		$options['attributes'] = (array) $input['attributes'];
 
