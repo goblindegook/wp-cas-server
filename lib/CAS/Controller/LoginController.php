@@ -79,7 +79,7 @@ class LoginController extends BaseController {
 	 *
 	 * @todo Support for the optional warn parameter.
 	 */
-	protected function loginAcceptor( $request = array() ) {
+	private function loginAcceptor( $request = array() ) {
 
 		$username   = \sanitize_user( $request['username'] );
 		$password   = $request['password'];
@@ -99,7 +99,7 @@ class LoginController extends BaseController {
 			$this->server->authRedirect( $request );
 		}
 
-		$this->loginUser( $user, $service );
+		$this->login( $user, $service );
 	}
 
 	/**
@@ -114,13 +114,10 @@ class LoginController extends BaseController {
 	 *
 	 * @param array $request Request arguments.
 	 *
-	 * @uses \is_ssl()
 	 * @uses \is_user_logged_in()
-	 * @uses \remove_query_arg()
 	 * @uses \wp_get_current_user()
-	 * @uses \wp_logout()
 	 */
-	protected function loginRequestor( $request = array() ) {
+	private function loginRequestor( $request = array() ) {
 
 		$this->server->sessionStart();
 
@@ -129,13 +126,7 @@ class LoginController extends BaseController {
 		$service = isset( $request['service'] ) ? $request['service'] : '';
 
 		if ( $renew ) {
-			\wp_logout();
-
-			$schema = \is_ssl() ? 'https://' : 'http://';
-			$url    = $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-			$url    = \remove_query_arg( 'renew', $url );
-
-			$this->server->redirect( $url );
+			$this->renew();
 		}
 
 		if ( ! \is_user_logged_in() ) {
@@ -146,7 +137,27 @@ class LoginController extends BaseController {
 			$this->server->authRedirect( $request );
 		}
 
-		$this->loginUser( \wp_get_current_user(), $service );
+		$this->login( \wp_get_current_user(), $service );
+	}
+
+	/**
+	 * Renews the user session.
+	 *
+	 * Invalidates the user session and repeats the login request without the
+	 * `renew` parameter.
+	 *
+	 * @uses \is_ssl()
+	 * @uses \remove_query_arg()
+	 * @uses \wp_logout()
+	 */
+	private function renew() {
+		\wp_logout();
+
+		$schema = \is_ssl() ? 'https://' : 'http://';
+		$url    = $schema . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+		$url    = \remove_query_arg( 'renew', $url );
+
+		$this->server->redirect( $url );
 	}
 
 	/**
@@ -160,7 +171,7 @@ class LoginController extends BaseController {
 	 * @uses \esc_url_raw()
 	 * @uses \home_url()
 	 */
-	protected function loginUser( $user, $service = '' ) {
+	private function login( $user, $service = '' ) {
 		$ticket = new CAS\Ticket( CAS\Ticket::TYPE_ST, $user, $service );
 
 		$service = empty( $service ) ? \home_url() : \esc_url_raw( $service );
