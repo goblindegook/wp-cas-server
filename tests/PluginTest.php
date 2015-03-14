@@ -52,11 +52,11 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	function test_init () {
 		global $wp;
 
-		delete_option( \Cassava\Plugin::OPTIONS_KEY );
+		delete_option( \Cassava\Options::KEY );
 
 		$this->plugin->init();
 
-		$this->assertNotEmpty( get_option( \Cassava\Plugin::OPTIONS_KEY ), 'Plugin sets default options on init.' );
+		$this->assertNotEmpty( get_option( \Cassava\Options::KEY ), 'Plugin sets default options on init.' );
 
 		$this->assertTrue( in_array( 'cas_route', $wp->public_query_vars ), 'Plugin sets the cas_route endpoint.' );
 	}
@@ -110,47 +110,6 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test plugin settings getter.
-	 * @covers \Cassava\Plugin::getOption
-	 */
-	function testGetOption () {
-		$path = \Cassava\Plugin::getOption( 'endpoint_slug' );
-		$this->assertEquals( \Cassava\Plugin::ENDPOINT_SLUG, $path, 'Obtain the path setting.' );
-
-		$path = \Cassava\Plugin::getOption( 'endpoint_slug', 'default' );
-		$this->assertEquals( \Cassava\Plugin::ENDPOINT_SLUG, $path, 'Ignores default when obtaining an existing setting.' );
-
-		$unset = \Cassava\Plugin::getOption( 'unset', 'nothing' );
-		$this->assertEquals( 'nothing', $unset, 'Obtain the default for a non-existing setting.' );
-	}
-
-	/**
-	 * Test plugin settings setter.
-	 *
-	 * @covers \Cassava\Plugin::getOption
-	 * @covers \Cassava\Plugin::setOption
-	 */
-	function testSetOption () {
-		\Cassava\Plugin::setOption( 'zero', 0 );
-		$this->assertSame( 0, \Cassava\Plugin::getOption( 'zero' ), 'Set 0 integer.' );
-
-		\Cassava\Plugin::setOption( 'integer', 99 );
-		$this->assertSame( 99, \Cassava\Plugin::getOption( 'integer' ), 'Set non-zero integer.' );
-
-		\Cassava\Plugin::setOption( 'float', 99.99 );
-		$this->assertSame( 99.99, \Cassava\Plugin::getOption( 'float' ), 'Set float.' );
-
-		\Cassava\Plugin::setOption( 'string', 'test' );
-		$this->assertSame( 'test', \Cassava\Plugin::getOption( 'string' ), 'Set string.' );
-
-		\Cassava\Plugin::setOption( 'array', array( 1, 2, 3 ) );
-		$this->assertSame( array( 1, 2, 3 ), \Cassava\Plugin::getOption( 'array' ), 'Set array.' );
-
-		\Cassava\Plugin::setOption( 'object', (object) array( 1, 2, 3 ) );
-		$this->assertEquals( (object) array( 1, 2, 3 ), \Cassava\Plugin::getOption( 'object' ), 'Set object.' );
-	}
-
-	/**
 	 * Test allowed_redirect_hosts filter callback.
 	 * @covers \Cassava\Plugin::allowed_redirect_hosts
 	 */
@@ -158,7 +117,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
 		$noSchemaAllowed = version_compare( phpversion(), '5.4.7', '>=' );
 
-		\Cassava\Plugin::setOption( 'allowed_services', array(
+		\Cassava\Options::set( 'allowed_services', array(
 			'http://test1/',
 			'http://test2:8080/',
 			'https://test3/',
@@ -197,7 +156,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 		$this->assertCount( $expected_count, $hosts,
 			'Allowed hosts are added to an existing list.');
 
-		\Cassava\Plugin::setOption( 'allowed_services', false );
+		\Cassava\Options::set( 'allowed_services', false );
 
 		$hosts = $this->plugin->allowed_redirect_hosts( array( 'test.local' ));
 
@@ -210,7 +169,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 		$this->assertCount( 1, $hosts,
 			'Invalid hosts are not added to an existing list.');
 
-		\Cassava\Plugin::setOption( 'allowed_services', 'http://test-string/' );
+		\Cassava\Options::set( 'allowed_services', 'http://test-string/' );
 
 		$hosts = $this->plugin->allowed_redirect_hosts();
 
@@ -229,7 +188,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	 */
 	function test_rewrite_rules () {
 
-		$path = \Cassava\Plugin::getOption( 'endpoint_slug' );
+		$path = \Cassava\Options::get( 'endpoint_slug' );
 
 		$this->assertNotEmpty( $path, 'Plugin sets default URI path root.');
 
@@ -243,7 +202,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 
 		// Plugin forces default endpoint slug
 
-		\Cassava\Plugin::setOption( 'endpoint_slug', '' );
+		\Cassava\Options::set( 'endpoint_slug', '' );
 
 		$this->markTestIncomplete();
 	}

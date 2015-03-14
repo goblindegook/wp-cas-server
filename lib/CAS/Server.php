@@ -10,6 +10,7 @@ namespace Cassava\CAS;
 
 use Cassava\Exception\GeneralException;
 use Cassava\Exception\RequestException;
+use Cassava\Options;
 use Cassava\Plugin;
 
 /**
@@ -81,7 +82,7 @@ class Server {
 	 * @uses \wp_safe_redirect()
 	 */
 	public function redirect( $location, $status = 302 ) {
-		$allowedServices = Plugin::getOption( 'allowed_services' );
+		$allowedServices = Options::get( 'allowed_services' );
 
 		if ( is_array( $allowedServices ) && count( $allowedServices ) > 0 ) {
 			\wp_safe_redirect( $location, $status );

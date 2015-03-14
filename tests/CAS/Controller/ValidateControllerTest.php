@@ -103,12 +103,12 @@ class TestWPCASControllerValidate extends WPCAS_UnitTestCase {
 		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->controller->handleRequest( $args ),
 			"Valid ticket." );
 
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Options::set( 'allow_ticket_reuse', 1 );
 
 		$this->assertEquals( "yes\n" . $user->user_login . "\n", $this->controller->handleRequest( $args ),
 			"Tickets may reused." );
 
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 0 );
+		Cassava\Options::set( 'allow_ticket_reuse', 0 );
 
 		$this->assertEquals( "no\n\n", $this->controller->handleRequest( $args ),
 			"Tickets may not be reused." );

@@ -9,6 +9,7 @@
 namespace Cassava\CAS;
 
 use Cassava\Exception\TicketException;
+use Cassava\Options;
 use Cassava\Plugin;
 
 /**
@@ -94,7 +95,7 @@ class Ticket {
 		 * Freshly generated tickets have no expiration timestamp:
 		 */
 		if ( ! $expires ) {
-			$expiration  = Plugin::getOption( 'expiration', 30 );
+			$expiration  = Options::get( 'expiration', 30 );
 
 			/**
 			 * This filter allows developers to override the default ticket expiration period.
@@ -253,7 +254,7 @@ class Ticket {
 	 */
 	public function isUsed() {
 
-		if ( Plugin::getOption( 'allow_ticket_reuse' ) ) {
+		if ( Options::get( 'allow_ticket_reuse' ) ) {
 			return false;
 		}
 

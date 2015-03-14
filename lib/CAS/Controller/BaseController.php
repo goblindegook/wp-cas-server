@@ -36,6 +36,8 @@ abstract class BaseController {
 	 * Handle a CAS request.
 	 *
 	 * @param array $request CAS request.
+	 *
+	 * @return null
 	 */
 	abstract public function handleRequest( $request );
 }

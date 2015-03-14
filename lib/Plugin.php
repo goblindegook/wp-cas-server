@@ -31,11 +31,6 @@ class Plugin {
 	const ENDPOINT_SLUG = 'wp-cas';
 
 	/**
-	 * Plugin options key.
-	 */
-	const OPTIONS_KEY = 'wp_cas_server';
-
-	/**
 	 * Plugin file.
 	 */
 	const FILE = 'wp-cas-server/wp-cas-server.php';
@@ -61,38 +56,6 @@ class Plugin {
 	 * @var \Cassava\Admin
 	 */
 	protected $admin;
-
-	/**
-	 * Default plugin options.
-	 * @var array
-	 */
-	private $defaultOptions = array(
-		/**
-		 * CAS server endpoint path fragment (e.g. `<scheme>://<host>/wp-cas/login`).
-		 */
-		'endpoint_slug'      => self::ENDPOINT_SLUG,
-
-		/**
-		 * Service ticket expiration, in seconds [0..300].
-		 */
-		'expiration'         => 30,
-
-		/**
-		 * `allow_ticket_reuse` exists as a workaround for potential issues with
-		 * WordPress's Transients API.
-		 */
-		'allow_ticket_reuse' => false,
-
-		/**
-		 * @todo Allow requests from these service URIs only.
-		 */
-		'allowed_services'   => array(),
-
-		/**
-		 * User attributes to return on a successful `/serviceValidate` response.
-		 */
-		'attributes'         => array(),
-		);
 
 	/**
 	 * WP CAS Server plugin constructor.
@@ -206,13 +169,13 @@ class Plugin {
 		global $wp;
 
 		$domain = static::SLUG;
-		$locale = apply_filters( 'plugin_locale', get_locale(), 'wp-cas-server' );
+		$locale = \apply_filters( 'plugin_locale', \get_locale(), 'wp-cas-server' );
 
-		load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
-		load_plugin_textdomain( $domain, FALSE, basename( plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
+		\load_textdomain( $domain, \trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
+		\load_plugin_textdomain( $domain, FALSE, basename( \plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
 
-		if ( ! get_option( static::OPTIONS_KEY ) ) {
-			$this->setDefaultOptions();
+		if ( ! \get_option( Options::KEY ) ) {
+			Options::setDefaults();
 		}
 
 		$wp->add_query_var( static::QUERY_VAR_ROUTE );
@@ -232,7 +195,7 @@ class Plugin {
 			return;
 		}
 
-		echo $this->server->handleRequest( $wp->query_vars[static::QUERY_VAR_ROUTE] );
+		echo $this->server->handleRequest( $wp->query_vars[ static::QUERY_VAR_ROUTE ] );
 
 		exit;
 	}
@@ -248,7 +211,7 @@ class Plugin {
 	 */
 	public function allowed_redirect_hosts( $allowed = array() ) {
 
-		foreach ( (array) static::getOption( 'allowed_services' ) as $uri ) {
+		foreach ( (array) Options::get( 'allowed_services' ) as $uri ) {
 			// `allowed_redirect_hosts` returns a list of **hosts**, not URIs:
 			$host = parse_url( $uri, PHP_URL_HOST );
 
@@ -261,57 +224,10 @@ class Plugin {
 	}
 
 	/**
-	 * Get plugin option by key.
-	 *
-	 * @param  string $key     Plugin option key to return.
-	 * @param  mixed  $default Option value to return if `$key` is not found.
-	 *
-	 * @return mixed           Plugin option value.
-	 *
-	 * @uses get_option()
-	 */
-	public static function getOption( $key = '', $default = null ) {
-		$options = get_option( static::OPTIONS_KEY );
-		return isset( $options[ $key ] ) ? $options[ $key ] : $default;
-	}
-
-	/**
-	 * Set plugin option by key.
-	 *
-	 * @param string $key   Plugin option key to set.
-	 * @param mixed  $value Plugin option value to set.
-	 */
-	public static function setOption( $key, $value ) {
-		if ( ! isset( $key ) ) {
-			return;
-		}
-
-		$options = get_option( static::OPTIONS_KEY );
-
-		if ( ! isset( $value ) ) {
-			unset( $options[ $key ] );
-		} else {
-			$options[ $key ] = $value;
-		}
-
-		update_option( static::OPTIONS_KEY, $options );
-	}
-
-	/**
-	 * Set the default plugin options in the database.
-	 *
-	 * @uses get_option()
-	 * @uses update_option()
-	 */
-	private function setDefaultOptions() {
-		$options = get_option( static::OPTIONS_KEY, $this->defaultOptions );
-		update_option( static::OPTIONS_KEY, $options );
-	}
-
-	/**
 	 * Register new rewrite rules for the CAS server URIs.
 	 *
-	 * @uses add_rewrite_endpoint()
+	 * @uses \add_rewrite_endpoint()
+	 * @uses \is_ssl()
 	 *
 	 * @SuppressWarnings(CamelCaseMethodName)
 	 */
@@ -320,17 +236,17 @@ class Plugin {
 		/**
 		 * Enforce SSL
 		 */
-		if ( ! is_ssl() ) {
+		if ( ! \is_ssl() ) {
 			return;
 		}
 
-		$path = static::getOption( 'endpoint_slug' );
+		$path = Options::get( 'endpoint_slug' );
 
 		if ( empty( $path ) ) {
 			$path = static::ENDPOINT_SLUG;
 		}
 
-		add_rewrite_endpoint( $path, EP_ROOT, static::QUERY_VAR_ROUTE );
+		\add_rewrite_endpoint( $path, EP_ROOT, static::QUERY_VAR_ROUTE );
 	}
 
 }

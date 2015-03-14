@@ -128,7 +128,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		 * Do not enforce single-use tickets.
 		 */
 
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Options::set( 'allow_ticket_reuse', 1 );
 
 		$xml = $this->controller->handleRequest( $args );
 
@@ -151,7 +151,7 @@ class TestWPCASControllerProxyValidate extends WPCAS_UnitTestCase {
 		/**
 		 * Enforce single-use tickets.
 		 */
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 0 );
+		Cassava\Options::set( 'allow_ticket_reuse', 0 );
 
 		$args = array(
 			'service' => $service,

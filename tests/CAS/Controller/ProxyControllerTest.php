@@ -137,7 +137,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		 * /proxy validates a Proxy-Granting Ticket successfully.
 		 */
 
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Options::set( 'allow_ticket_reuse', 1 );
 
 		$args = array(
 			'targetService' => $targetService,
@@ -183,7 +183,7 @@ class TestWPCASControllerProxy extends WPCAS_UnitTestCase {
 		 * Enforce single-use tickets.
 		 */
 
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 0 );
+		Cassava\Options::set( 'allow_ticket_reuse', 0 );
 
 		$error = $this->controller->handleRequest( $args );
 

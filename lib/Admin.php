@@ -102,7 +102,7 @@ class Admin {
 			|| isset( $_POST['category_base'] )
 			|| isset( $_POST['cas_server_endpoint_slug'] )
 		) {
-			Plugin::setOption( 'endpoint_slug', trim( sanitize_text_field( $_POST['cas_server_endpoint_slug'] ) ) );
+			Options::set( 'endpoint_slug', trim( sanitize_text_field( $_POST['cas_server_endpoint_slug'] ) ) );
 		}
 	}
 
@@ -119,7 +119,7 @@ class Admin {
 
 		register_setting(
 			Plugin::SLUG,
-			Plugin::OPTIONS_KEY,
+			Options::KEY,
 			array( $this, 'validateSettings' )
 		);
 
@@ -137,7 +137,7 @@ class Admin {
 		// Permalink settings:
 
 		add_settings_field(
-			Plugin::OPTIONS_KEY . '_endpoint_slug',
+			Options::KEY . '_endpoint_slug',
 			__( 'CAS server base', 'wp-cas-server' ),
 			array( $this, 'fieldPermalinksEndpointSlug' ),
 			'permalink',
@@ -156,7 +156,7 @@ class Admin {
 	 * @since 1.1.0
 	 */
 	public function validateSettings( $input ) {
-		$options = get_option( Plugin::OPTIONS_KEY );
+		$options = get_option( Options::KEY );
 
 		$options['attributes'] = (array) $input['attributes'];
 
@@ -171,10 +171,10 @@ class Admin {
 	 * @since 1.0.0
 	 */
 	public function fieldPermalinksEndpointSlug() {
-		$endpoint = Plugin::getOption( 'endpoint_slug' );
+		$endpoint = Options::get( 'endpoint_slug' );
 		?>
-		<input id="<?php echo Plugin::OPTIONS_KEY; ?>_endpoint_slug"
-			name="<?php echo Plugin::OPTIONS_KEY; ?>_endpoint_slug"
+		<input id="<?php echo Options::KEY; ?>_endpoint_slug"
+			name="<?php echo Options::KEY; ?>_endpoint_slug"
 			type="text" class="regular-text code"
 			value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>"
 			placeholder="<?php echo Plugin::ENDPOINT_SLUG; ?>" />
@@ -223,7 +223,7 @@ class Admin {
 	public function fieldUserAttributes() {
 
 		$user       = wp_get_current_user();
-		$attributes = Plugin::getOption( 'attributes' );
+		$attributes = Options::get( 'attributes' );
 
 		$attributeOptions = array(
 			'first_name'   => __( 'First Name', 'wp-cas-server' ),
@@ -255,8 +255,8 @@ class Admin {
 		<legend class="screen-reader-text"><?php _e( 'User Attributes', 'wp-cas-server' ) ?></legend>
 			<?php foreach ($attributeOptions as $value => $label) : ?>
 			<label>
-				<input id="<?php echo Plugin::OPTIONS_KEY . '-attribute-' . $value ?>"
-				name="<?php echo Plugin::OPTIONS_KEY ?>[attributes][]"
+				<input id="<?php echo Options::KEY . '-attribute-' . $value ?>"
+				name="<?php echo Options::KEY ?>[attributes][]"
 				type="checkbox" <?php if (in_array( $value, $attributes )) echo "checked" ?>
 				value="<?php echo $value ?>">
 				<span><?php echo $label ?></span>

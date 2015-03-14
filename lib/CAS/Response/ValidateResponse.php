@@ -9,6 +9,7 @@
 namespace Cassava\CAS\Response;
 
 use Cassava\CAS;
+use Cassava\Options;
 use Cassava\Plugin;
 
 /**
@@ -66,7 +67,7 @@ class ValidateResponse extends BaseResponse {
 	 * @uses \apply_filters()
 	 */
 	protected function setUserAttributes( CAS\Ticket $ticket ) {
-		$attributeKeys = Plugin::getOption( 'attributes' );
+		$attributeKeys = Options::get( 'attributes' );
 
 		if ( ! is_array( $attributeKeys ) || empty( $attributeKeys ) ) {
 			return;

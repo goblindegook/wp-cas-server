@@ -233,7 +233,7 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 
-		Cassava\Plugin::setOption( 'attributes', array( 'user_email' ) );
+		Cassava\Options::set( 'attributes', array( 'user_email' ) );
 
 		$args = array(
 			'service' => $service,

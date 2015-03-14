@@ -67,8 +67,8 @@ class BaseResponse {
 	/**
 	 * Set error response.
 	 *
-	 * @param WP_Error $error Response error.
-	 * @param string   $tag   Response XML tag (defaults to `authenticationFailure`).
+	 * @param \WP_Error $error Response error.
+	 * @param string    $tag   Response XML tag (defaults to `authenticationFailure`).
 	 *
 	 * @uses \WP_Error
 	 * @uses \do_action()
@@ -96,9 +96,9 @@ class BaseResponse {
 	/**
 	 * Create response element.
 	 *
-	 * @param  string   $element Unqualified element tag name.
-	 * @param  string   $value   Optional element value.
-	 * @return \DOMNode          XML element.
+	 * @param  string      $element Unqualified element tag name.
+	 * @param  string|null $value   Optional element value.
+	 * @return \DOMNode             XML element.
 	 */
 	protected function createElement( $element, $value = null ) {
 		return $this->document->createElementNS( static::CAS_NS, "cas:$element", $value );

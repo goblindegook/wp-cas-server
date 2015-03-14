@@ -17,7 +17,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 		$type       = CAS\Ticket::TYPE_ST;
 		$user       = get_user_by( 'id', $this->factory->user->create() );
 		$service    = 'https://test/ÚÑ|Çº∂€/';
-		$expiration = Cassava\Plugin::getOption( 'expiration', 30 );
+		$expiration = Cassava\Options::get( 'expiration', 30 );
 
 		$ticket = new CAS\Ticket( $type, $user, $service );
 
@@ -84,7 +84,7 @@ class WP_TestWPCASTicket extends WP_UnitTestCase {
 		$this->assertTrue( $ticket->isUsed(),
 			'Ticket correctly marked as used.' );
 
-		Cassava\Plugin::setOption( 'allow_ticket_reuse', 1 );
+		Cassava\Options::set( 'allow_ticket_reuse', 1 );
 
 		$this->assertFalse( $ticket->isUsed(),
 			'Settings allow ticket reuse.' );
