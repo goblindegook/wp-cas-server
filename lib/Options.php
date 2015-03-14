@@ -108,7 +108,7 @@ class Options {
 	 * @uses \update_option()
 	 */
 	public static function setDefaults() {
-		$options = \get_option( static::KEY, static::$defaults );
+		$options = \get_option( static::KEY, self::$defaults );
 		\update_option( static::KEY, $options );
 	}
 

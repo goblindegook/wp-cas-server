@@ -242,7 +242,7 @@ Parameters:
 * Developers: The `cas_server_routes` filter no longer deals with callbacks, controller classes are handled instead. Controller classes must extend `\Cassava\CAS\Controller\BaseController`.
 * WordPress 4.1.1 compatibility.
 * Cleaner, easier to maintain codebase.
-* Improved test coverage.
+* Improved tests and test coverage.
 
 = 1.1.2 =
 

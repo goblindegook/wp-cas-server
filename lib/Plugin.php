@@ -90,27 +90,12 @@ class Plugin {
 	 * @param bool $network_wide Plugin is activated for the entire network.
 	 *
 	 * @uses flush_rewrite_rules()
-	 * @uses is_multisite()
-	 * @uses restore_current_blog()
-	 * @uses switch_to_blog()
-	 * @uses wp_get_sites()
 	 */
 	public function activation( $network_wide ) {
-
-		if ( function_exists( 'is_multisite' ) && is_multisite() && $network_wide ) {
-			$sites = wp_get_sites();
-			foreach ( $sites as $site ) {
-				switch_to_blog( $site['blog_id'] );
-				$this->addRewriteRules();
-				flush_rewrite_rules();
-			}
-			restore_current_blog();
-			return;
-		}
-
-		$this->addRewriteRules();
-		flush_rewrite_rules();
-		return;
+		$this->callForAllSites( function () {
+			$this->addRewriteRules();
+			flush_rewrite_rules();
+		} );
 	}
 
 	/**
@@ -119,26 +104,39 @@ class Plugin {
 	 * @param bool $network_wide Plugin is activated for the entire network.
 	 *
 	 * @uses flush_rewrite_rules()
-	 * @uses is_multisite()
-	 * @uses restore_current_blog()
-	 * @uses switch_to_blog()
-	 * @uses wp_get_sites()
 	 *
 	 * @SuppressWarnings(CamelCaseParameterName)
 	 * @SuppressWarnings(CamelCaseVariableName)
 	 */
 	public function deactivation( $network_wide ) {
-		if ( function_exists( 'is_multisite' ) && is_multisite() && $network_wide ) {
-			$sites = wp_get_sites();
+		$this->callForAllSites( function () {
+			flush_rewrite_rules();
+		} );
+	}
+
+	/**
+	 * Executes a callback on every site on a multisite install.
+	 *
+	 * @param Callable $callback  Callback to run on every site.
+	 * @param array    $arguments Optional callback argument list.
+	 *
+	 * @uses \is_multisite()
+	 * @uses \restore_current_blog()
+	 * @uses \switch_to_blog()
+	 * @uses \wp_get_sites()
+	 */
+	private function callForAllSites( $callback, $arguments = array() ) {
+		if ( function_exists( 'is_multisite' ) && \is_multisite() && $network_wide ) {
+			$sites = \wp_get_sites();
 			foreach ( $sites as $site ) {
-				switch_to_blog( $site['blog_id'] );
-				flush_rewrite_rules();
+				\switch_to_blog( $site['blog_id'] );
+				call_user_func_array( $callback, $arguments );
 			}
-			restore_current_blog();
+			\restore_current_blog();
 			return;
 		}
 
-		flush_rewrite_rules();
+		call_user_func_array( $callback, $arguments );
 	}
 
 	/**
