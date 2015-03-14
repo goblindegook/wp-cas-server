@@ -92,7 +92,7 @@ class Plugin {
 	 * @uses flush_rewrite_rules()
 	 */
 	public function activation( $network_wide ) {
-		$this->callForAllSites( function () {
+		$this->call( $network_wide, function () {
 			$this->addRewriteRules();
 			flush_rewrite_rules();
 		} );
@@ -109,7 +109,7 @@ class Plugin {
 	 * @SuppressWarnings(CamelCaseVariableName)
 	 */
 	public function deactivation( $network_wide ) {
-		$this->callForAllSites( function () {
+		$this->call( $network_wide, function () {
 			flush_rewrite_rules();
 		} );
 	}
@@ -117,15 +117,16 @@ class Plugin {
 	/**
 	 * Executes a callback on every site on a multisite install.
 	 *
-	 * @param Callable $callback  Callback to run on every site.
-	 * @param array    $arguments Optional callback argument list.
+	 * @param bool     $network_wide Plugin is activated for the entire network.
+	 * @param Callable $callback     Callback to run on every site.
+	 * @param array    $arguments    Optional callback argument list.
 	 *
 	 * @uses \is_multisite()
 	 * @uses \restore_current_blog()
 	 * @uses \switch_to_blog()
 	 * @uses \wp_get_sites()
 	 */
-	private function callForAllSites( $callback, $arguments = array() ) {
+	private function call( $network_wide, $callback, $arguments = array() ) {
 		if ( function_exists( 'is_multisite' ) && \is_multisite() && $network_wide ) {
 			$sites = \wp_get_sites();
 			foreach ( $sites as $site ) {
