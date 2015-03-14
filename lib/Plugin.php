@@ -117,7 +117,7 @@ class Plugin {
 	/**
 	 * Executes a callback on every site on a multisite install.
 	 *
-	 * @param bool     $network_wide Plugin is activated for the entire network.
+	 * @param bool     $network_wide Whether the callback should run network-wide.
 	 * @param Callable $callback     Callback to run on every site.
 	 * @param array    $arguments    Optional callback argument list.
 	 *
