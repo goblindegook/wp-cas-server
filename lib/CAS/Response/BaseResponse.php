@@ -52,7 +52,10 @@ class BaseResponse {
 	 */
 	public function prepare() {
 		$root = $this->createElement( 'serviceResponse' );
-		$root->appendChild( $this->response );
+
+		if ( ! empty( $this->response ) ) {
+			$root->appendChild( $this->response );
+		}
 
 		// Removing all child nodes from response document:
 		while ( $this->document->firstChild ) {
@@ -67,13 +70,13 @@ class BaseResponse {
 	/**
 	 * Set error response.
 	 *
-	 * @param \WP_Error $error Response error.
-	 * @param string    $tag   Response XML tag (defaults to `authenticationFailure`).
+	 * @param \WP_Error|null $error Response error.
+	 * @param string         $tag   Response XML tag (defaults to `authenticationFailure`).
 	 *
 	 * @uses \WP_Error
 	 * @uses \do_action()
 	 */
-	public function setError( \WP_Error $error, $tag = 'authenticationFailure' ) {
+	public function setError( \WP_Error $error = null, $tag = 'authenticationFailure' ) {
 		/**
 		 * Fires if the CAS server has to return an XML error.
 		 *
@@ -84,7 +87,7 @@ class BaseResponse {
 		$message = __( 'Unknown error', 'wp-cas-server' );
 		$code    = GeneralException::ERROR_INTERNAL_ERROR;
 
-		if ( isset( $error ) ) {
+		if ( ! empty( $error ) ) {
 			$code    = $error->get_error_code();
 			$message = $error->get_error_message( $code );
 		}
