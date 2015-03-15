@@ -22,13 +22,6 @@ class TestWPCASResponseBaseResponse extends WPCAS_UnitTestCase {
 
 	/**
 	 * @covers ::__construct
-	 */
-	function test_construct () {
-		$this->assertTrue( is_a( $this->response, '\Cassava\CAS\Response\BaseResponse' ),
-			'BaseResponse is BaseResponse.' );
-	}
-
-	/**
 	 * @covers ::prepare
 	 */
 	function test_prepare() {
@@ -38,6 +31,7 @@ class TestWPCASResponseBaseResponse extends WPCAS_UnitTestCase {
 	}
 
 	/**
+	 * @covers ::prepare
 	 * @covers ::setError
 	 * @dataProvider data_setError
 	 */
