@@ -183,6 +183,7 @@ class TestWPCASResponseValidateResponse extends WPCAS_UnitTestCase {
 			array( array() ),
 			array( array( 'int' => 2 ) ),
 			array( array( 'float' => 2.5 ), array( 'string' => 'test' ) ),
+			array( array( 'empty' => '' ) ),
 		);
 	}
 
