@@ -25,6 +25,8 @@ class ValidateResponse extends BaseResponse {
 	 * @param  \Cassava\CAS\Ticket $ticket              Validated ticket.
 	 * @param  string              $proxyGrantingTicket Generated Proxy-Granting Ticket (PGT) to return.
 	 * @param  array               $proxies             List of proxy URIs.
+	 *
+	 * @todo Throw exception on bad or no ticket.
 	 */
 	public function setTicket( CAS\Ticket $ticket, $proxyGrantingTicket = '', $proxies = array() ) {
 
@@ -69,10 +71,6 @@ class ValidateResponse extends BaseResponse {
 	protected function setUserAttributes( CAS\Ticket $ticket ) {
 		$attributeKeys = Options::get( 'attributes' );
 
-		if ( ! is_array( $attributeKeys ) || empty( $attributeKeys ) ) {
-			return;
-		}
-
 		$attributes = array();
 
 		foreach ( $attributeKeys as $key ) {
@@ -87,6 +85,10 @@ class ValidateResponse extends BaseResponse {
 		 * @param  WP_User $user       Authenticated user.
 		 */
 		$attributes = \apply_filters( 'cas_server_validation_user_attributes', $attributes, $ticket->user );
+
+		if ( ! is_array( $attributes ) || empty( $attributes ) ) {
+			return;
+		}
 
 		$xmlAttributes = $this->createElement( 'attributes' );
 

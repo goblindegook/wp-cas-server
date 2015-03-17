@@ -28,4 +28,33 @@ class TestWPCASResponseProxyResponse extends WPCAS_UnitTestCase {
 			'ProxyResponse extends BaseResponse.' );
 	}
 
+	/**
+	 * @covers ::prepare
+	 * @covers ::setTicket
+	 */
+	function test_setTicket() {
+		$type    = CAS\Ticket::TYPE_PT;
+		$user    = get_user_by( 'id', $this->factory->user->create() );
+		$service = 'https://test/';
+
+		$ticket = new CAS\Ticket( $type, $user, $service );
+
+		$this->response->setTicket( $ticket );
+
+		$xml = $this->response->prepare();
+
+		$this->assertXPathMatch( 1, 'count(//cas:proxySuccess)', $xml,
+			'Successful response has a proxySuccess tag.' );
+
+		$this->assertXPathMatch( (string) $ticket, 'string(//cas:proxySuccess/cas:proxyTicket/text())', $xml,
+			'Response contains the set ticket.' );
+
+		$this->response->setTicket( $ticket );
+
+		$xml = $this->response->prepare();
+
+		$this->assertXPathMatch( 1, 'count(//cas:proxySuccess)', $xml,
+			'setTicket is an idempotent operation.' );
+	}
+
 }

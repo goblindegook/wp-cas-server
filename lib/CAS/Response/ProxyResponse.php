@@ -15,6 +15,8 @@ use Cassava\CAS;
  * Implements the CAS response for proxy requests.
  *
  * @version 1.2.0
+ *
+ * @todo Throw exception on bad or no ticket.
  */
 class ProxyResponse extends BaseResponse {
 
