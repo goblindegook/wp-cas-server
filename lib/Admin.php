@@ -69,7 +69,7 @@ class Admin {
 	 * @SuppressWarnings(CamelCaseMethodName)
 	 */
 	public function admin_notices() {
-		if (!is_ssl() && current_user_can( 'install_plugins' )) {
+		if ( ! is_ssl() && current_user_can( 'install_plugins' ) ) {
 			$this->adminNoticeNoSSL();
 		}
 	}
@@ -97,12 +97,14 @@ class Admin {
 			return;
 		}
 
+		$option = Options::KEY . '_endpoint_slug';
+
 		if ( false
 			|| isset( $_POST['permalink_structure'] )
 			|| isset( $_POST['category_base'] )
-			|| isset( $_POST['cas_server_endpoint_slug'] )
+			|| isset( $_POST[ $option ] )
 		) {
-			Options::set( 'endpoint_slug', trim( sanitize_text_field( $_POST['cas_server_endpoint_slug'] ) ) );
+			Options::set( 'endpoint_slug', trim( sanitize_text_field( $_POST[ $option ] ) ) );
 		}
 	}
 
@@ -171,10 +173,10 @@ class Admin {
 	 * @since 1.0.0
 	 */
 	public function fieldPermalinksEndpointSlug() {
+		$option   = Options::KEY . '_endpoint_slug';
 		$endpoint = Options::get( 'endpoint_slug' );
 		?>
-		<input id="<?php echo Options::KEY; ?>_endpoint_slug"
-			name="<?php echo Options::KEY; ?>_endpoint_slug"
+		<input id="<?php echo $option; ?>" name="<?php echo $option; ?>"
 			type="text" class="regular-text code"
 			value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>"
 			placeholder="<?php echo Plugin::ENDPOINT_SLUG; ?>" />
