@@ -118,17 +118,13 @@ class Ticket {
 	 * @return string Ticket as string.
 	 */
 	public function __toString() {
-		return $this->type . '-' . base64_encode( implode( '|', array(
-			$this->user->user_login,
-			urlencode( $this->service ),
-			$this->expires,
-			$this->generateSignature() ) ) );
+		return $this->encodeTicket();
 	}
 
 	/**
 	 * Create a new ticket instance from a ticket string.
 	 *
-	 * @param  string $ticket Ticket string.
+	 * @param  string $string Ticket string.
 	 * @return Ticket         Ticket object.
 	 *
 	 * @throws \Cassava\Exception\TicketException
@@ -137,37 +133,47 @@ class Ticket {
 	 * @uses \get_user_by()
 	 * @uses \is_wp_error()
 	 */
-	public static function fromString( $ticket ) {
+	public static function fromString( $string ) {
 
-		if ( strpos( $ticket, '-' ) === false ) {
-			$ticket = static::TYPE_ST . '-' . $ticket;
+		$components = static::decodeTicket( $string );
+
+		if ( $components['expires'] < time() ) {
+			throw new TicketException( __( 'Expired ticket.', 'wp-cas-server' ) );
 		}
 
-		list( $type, $content ) = explode( '-', $ticket, 2 );
-
-		list( $login, $service, $expires, $signature ) = static::extractComponents( $content );
-
-		if ( $expires < time() ) {
-			throw new TicketException( __( 'Ticket has expired.', 'wp-cas-server' ) );
-		}
-
-		$user = \get_user_by( 'login', $login );
+		$user = \get_user_by( 'login', $components['login'] );
 
 		if ( ! $user || \is_wp_error( $user ) ) {
-			throw new TicketException( __( 'Ticket does not match a valid user.', 'wp-cas-server' ) );
+			throw new TicketException( __( 'No user matches ticket.', 'wp-cas-server' ) );
 		}
 
-		$ticket = new static( $type, $user, $service, $expires );
+		$ticket = new static( $components['type'], $user, $components['service'], $components['expires'] );
 
-		if ( $ticket->generateSignature() !== $signature ) {
-			throw new TicketException( __( 'Ticket is corrupted.', 'wp-cas-server' ) );
+		if ( $ticket->generateSignature() !== $components['signature'] ) {
+			throw new TicketException( __( 'Corrupted ticket.', 'wp-cas-server' ) );
 		}
 
 		if ( $ticket->isUsed() ) {
-			throw new TicketException( __( 'Ticket is unknown or has already been used.', 'wp-cas-server' ) );
+			throw new TicketException( __( 'Unknown or used ticket.', 'wp-cas-server' ) );
 		}
 
 		return $ticket;
+	}
+
+	/**
+	 * Serialize ticket components into a string.
+	 *
+	 * @return string Ticket string.
+	 */
+	protected function encodeTicket() {
+		$components = array(
+			$this->user->user_login,     // 1. User login
+			urlencode( $this->service ), // 2. Service URL
+			$this->expires,              // 3. Expiration timestamp
+			$this->generateSignature(),  // 4. Cryptographic signature
+		);
+
+		return $this->type . '-' . base64_encode( implode( '|', $components ) );
 	}
 
 	/**
@@ -180,19 +186,27 @@ class Ticket {
 	 *
 	 * @uses \__()
 	 */
-	private static function extractComponents( $ticket ) {
+	protected static function decodeTicket( $ticket ) {
 
-		$components = explode( '|', base64_decode( $ticket ) );
-
-		if (count( $components ) < 4) {
-			throw new TicketException( __( 'Ticket is malformed.', 'wp-cas-server' ) );
+		if ( strpos( $ticket, '-' ) === false ) {
+			$ticket = static::TYPE_ST . '-' . $ticket;
 		}
 
-		list( $login, $service, $expires, $signature ) = $components;
+		list( $type, $content ) = explode( '-', $ticket, 2 );
 
-		$service = urldecode( $service );
+		$values = explode( '|', base64_decode( $content ) );
 
-		return array( $login, $service, $expires, $signature );
+		if (count( $values ) < 4) {
+			throw new TicketException( __( 'Malformed ticket.', 'wp-cas-server' ) );
+		}
+
+		$keys       = array( 'login', 'service', 'expires', 'signature' );
+		$components = array_combine( $keys, $values );
+
+		$components['type']    = $type;
+		$components['service'] = urldecode( $components['service'] );
+
+		return $components;
 	}
 
 	/**

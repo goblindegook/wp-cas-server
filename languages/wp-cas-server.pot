@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the Cassava: A WordPress CAS Server package.
 msgid ""
 msgstr ""
-"Project-Id-Version: Cassava: A WordPress CAS Server 1.2.0\n"
+"Project-Id-Version: Cassava: A WordPress CAS Server 1.2.1\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/wp-cas-server\n"
-"POT-Creation-Date: 2015-02-22 19:30:29+00:00\n"
+"POT-Creation-Date: 2015-05-06 20:29:47+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -22,53 +22,53 @@ msgid ""
 "information, contact your system administrator or hosting provider."
 msgstr ""
 
-#: lib/Admin.php:132
+#: lib/Admin.php:134
 msgid "User Attributes To Return"
 msgstr ""
 
-#: lib/Admin.php:141
+#: lib/Admin.php:143
 msgid "CAS server base"
 msgstr ""
 
-#: lib/Admin.php:197
+#: lib/Admin.php:199
 msgid "Cassava CAS Server Settings"
 msgstr ""
 
-#: lib/Admin.php:199
+#: lib/Admin.php:201
 msgid ""
 "Configuration panel for the Central Authentication Service provided by this "
 "site."
 msgstr ""
 
-#: lib/Admin.php:229
+#: lib/Admin.php:231
 msgid "First Name"
 msgstr ""
 
-#: lib/Admin.php:230
+#: lib/Admin.php:232
 msgid "Last Name"
 msgstr ""
 
-#: lib/Admin.php:231
+#: lib/Admin.php:233
 msgid "Public Name"
 msgstr ""
 
-#: lib/Admin.php:232
+#: lib/Admin.php:234
 msgid "Email"
 msgstr ""
 
-#: lib/Admin.php:233
+#: lib/Admin.php:235
 msgid "Website"
 msgstr ""
 
-#: lib/Admin.php:255
+#: lib/Admin.php:257
 msgid "User Attributes"
 msgstr ""
 
-#: lib/Admin.php:265
+#: lib/Admin.php:267
 msgid "(e.g. %s)"
 msgstr ""
 
-#: lib/Admin.php:270
+#: lib/Admin.php:272
 msgid ""
 "Checked attributes are disclosed on successful validation requests (CAS 2.0 "
 "only)."
@@ -86,43 +86,43 @@ msgstr ""
 msgid "Ticket does not match the service provided."
 msgstr ""
 
-#: lib/CAS/Response/BaseResponse.php:84
+#: lib/CAS/Response/BaseResponse.php:87
 msgid "Unknown error"
 msgstr ""
 
-#: lib/CAS/Server.php:189
+#: lib/CAS/Server.php:190
 msgid "The CAS server is disabled."
 msgstr ""
 
-#: lib/CAS/Server.php:203
+#: lib/CAS/Server.php:204
 msgid "The controller for the route is invalid."
 msgstr ""
 
-#: lib/CAS/Server.php:234
+#: lib/CAS/Server.php:235
 msgid "The server does not support the method requested."
 msgstr ""
 
-#: lib/CAS/Ticket.php:146
-msgid "Ticket is malformed."
+#: lib/CAS/Ticket.php:141
+msgid "Expired ticket."
 msgstr ""
 
-#: lib/CAS/Ticket.php:154
-msgid "Ticket has expired."
+#: lib/CAS/Ticket.php:147
+msgid "No user matches ticket."
 msgstr ""
 
-#: lib/CAS/Ticket.php:160
-msgid "Ticket does not match a valid user."
+#: lib/CAS/Ticket.php:153
+msgid "Corrupted ticket."
 msgstr ""
 
-#: lib/CAS/Ticket.php:166
-msgid "Ticket is corrupted."
+#: lib/CAS/Ticket.php:157
+msgid "Unknown or used ticket."
 msgstr ""
 
-#: lib/CAS/Ticket.php:170
-msgid "Ticket is unknown or has already been used."
+#: lib/CAS/Ticket.php:200
+msgid "Malformed ticket."
 msgstr ""
 
-#: lib/CAS/Ticket.php:208
+#: lib/CAS/Ticket.php:254
 msgid "Ticket type cannot be validated."
 msgstr ""
 
