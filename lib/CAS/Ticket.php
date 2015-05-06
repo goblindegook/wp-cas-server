@@ -133,6 +133,7 @@ class Ticket {
 	 *
 	 * @throws \Cassava\Exception\TicketException
 	 *
+	 * @uses \__()
 	 * @uses \get_user_by()
 	 * @uses \is_wp_error()
 	 */
@@ -171,8 +172,13 @@ class Ticket {
 
 	/**
 	 * Extracts components from a base64 encoded ticket string.
+	 *
 	 * @param  string $ticket Ticket string (minus the prefix).
 	 * @return array          Ticket components.
+	 *
+	 * @throws \Cassava\Exception\TicketException
+	 *
+	 * @uses \__()
 	 */
 	private static function extractComponents( $ticket ) {
 
