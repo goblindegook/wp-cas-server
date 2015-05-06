@@ -144,15 +144,7 @@ class Ticket {
 
 		list( $type, $content ) = explode( '-', $ticket, 2 );
 
-		$elements = explode( '|', base64_decode( $content ) );
-
-		if (count( $elements ) < 4) {
-			throw new TicketException( __( 'Ticket is malformed.', 'wp-cas-server' ) );
-		}
-
-		list( $login, $service, $expires, $signature ) = $elements;
-
-		$service = urldecode( $service );
+		list( $login, $service, $expires, $signature ) = static::extractComponents( $content );
 
 		if ( $expires < time() ) {
 			throw new TicketException( __( 'Ticket has expired.', 'wp-cas-server' ) );
@@ -175,6 +167,26 @@ class Ticket {
 		}
 
 		return $ticket;
+	}
+
+	/**
+	 * Extracts components from a base64 encoded ticket string.
+	 * @param  string $ticket Ticket string (minus the prefix).
+	 * @return array          Ticket components.
+	 */
+	private static function extractComponents( $ticket ) {
+
+		$components = explode( '|', base64_decode( $ticket ) );
+
+		if (count( $components ) < 4) {
+			throw new TicketException( __( 'Ticket is malformed.', 'wp-cas-server' ) );
+		}
+
+		list( $login, $service, $expires, $signature ) = $components;
+
+		$service = urldecode( $service );
+
+		return array( $login, $service, $expires, $signature );
 	}
 
 	/**
