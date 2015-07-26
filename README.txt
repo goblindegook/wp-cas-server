@@ -2,7 +2,7 @@
 Contributors: goblindegook
 Tags: authentication, cas, central authentication service, single sign-on, jasig cas, sso
 Requires at least: 3.9
-Tested up to: 4.1.1
+Tested up to: 4.3
 Stable tag: 1.2.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -35,6 +35,10 @@ Please follow and contribute to Cassava's development on [Github](https://github
 1. Administration settings panel.
 
 == Installation ==
+
+= Using [Composer](https://getcomposer.org) =
+
+1. Install the plugin package using `composer require goblindegook/wp-cas-server`.
 
 = Using the WordPress Dashboard =
 
@@ -240,6 +244,10 @@ Parameters:
 == Upgrade Notice ==
 
 == Changelog ==
+
+= 1.2.2 =
+
+* Fixed endpoint registration in mixed HTTP/HTTPS installs. The server will now respond to requests over unencrypted HTTP, but will throw an error and tell the user to switch to HTTPS.
 
 = 1.2.1 =
 

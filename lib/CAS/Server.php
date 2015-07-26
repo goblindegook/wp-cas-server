@@ -73,7 +73,7 @@ class Server {
 	 * If the 'allowed_services' contains at least one host, it will always perform a safe
 	 * redirect.
 	 *
-	 * Calling Server::redirect() will _always_ terminate the request.
+	 * Calling Server::redirect() will _always_ end the request.
 	 *
 	 * @param  string  $location URI to redirect to.
 	 * @param  integer $status   HTTP status code (default 302).
@@ -123,7 +123,7 @@ class Server {
 		$this->setResponseHeader( 'Expires'      , gmdate( static::RFC1123_DATE_FORMAT ) );
 
 		/**
-		 * Fires before the CAS request is processed.
+		 * Fires before processing the CAS request.
 		 *
 		 * @param  string $path Requested URI path.
 		 * @return string       Filtered requested URI path.
@@ -175,9 +175,15 @@ class Server {
 	 * @global $_GET
 	 *
 	 * @uses \apply_filters()
+	 * @uses \is_ssl()
 	 * @uses \is_wp_error()
 	 */
 	protected function dispatch( $path ) {
+
+		if ( ! \is_ssl() ) {
+			throw new GeneralException(
+				__( 'The CAS server requires SSL.', 'wp-cas-server' ) );
+		}
 
 		/**
 		 * Allows developers to disable CAS.
@@ -186,8 +192,9 @@ class Server {
 		 */
 		$enabled = apply_filters( 'cas_enabled', true );
 
-		if (!$enabled) {
-			throw new GeneralException( __('The CAS server is disabled.', 'wp-cas-server') );
+		if ( ! $enabled ) {
+			throw new GeneralException(
+				__( 'The CAS server is disabled.', 'wp-cas-server' ) );
 		}
 
 		$routes = $this->routes();
@@ -201,7 +208,8 @@ class Server {
 			}
 
 			if ( ! class_exists( $controller ) ) {
-				throw new GeneralException( __('The controller for the route is invalid.', 'wp-cas-server') );
+				throw new GeneralException(
+					__( 'The controller for the route is invalid.', 'wp-cas-server' ) );
 			}
 
 			$args = $_GET;

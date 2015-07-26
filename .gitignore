@@ -16,6 +16,8 @@ Temporary Items
 # Composer
 
 composer.phar
+composer.lock
+vendor/
 
 # PHPdocumentor
 
