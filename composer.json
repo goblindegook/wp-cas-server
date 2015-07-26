@@ -14,7 +14,10 @@
             "Cassava\\": "lib/"
         }
     },
-    "require": {},
+    "require": {
+    },
     "require-dev": {
+        "phpunit/phpunit": "~4.7",
+        "apigen/apigen": "~4.1"
     }
 }

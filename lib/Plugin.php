@@ -226,18 +226,10 @@ class Plugin {
 	 * Register new rewrite rules for the CAS server URIs.
 	 *
 	 * @uses \add_rewrite_endpoint()
-	 * @uses \is_ssl()
 	 *
 	 * @SuppressWarnings(CamelCaseMethodName)
 	 */
 	private function addRewriteRules() {
-
-		/**
-		 * Enforce SSL
-		 */
-		if ( ! \is_ssl() ) {
-			return;
-		}
 
 		$path = Options::get( 'endpoint_slug' );
 
