@@ -18,7 +18,7 @@ class Plugin {
 	/**
 	 * Plugin version.
 	 */
-	const VERSION = '1.2.1';
+	const VERSION = '1.2.2';
 
 	/**
 	 * Plugin slug.
