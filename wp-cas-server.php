@@ -37,17 +37,6 @@ if ( ! defined( 'WPINC' ) ) {
     die;
 }
 
-if ( version_compare( PHP_VERSION, '5.3.0' ) === -1 ) {
-	if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload_52.php' ) ) {
-		require_once dirname( __FILE__ ) . '/vendor/autoload_52.php';
-	}
-} else {
-	if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload.php' ) ) {
-		require_once dirname( __FILE__ ) . '/vendor/autoload.php';
-	}
-}
-
-// FIXME: Autoloader not working for this class, manually requiring it.
 require_once dirname( __FILE__ ) . '/wp-requirements.php';
 
 $wp_cas_server_requirements = new WP_Requirements(
@@ -65,6 +54,10 @@ $wp_cas_server_requirements = new WP_Requirements(
 if ( $wp_cas_server_requirements->pass() === false ) {
     $wp_cas_server_requirements->halt();
     return;
+}
+
+if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload.php' ) ) {
+	require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 }
 
 require_once dirname( __FILE__ ) . '/plugin.php';
