@@ -5,6 +5,7 @@ filter:
         - languages/*
         - tests/*
         - vendor/*
+        - wp-requirements.php
 
 checks:
     php:
