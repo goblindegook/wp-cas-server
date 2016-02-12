@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "818a6b0e403007a6581a4c146eeaaa50",
-    "content-hash": "f3fb6e2a19bc608a25543d6848516776",
+    "hash": "ee6aa065fe579c79ef84ae0b54254868",
+    "content-hash": "cf726a5a9731245cab742c9b3f3a06ef",
     "packages": [
         {
             "name": "nekojira/wp-requirements",
