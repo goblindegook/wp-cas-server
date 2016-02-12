@@ -18,9 +18,14 @@ Temporary Items
 composer.phar
 vendor/
 
+# NPM
+
+node_modules/
+
 # PHPdocumentor
 
-docs/*
+/build/
+/docs/*
 
 # Subversion
 
