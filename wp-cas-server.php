@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: Cassava: A WordPress CAS Server
-Version: 1.2.2
+Version: 1.2.3
 Description: Provides authentication services based on the Jasig CAS protocol.
 Author: Luís Rodrigues
-Author URI: http://goblindegook.net/
+Author URI: http://goblindegook.com/
 Plugin URI: https://goblindegook.github.io/wp-cas-server
 Github URI: https://github.com/goblindegook/wp-cas-server
 Text Domain: wp-cas-server
@@ -37,9 +37,33 @@ if ( ! defined( 'WPINC' ) ) {
     die;
 }
 
-if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload.php' ) ) {
-	require_once dirname( __FILE__ ) . '/vendor/autoload.php';
+if ( version_compare( PHP_VERSION, '5.3.0' ) === -1 ) {
+	if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload_52.php' ) ) {
+		require_once dirname( __FILE__ ) . '/vendor/autoload_52.php';
+	}
+} else {
+	if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload.php' ) ) {
+		require_once dirname( __FILE__ ) . '/vendor/autoload.php';
+	}
 }
 
-$GLOBALS[ Cassava\Plugin::SLUG ] = new \Cassava\Plugin( new \Cassava\CAS\Server );
-$GLOBALS[ Cassava\Plugin::SLUG ]->ready();
+require_once dirname( __FILE__ ) . '/wp-requirements.php';
+
+$wp_cas_server_requirements = new WP_Requirements(
+	__( 'Cassava CAS Server', 'wp-cas-server' ),
+    plugin_basename( __FILE__ ),
+    array(
+        'PHP'        => '5.3.2',
+        'WordPress'  => '3.9.0',
+        'Extensions' => array(
+        	'libxml',
+        ),
+    )
+);
+
+if ( $wp_cas_server_requirements->pass() === false ) {
+    $wp_cas_server_requirements->halt();
+    return;
+}
+
+require_once 'plugin.php';

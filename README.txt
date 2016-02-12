@@ -3,7 +3,7 @@ Contributors: goblindegook
 Tags: authentication, cas, central authentication service, single sign-on, jasig cas, sso
 Requires at least: 3.9
 Tested up to: 4.3
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -244,6 +244,10 @@ Parameters:
 == Upgrade Notice ==
 
 == Changelog ==
+
+= 1.2.3 =
+
+* Requirement checks and admin error on pre-PHP 5.3 setups.
 
 = 1.2.2 =
 
