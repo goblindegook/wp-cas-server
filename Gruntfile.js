@@ -1,26 +1,28 @@
 module.exports = function (grunt) {
 
-  var pkg = grunt.file.readJSON('package.json'),
-    distFiles =  [
-      '**',
-      '!**/.*',
-      '!apigen.neon',
-      '!assets/**',
-      '!bin/**',
-      '!bootstrap.php',
-      '!CHANGELOG.md',
-      '!composer.json',
-      '!composer.lock',
-      '!Gruntfile.js',
-      '!node_modules/**',
-      '!package.json',
-      '!phpdoc.dist.xml',
-      '!phpunit.xml',
-      '!phpunit.xml.dist',
-      '!README.md',
-      '!svn/**',
-      '!tests/**',
-    ];
+  var pkg = grunt.file.readJSON('package.json');
+
+  var distFiles =  [
+    '**',
+    '!**/.*',
+    '!apigen.neon',
+    '!assets/**',
+    '!bin/**',
+    '!build/**',
+    '!bootstrap.php',
+    '!CHANGELOG.md',
+    '!composer.json',
+    '!composer.lock',
+    '!Gruntfile.js',
+    '!node_modules/**',
+    '!package.json',
+    '!phpdoc.dist.xml',
+    '!phpunit.xml',
+    '!phpunit.xml.dist',
+    '!README.md',
+    '!svn/**',
+    '!tests/**',
+  ];
 
   // Project configuration
   grunt.initConfig({
@@ -120,7 +122,7 @@ module.exports = function (grunt) {
       main: {
         options: {
           mode:    'zip',
-          archive: './build/wp-cas-server.<%= pkg.version %>.zip'
+          archive: './build/wp-cas-server-<%= pkg.version %>.zip'
         },
         expand: true,
         src:    distFiles,
@@ -156,7 +158,7 @@ module.exports = function (grunt) {
     'clean',
     'copy',
     'compress',
-    'composer:update',
+    'composer:install',
     'composer:dump-autoload:optimize',
   ]);
 
