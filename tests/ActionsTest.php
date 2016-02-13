@@ -122,7 +122,7 @@ class WP_TestWPCASServerPluginActions extends WP_UnitTestCase {
 			$loginController = new Cassava\CAS\Controller\LoginController( $this->server );
 			$loginController->handleRequest( array( 'service' => $service ) );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			parse_str( parse_url( $this->redirect_location, PHP_URL_QUERY ), $query );
 		}
 

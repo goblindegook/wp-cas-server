@@ -82,7 +82,7 @@ class WP_TestWPCASServerPluginFilters extends WP_UnitTestCase {
 		try {
 			call_user_func_array( $function, $args );
 		}
-		catch (WPDieException $message) {
+		catch ( WPDieException $message ) {
 			ob_end_clean();
 			remove_filter( $label, array( $mock, 'filter' ) );
 			return;

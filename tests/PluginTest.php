@@ -117,7 +117,7 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	 */
 	function testAllowedRedirectHosts () {
 
-		$noSchemaAllowed = version_compare( phpversion(), '5.4.7', '>=' );
+		$allowNoUrlScheme = version_compare( phpversion(), '5.4.7', '>=' );
 
 		\Cassava\Options::set( 'allowed_services', array(
 			'http://test1/',
@@ -148,14 +148,14 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 		$this->assertContains( 'test5', $hosts,
 			'test5 is added to the allowed redirect hosts list.' );
 
-		if ($noSchemaAllowed) {
+		if ( $allowNoUrlScheme ) {
 			$this->assertContains( 'test6', $hosts,
 				'test6 is added to the allowed redirect hosts list.' );
 		}
 
-		$expected_count = $noSchemaAllowed ? 7 : 6;
+		$expectedCount = $allowNoUrlScheme ? 7 : 6;
 
-		$this->assertCount( $expected_count, $hosts,
+		$this->assertCount( $expectedCount, $hosts,
 			'Allowed hosts are added to an existing list.');
 
 		\Cassava\Options::set( 'allowed_services', false );
@@ -210,4 +210,3 @@ class WP_TestWPCASServerPlugin extends WP_UnitTestCase {
 	}
 
 }
-

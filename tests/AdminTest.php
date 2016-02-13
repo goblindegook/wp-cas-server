@@ -25,13 +25,13 @@ class WP_TestWPCASServerAdmin extends WP_UnitTestCase {
 	function test_construct () {
 		$actions = array(
 			'admin_init' => array(
-				'priority'  => 10,
-				'callback'  => array( $this->admin, 'admin_init' ),
-				),
+				'priority' => 10,
+				'callback' => array( $this->admin, 'admin_init' ),
+			),
 			'admin_menu' => array(
-				'priority'  => 10,
-				'callback'  => array( $this->admin, 'admin_menu' ),
-				),
+				'priority' => 10,
+				'callback' => array( $this->admin, 'admin_menu' ),
+			),
 		);
 
 		foreach ($actions as $tag => $action) {
@@ -49,8 +49,8 @@ class WP_TestWPCASServerAdmin extends WP_UnitTestCase {
 	function test_admin_init () {
 		$actions = array(
 			'admin_notices' => array(
-				'priority'  => 10,
-				'callback'  => array( $this->admin, 'admin_notices' ),
+				'priority' => 10,
+				'callback' => array( $this->admin, 'admin_notices' ),
 				),
 		);
 

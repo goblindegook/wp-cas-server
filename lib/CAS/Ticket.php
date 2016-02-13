@@ -196,7 +196,7 @@ class Ticket {
 
 		$values = explode( '|', base64_decode( $content ) );
 
-		if (count( $values ) < 4) {
+		if ( count( $values ) < 4 ) {
 			throw new TicketException( __( 'Malformed ticket.', 'wp-cas-server' ) );
 		}
 
