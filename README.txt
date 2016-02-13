@@ -245,6 +245,10 @@ Parameters:
 
 == Changelog ==
 
+= Unreleased =
+
+* Now hashing signatures with the SHA-256 algorithm.
+
 = 1.2.3 =
 
 * Requirement checks and admin error on pre-PHP 5.3 setups.

@@ -236,7 +236,7 @@ class Ticket {
 			$this->service,
 			$this->expires,
 		);
-		return hash_hmac( 'sha1', implode( '|', $signatureComponents ), $this->generateKey() );
+		return hash_hmac( 'sha256', implode( '|', $signatureComponents ), $this->generateKey() );
 	}
 
 	/**
