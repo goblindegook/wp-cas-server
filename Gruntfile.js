@@ -29,6 +29,22 @@ module.exports = function (grunt) {
 
     pkg: pkg,
 
+    exec: {
+      'install-wp-tests': {
+        cmd: './bin/install-wp-tests.sh wordpress_unit_tests external external 192.168.50.4',
+        exitCode: [0, 255]
+      }
+    },
+
+    phpunit: {
+      tests: {
+        dir: 'tests/'
+      },
+      options: {
+        bin: 'vendor/bin/phpunit',
+      }
+    },
+
     checktextdomain: {
       options: {
         text_domain:    'wp-cas-server',
@@ -139,12 +155,18 @@ module.exports = function (grunt) {
           svn_url:     'https://plugins.svn.wordpress.org/wp-cas-server'
         }
       }
-    }
+    },
 
   });
 
   // Load tasks
   require('load-grunt-tasks')(grunt);
+
+  grunt.registerTask('test', [
+    'composer:install',
+    'exec:install-wp-tests',
+    'phpunit',
+  ]);
 
   // Register tasks
   grunt.registerTask('pot', [
