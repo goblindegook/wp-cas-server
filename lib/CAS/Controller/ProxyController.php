@@ -61,6 +61,7 @@ class ProxyController extends ValidateController {
 		try {
 			$ticket      = $this->validateRequest( $pgt, $targetService );
 			$proxyTicket = new CAS\Ticket( CAS\Ticket::TYPE_PT, $ticket->user, $targetService );
+			
 			$response->setTicket( $proxyTicket );
 		}
 		catch ( GeneralException $exception ) {

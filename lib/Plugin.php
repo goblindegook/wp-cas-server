@@ -79,9 +79,9 @@ class Plugin {
 	 * Bootstrap plugin.
 	 */
 	public function ready() {
-		register_activation_hook( __FILE__, array( $this, 'activation' ) );
-		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
-		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+		\register_activation_hook( __FILE__, array( $this, 'activation' ) );
+		\register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
+		\add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
 	}
 
 	/**
@@ -94,7 +94,7 @@ class Plugin {
 	public function activation( $network_wide ) {
 		$this->call( $network_wide, function () {
 			$this->addRewriteRules();
-			flush_rewrite_rules();
+			\flush_rewrite_rules();
 		} );
 	}
 
@@ -110,7 +110,7 @@ class Plugin {
 	 */
 	public function deactivation( $network_wide ) {
 		$this->call( $network_wide, function () {
-			flush_rewrite_rules();
+			\flush_rewrite_rules();
 		} );
 	}
 
@@ -230,7 +230,6 @@ class Plugin {
 	 * @SuppressWarnings(CamelCaseMethodName)
 	 */
 	private function addRewriteRules() {
-
 		$path = Options::get( 'endpoint_slug' );
 
 		if ( empty( $path ) ) {

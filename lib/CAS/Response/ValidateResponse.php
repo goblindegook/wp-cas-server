@@ -70,8 +70,7 @@ class ValidateResponse extends BaseResponse {
 	 */
 	protected function setUserAttributes( CAS\Ticket $ticket ) {
 		$attributeKeys = Options::get( 'attributes' );
-
-		$attributes = array();
+		$attributes    = array();
 
 		foreach ( $attributeKeys as $key ) {
 			$attributes[ $key ] = implode( ',', (array) $ticket->user->get( $key ) );

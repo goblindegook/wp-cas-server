@@ -88,7 +88,7 @@ class Ticket {
 	public function __construct( $type, $user, $service, $expires = 0.0 ) {
 		$this->type    = $type;
 		$this->user    = $user;
-		$this->service = esc_url_raw( $service );
+		$this->service = \esc_url_raw( $service );
 		$this->expires = $expires;
 
 		/**

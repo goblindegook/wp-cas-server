@@ -130,7 +130,7 @@ class Server {
 		 */
 		\do_action( 'cas_server_before_request', $path );
 
-		if (empty( $path )) {
+		if ( empty( $path ) ) {
 			$path = isset( $_SERVER['PATH_INFO'] ) ? $_SERVER['PATH_INFO'] : '/';
 		}
 
@@ -245,21 +245,27 @@ class Server {
 
 	/**
 	 * Wraps calls to session_start() to prevent 'headers already sent' errors.
+	 *
+	 * @fixme Do we REALLY need sessions?
 	 */
 	public function sessionStart() {
 		$sessionExists = function_exists( 'session_status' ) && session_status() === PHP_SESSION_NONE;
+
 		if ( headers_sent() || $sessionExists || strlen( session_id() ) ) {
 			return;
 		}
+
 		session_start();
 	}
 
 	/**
 	 * Wraps calls to session destruction functions.
+	 *
+	 * @fixme Do we REALLY need sessions?
 	 */
 	public function sessionDestroy() {
-		wp_logout();
-		wp_set_current_user( false );
+		\wp_logout();
+		\wp_set_current_user( false );
 
 		$sessionExists = function_exists( 'session_status' ) && session_status() === PHP_SESSION_NONE;
 
@@ -278,7 +284,10 @@ class Server {
 	 * @param string $value Header value.
 	 */
 	protected function setResponseHeader( $key, $value ) {
-		if (headers_sent()) return;
+		if ( headers_sent() ) {
+			return;
+		}
+
 		header( sprintf( '%s: %s', $key, $value ) );
 	}
 
@@ -298,14 +307,14 @@ class Server {
 	 * @uses apply_filters()
 	 * @uses auth_redirect()
 	 */
-	public function authRedirect ( $args = array() ) {
+	public function authRedirect( $args = array() ) {
 		/**
 		 * Allows developers to redirect the user to a custom login form.
 		 *
 		 * @param string $custom_login_url URI for the custom login page.
 		 * @param array  $args             Login request parameters.
 		 */
-		$custom_login_url = apply_filters( 'cas_server_custom_auth_uri', false, $args );
+		$custom_login_url = \apply_filters( 'cas_server_custom_auth_uri', false, $args );
 
 		if ( $custom_login_url ) {
 			$this->redirect( $custom_login_url );

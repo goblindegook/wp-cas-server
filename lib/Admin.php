@@ -18,11 +18,11 @@ class Admin {
 	/**
 	 * Instantiates the admin panel object.
 	 *
-	 * @uses add_action()
+	 * @uses \add_action()
 	 */
 	public function __construct () {
-		add_action( 'admin_init', array( $this, 'admin_init' ) );
-		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		\add_action( 'admin_init', array( $this, 'admin_init' ) );
+		\add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 	}
 
 	/**
@@ -30,30 +30,31 @@ class Admin {
 	 *
 	 * Triggered by the `admin_init` action.
 	 *
-	 * @uses add_action()
+	 * @uses \add_action()
 	 */
 	public function admin_init() {
 		$this->savePermalinks();
 		$this->addSettings();
 
-		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		\add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 	}
 
 	/**
 	 * Register the menu entry for the plugin's settings page.
 	 *
 	 * @since 1.1.0
+	 *
+	 * @uses \__()
+	 * @uses \add_options_page()
 	 */
 	public function admin_menu() {
-
-		add_options_page(
+		\add_options_page(
 			__( 'Cassava CAS Server', 'wp-cas-server' ),
 			__( 'Cassava CAS Server', 'wp-cas-server' ),
 			'manage_options',
 			Plugin::SLUG,
 			array( $this, 'pageSettings' )
 		);
-
 	}
 
 	/**
@@ -61,15 +62,15 @@ class Admin {
 	 *
 	 * Triggered by the `admin_notices` action.
 	 *
-	 * @uses current_user_can()
-	 * @uses is_ssl()
+	 * @uses \current_user_can()
+	 * @uses \is_ssl()
 	 *
 	 * @uses ::adminNoticeNoSSL()
 	 *
 	 * @SuppressWarnings(CamelCaseMethodName)
 	 */
 	public function admin_notices() {
-		if ( ! is_ssl() && current_user_can( 'install_plugins' ) ) {
+		if ( ! \is_ssl() && \current_user_can( 'install_plugins' ) ) {
 			$this->adminNoticeNoSSL();
 		}
 	}
@@ -89,11 +90,11 @@ class Admin {
 	/**
 	 * Updates the CAS server endpoint when saving permalinks.
 	 *
-	 * @uses is_admin()
-	 * @uses sanitize_text_field()
+	 * @uses \is_admin()
+	 * @uses \sanitize_text_field()
 	 */
 	protected function savePermalinks() {
-		if ( ! is_admin() ) {
+		if ( ! \is_admin() ) {
 			return;
 		}
 
@@ -104,22 +105,21 @@ class Admin {
 			|| isset( $_POST['category_base'] )
 			|| isset( $_POST[ $option ] )
 		) {
-			Options::set( 'endpoint_slug', trim( sanitize_text_field( $_POST[ $option ] ) ) );
+			Options::set( 'endpoint_slug', trim( \sanitize_text_field( $_POST[ $option ] ) ) );
 		}
 	}
 
 	/**
 	 * Register plugin settings.
 	 *
-	 * @uses add_settings_field()
-	 * @uses add_settings_section()
-	 * @uses register_setting()
+	 * @uses \add_settings_field()
+	 * @uses \add_settings_section()
+	 * @uses \register_setting()
 	 *
 	 * @since   1.0.0
 	 */
 	protected function addSettings() {
-
-		register_setting(
+		\register_setting(
 			Plugin::SLUG,
 			Options::KEY,
 			array( $this, 'validateSettings' )
@@ -127,9 +127,9 @@ class Admin {
 
 		// Default plugin settings:
 
-		add_settings_section( 'default', '', false, Plugin::SLUG );
+		\add_settings_section( 'default', '', false, Plugin::SLUG );
 
-		add_settings_field(
+		\add_settings_field(
 			'attributes',
 			__( 'User Attributes To Return', 'wp-cas-server' ),
 			array( $this, 'fieldUserAttributes' ),
@@ -138,7 +138,7 @@ class Admin {
 
 		// Permalink settings:
 
-		add_settings_field(
+		\add_settings_field(
 			Options::KEY . '_endpoint_slug',
 			__( 'CAS server base', 'wp-cas-server' ),
 			array( $this, 'fieldPermalinksEndpointSlug' ),
@@ -168,7 +168,7 @@ class Admin {
 	/**
 	 * Display the configuration field for the CAS endpoint.
 	 *
-	 * @uses esc_attr()
+	 * @uses \esc_attr()
 	 *
 	 * @since 1.0.0
 	 */
@@ -178,7 +178,7 @@ class Admin {
 		?>
 		<input id="<?php echo $option; ?>" name="<?php echo $option; ?>"
 			type="text" class="regular-text code"
-			value="<?php if ( isset( $endpoint ) ) echo esc_attr( $endpoint ); ?>"
+			value="<?php if ( isset( $endpoint ) ) echo \esc_attr( $endpoint ); ?>"
 			placeholder="<?php echo Plugin::ENDPOINT_SLUG; ?>" />
 		<?php
 	}
@@ -186,24 +186,24 @@ class Admin {
 	/**
 	 * Displays the CAS server settings page in the dashboard.
 	 *
-	 * @uses _e()
-	 * @uses do_settings_sections()
-	 * @uses settings_fields()
-	 * @uses submit_button()
+	 * @uses \_e()
+	 * @uses \do_settings_sections()
+	 * @uses \settings_fields()
+	 * @uses \submit_button()
 	 *
 	 * @since 1.1.0
 	 */
 	public function pageSettings() {
 		?>
 		<div class="wrap">
-			<h2><?php _e( 'Cassava CAS Server Settings', 'wp-cas-server' ); ?></h2>
+			<h2><?php \_e( 'Cassava CAS Server Settings', 'wp-cas-server' ); ?></h2>
 
-			<p><?php _e( 'Configuration panel for the Central Authentication Service provided by this site.', 'wp-cas-server' ); ?></p>
+			<p><?php \_e( 'Configuration panel for the Central Authentication Service provided by this site.', 'wp-cas-server' ); ?></p>
 
 			<form action="options.php" method="POST">
-				<?php do_settings_sections( Plugin::SLUG ); ?>
-				<?php settings_fields( Plugin::SLUG ); ?>
-				<?php submit_button(); ?>
+				<?php \do_settings_sections( Plugin::SLUG ); ?>
+				<?php \settings_fields( Plugin::SLUG ); ?>
+				<?php \submit_button(); ?>
 			</form>
 		</div>
 		<?php
@@ -217,14 +217,13 @@ class Admin {
 	 * `/validateService` request responses inside an optional `<cas:attributes></cas:attributes>`
 	 * tag.
 	 *
-	 * @uses _e()
-	 * @uses apply_filters()
+	 * @uses \_e()
+	 * @uses \apply_filters()
 	 *
 	 * @since 1.1.0
 	 */
 	public function fieldUserAttributes() {
-
-		$user       = wp_get_current_user();
+		$user       = \wp_get_current_user();
 		$attributes = Options::get( 'attributes' );
 
 		$attributeOptions = array(
@@ -250,26 +249,28 @@ class Admin {
 		 *
 		 * @since 1.1.0
 		 */
-		$attributeOptions = apply_filters( 'cas_server_settings_user_attribute_options', $attributeOptions );
+		$attributeOptions = \apply_filters( 'cas_server_settings_user_attribute_options', $attributeOptions );
 		?>
 
 		<fieldset>
-		<legend class="screen-reader-text"><?php _e( 'User Attributes', 'wp-cas-server' ) ?></legend>
-			<?php foreach ($attributeOptions as $value => $label) : ?>
+		<legend class="screen-reader-text"><?php _e( 'User Attributes', 'wp-cas-server' ); ?></legend>
+			<?php foreach ( $attributeOptions as $value => $label ) : ?>
 			<label>
 				<input id="<?php echo Options::KEY . '-attribute-' . $value ?>"
 				name="<?php echo Options::KEY ?>[attributes][]"
-				type="checkbox" <?php if (in_array( $value, $attributes )) echo "checked" ?>
+				type="checkbox" <?php if (in_array( $value, $attributes )) echo "checked"; ?>
 				value="<?php echo $value ?>">
 				<span><?php echo $label ?></span>
-				<?php if ($user->get( $value )) : ?>
+				<?php if ( $user->get( $value ) ) : ?>
 				<span class="description"><?php
-					printf( __( '(e.g. %s)', 'wp-cas-server' ), implode( ',', (array) $user->get( $value ) )  );
+					printf( __( '(e.g. %s)', 'wp-cas-server' ), implode( ',', (array) $user->get( $value ) ) );
 				?></span>
 				<?php endif; ?>
 			</label><br>
 			<?php endforeach; ?>
-			<p class="description"><?php _e( 'Checked attributes are disclosed on successful validation requests (CAS 2.0 only).', 'wp-cas-server' ) ?></p>
+			<p class="description"><?php
+				_e( 'Checked attributes are disclosed on successful validation requests (CAS 2.0 only).', 'wp-cas-server' );
+			?></p>
 		</fieldset>
 		<?php
 	}
