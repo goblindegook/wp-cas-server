@@ -162,13 +162,13 @@ module.exports = function (grunt) {
   // Load tasks
   require('load-grunt-tasks')(grunt);
 
+  // Register tasks
   grunt.registerTask('test', [
     'composer:install',
     'exec:install-wp-tests',
     'phpunit',
   ]);
 
-  // Register tasks
   grunt.registerTask('pot', [
     'checktextdomain',
     'makepot',
