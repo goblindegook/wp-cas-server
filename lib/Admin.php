@@ -232,6 +232,7 @@ class Admin {
 			'display_name' => __( 'Public Name', 'wp-cas-server' ),
 			'user_email'   => __( 'Email', 'wp-cas-server' ),
 			'user_url'     => __( 'Website', 'wp-cas-server' ),
+			'ID'	       => __( 'User-ID', 'wp-cas-server' ),
 		);
 
 		/**
