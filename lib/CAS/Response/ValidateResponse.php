@@ -92,8 +92,12 @@ class ValidateResponse extends BaseResponse {
 		$xmlAttributes = $this->createElement( 'attributes' );
 
 		foreach ($attributes as $key => $value) {
-			$xmlAttribute = $this->createElement( $key, $value );
-			$xmlAttributes->appendChild( $xmlAttribute );
+			//if user's attribute is empty, don't create xml element
+			//that will raise some CAS client resove error. such as Rocket Chat
+			if(!empty($value)){
+				$xmlAttribute = $this->createElement( $key, $value );
+				$xmlAttributes->appendChild( $xmlAttribute );
+			}
 		}
 
 		$this->response->appendChild( $xmlAttributes );
